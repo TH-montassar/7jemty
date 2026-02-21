@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'pages/main_page.dart';
+import 'pages/tm_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -29,7 +29,7 @@ class MyApp extends StatelessWidget {
           ),  
         ),
       ),
-      home: const SelectionArea(child: MainPage()),
+      home: const SelectionArea(child: RoleSelectionPage()),
     );
   }
 }
