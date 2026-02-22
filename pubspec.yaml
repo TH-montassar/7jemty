@@ -1,4 +1,4 @@
-name: flutter_application_1
+name: hjamty
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -57,4 +57,5 @@ flutter:
   # the material Icons class.
   uses-material-design: true
   assets:
-    - assets/img1.jpg
+    - assets/images/img1.jpg
+    - assets/images/logo.png

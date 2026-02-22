@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'pages/tm_page.dart';
+import 'package:hjamty/pages/splash_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -26,10 +26,10 @@ class MyApp extends StatelessWidget {
             color: Colors.black,
             fontSize: 20,
             fontWeight: FontWeight.bold,
-          ),  
+          ),
         ),
       ),
-      home: const SelectionArea(child: RoleSelectionPage()),
+      home: const SplashScreen(),
     );
   }
 }

@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 
 // 1. Detail Row Helper (نفسو ما تبدلش)
 class _DetailRow extends StatelessWidget {
-  final IconData icon;
+  final IconData? icon;
+  final String? assetPath;
   final String label;
   final String value;
   final bool isPrice;
 
   const _DetailRow({
-    required this.icon,
+    this.icon,
+    this.assetPath,
     required this.label,
     required this.value,
     this.isPrice = false,
@@ -26,7 +28,14 @@ class _DetailRow extends StatelessWidget {
               color: Colors.grey[100],
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, color: Colors.grey[600], size: 20),
+            child: assetPath != null
+                ? Image.asset(
+                    assetPath!,
+                    width: 20,
+                    height: 20,
+                    color: Colors.grey[600],
+                  )
+                : Icon(icon, color: Colors.grey[600], size: 20),
           ),
           const SizedBox(width: 15),
           Expanded(
@@ -124,7 +133,7 @@ class CutDetailsModal extends StatelessWidget {
                     value: cutData['client']!,
                   ),
                   _DetailRow(
-                    icon: Icons.content_cut,
+                    assetPath: 'assets/images/logo.png',
                     label: "Coiffeur",
                     value: cutData['barber']!,
                   ),

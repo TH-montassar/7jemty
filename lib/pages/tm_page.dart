@@ -20,7 +20,7 @@ class RoleSelectionPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // 1. Logo wala Titre mta3 l'App
-              const Icon(Icons.content_cut, size: 80, color: AppColors.primaryBlue),
+              Center(child: Image.asset('assets/images/logo.png', height: 150)),
               const SizedBox(height: 20),
               const Text(
                 "Mar7ba bik fi 7ajamty",
@@ -50,11 +50,13 @@ class RoleSelectionPage extends StatelessWidget {
                   // Navigation lel Espace Client
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const ClientHomePage()),
+                    MaterialPageRoute(
+                      builder: (context) => const ClientHomePage(),
+                    ),
                   );
                 },
               ),
-              
+
               const SizedBox(height: 20),
 
               // 3. Bouton Espace Barber
@@ -63,7 +65,8 @@ class RoleSelectionPage extends StatelessWidget {
                 title: "Espace 7ajem",
                 subtitle: "Gérer l'salon w les rendez-vous mte3ek",
                 icon: Icons.storefront,
-                color: AppColors.textDark, // Nesta3mlou l'gris fange9 bech nfar9ouh 3al client
+                color: AppColors
+                    .textDark, // Nesta3mlou l'gris fange9 bech nfar9ouh 3al client
                 onTap: () {
                   // Navigation lel Espace Barber (n7ottou page test tawa)
                   Navigator.push(
@@ -102,7 +105,7 @@ class RoleSelectionPage extends StatelessWidget {
               color: color.withOpacity(0.1),
               blurRadius: 15,
               offset: const Offset(0, 5),
-            )
+            ),
           ],
         ),
         child: Row(
@@ -120,13 +123,27 @@ class RoleSelectionPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: color,
+                    ),
+                  ),
                   const SizedBox(height: 4),
-                  Text(subtitle, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
                 ],
               ),
             ),
-            Icon(Icons.arrow_forward_ios, size: 16, color: color.withOpacity(0.5)),
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 16,
+              color: color.withOpacity(0.5),
+            ),
           ],
         ),
       ),
@@ -143,8 +160,13 @@ class BarberTestPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Espace 7ajem"), backgroundColor: AppColors.textDark),
-      body: const Center(child: Text("Hetha l'espace mta3 l'7ajem (En cours de dev...)")),
+      appBar: AppBar(
+        title: const Text("Espace 7ajem"),
+        backgroundColor: AppColors.textDark,
+      ),
+      body: const Center(
+        child: Text("Hetha l'espace mta3 l'7ajem (En cours de dev...)"),
+      ),
     );
   }
 }
