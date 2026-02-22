@@ -57,7 +57,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
                       const SizedBox(height: 30),
                       Row(
                         children: const [
-                          Text("Salons  Lik ", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textDark)),
+                          Text("Salons 9rab Lik ", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textDark)),
                           Icon(Icons.location_on, color: Colors.grey, size: 20),
                         ],
                       ),

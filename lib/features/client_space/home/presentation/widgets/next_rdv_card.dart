@@ -9,10 +9,17 @@ class NextRdvCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15, offset: const Offset(0, 5))],
-      ),
+  color: Colors.white,
+  borderRadius: BorderRadius.circular(20),
+ boxShadow: [
+  BoxShadow(
+    color: Colors.black.withValues(alpha: 0.05), // شفافية عالية جداً
+    blurRadius: 30,                              // انتشار واسع للظل
+    spreadRadius: 0,
+    offset: const Offset(0, 10),                 // الظل يميل للأسفل
+  )
+]
+),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

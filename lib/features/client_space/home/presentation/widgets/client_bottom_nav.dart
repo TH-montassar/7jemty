@@ -17,12 +17,13 @@ class ClientBottomNav extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05), 
-            blurRadius: 20, 
-            offset: const Offset(0, -5)
-          )
-        ],
+  BoxShadow(
+    color: Colors.black.withValues(alpha: 0.05), // شفافية عالية جداً
+    blurRadius: 30,                              // انتشار واسع للظل
+    spreadRadius: 0,
+    offset: const Offset(0, 10),                 // الظل يميل للأسفل
+  )
+]
       ),
       child: BottomNavigationBar(
         currentIndex: selectedIndex,
