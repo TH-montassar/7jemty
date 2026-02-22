@@ -53,9 +53,9 @@ class _SplashScreenState extends State<SplashScreen> {
     await Future.delayed(const Duration(milliseconds: 700));
     if (!mounted) return;
 
-    bool isUserLoggedIn = true;
+    bool isUserLoggedIn = false;
     // "client" و إلا "barber"
-    String userRole = "barber";
+    String userRole = "client";
     // =================================================================
 
     Widget nextPage;

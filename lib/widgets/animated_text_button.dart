@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/constants/app_colors.dart';
 
 class AnimatedTextButton extends StatefulWidget {
   final String text;
@@ -39,7 +40,7 @@ class _AnimatedTextButtonState extends State<AnimatedTextButton> {
   @override
   Widget build(BuildContext context) {
     // الألوان: روز في العادي، وأزرق كي تنزل
-    final color = _isPressed ? Colors.blue : Colors.pinkAccent;
+    final color = _isPressed ? Colors.blue : AppColors.actionRed;
 
     return GestureDetector(
       onTap: _handleTap,
@@ -59,7 +60,7 @@ class _AnimatedTextButtonState extends State<AnimatedTextButton> {
             radius: _isPressed ? 2.5 : 0.0,
             colors: [
               Colors.blue.withOpacity(0.2),
-              Colors.pinkAccent.withOpacity(0.05),
+              AppColors.actionRed.withOpacity(0.05),
             ],
             stops: const [0.0, 1.0],
           ),

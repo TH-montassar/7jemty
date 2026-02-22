@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/constants/app_colors.dart';
 
 class AnimatedQuickAccessButton extends StatefulWidget {
   final IconData icon;
@@ -43,12 +44,12 @@ class _AnimatedQuickAccessButtonState extends State<AnimatedQuickAccessButton> {
     // 1. الحدود (Border):
     // كان نازل (_isPressed) -> أزرق (Blue)
     // كان مرتاح -> روز (PinkAccent)
-    final borderColor = _isPressed ? Colors.blue : Colors.pinkAccent;
+    final borderColor = _isPressed ? Colors.blue : AppColors.actionRed;
 
     // 2. الأيقونة (Icon):
     // كان نازل -> أزرق
     // كان مرتاح -> روز
-    final iconColor = _isPressed ? Colors.blue : Colors.pinkAccent;
+    final iconColor = _isPressed ? Colors.blue : AppColors.actionRed;
 
     // 3. الكتيبة (Text):
     // كان نازل -> أزرق
@@ -74,7 +75,7 @@ class _AnimatedQuickAccessButtonState extends State<AnimatedQuickAccessButton> {
             radius: _isPressed ? 2.5 : 0.0,
             colors: [
               Colors.blue.withOpacity(0.2), // لون الـ Effect (أزرق)
-              Colors.pinkAccent.withOpacity(
+              AppColors.actionRed.withOpacity(
                 0.05,
               ), // لون الخلفية العادية (روز فاتح)
             ],
