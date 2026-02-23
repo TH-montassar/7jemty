@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hjamty/features/client_space/appointments/presentation/pages/appointments_page.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../widgets/client_header_section.dart';
 import '../widgets/next_rdv_card.dart';
@@ -19,8 +20,15 @@ class ClientHomePage extends StatefulWidget {
 class _ClientHomePageState extends State<ClientHomePage> {
   int _selectedIndex = 0;
 
-  void _onNavTapped(int index) {
-    if (index == 3) {
+ void _onNavTapped(int index) {
+    if (index == 1) {
+      // Index 1 houwa "Mes RDV"
+      // Thezzou ditect lel page mta3 l'historique wel RDV
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const AppointmentsPage()),
+      );
+    } else if (index == 3) {
       // Index 3 houwa l'Profil fel BottomNavigation
       // === هوني تبدل اللوجيك متاعك بعدين بالـ Firebase أو SharedPrefs ===
       bool isUserLoggedIn = false; // tawa hatineha false bech njarrbou l'Login
@@ -40,13 +48,12 @@ class _ClientHomePageState extends State<ClientHomePage> {
         );
       }
     } else {
-      // Les autres tabs yetbaddlou 3adi fel bar loutaniya
+      // Les autres tabs (Accueil, Moins Cher) yetbaddlou 3adi
       setState(() {
         _selectedIndex = index;
       });
     }
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

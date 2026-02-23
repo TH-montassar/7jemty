@@ -37,9 +37,10 @@ class ClientBottomNav extends StatelessWidget {
         unselectedLabelStyle: const TextStyle(fontSize: 12),
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Accueil"),
-          BottomNavigationBarItem(icon: Icon(Icons.star_border), label: "Top Avis"),
+         
           // 🔄 Houni badelna el bouton wel icône
           BottomNavigationBarItem(icon: Icon(Icons.calendar_month_outlined), label: "Mes RDV"),
+           BottomNavigationBarItem(icon: Icon(Icons.production_quantity_limits), label: "Mes Produits"),
           BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: "Profil"),
         ],
       ),

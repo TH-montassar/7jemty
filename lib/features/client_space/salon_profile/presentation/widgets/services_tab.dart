@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../booking/presentation/pages/booking_page.dart';
 
 class ServicesTab extends StatelessWidget {
   const ServicesTab({super.key});
@@ -42,7 +43,19 @@ class ServicesTab extends StatelessWidget {
               ),
               ElevatedButton(
                 onPressed: () {
+
                   // TODO: Go to Booking Flow
+
+                 Navigator.push(
+  context,
+  MaterialPageRoute(
+    builder: (context) => BookingPage(
+      serviceName: s['name']!,
+      servicePrice: s['price']!,       // صلحنا الاسم هنا
+      serviceDuration: s['time']!, price: '',     // وزدنا هذي اللي كانت ناقصة
+    ),
+  ),
+);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.actionRed,
