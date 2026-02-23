@@ -1,0 +1,32 @@
+{
+  "name": "hjamty",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "monta",
+  "type": "module",
+  "main": "server.ts",
+  "scripts": {
+    "dev": "nodemon --exec \"node --loader ts-node/esm server.ts\"",
+    "prisma:mig": "prisma migrate dev",
+    "prisma:gen": "prisma generate",
+    "prisma:reset": "prisma migrate reset",
+    "prisma:studio": "prisma studio"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.4.1",
+    "@prisma/client": "^7.4.1",
+    "express": "^5.2.1",
+    "pg": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.3.0",
+    "@types/pg": "^8.16.0",
+    "dotenv": "^17.3.1",
+    "nodemon": "^3.1.14",
+    "prisma": "^7.4.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}

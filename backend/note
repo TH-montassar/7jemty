@@ -1,0 +1,5 @@
+npm run prisma:migrate   # changed schema → migrate + auto-generate
+npm run prisma:generate  # after npm install or git pull
+npm run prisma:reset     # nuke DB and start fresh (careful in production!)
+npm run prisma:studio    # open visual DB browser
+npm run dev              # start server
