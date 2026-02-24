@@ -7,7 +7,7 @@
   "type": "module",
   "main": "server.ts",
   "scripts": {
-    "dev": "nodemon --exec \"node --loader ts-node/esm server.ts\"",
+    "dev": "nodemon -L --exec tsx server.ts",
     "prisma:mig": "prisma migrate dev",
     "prisma:gen": "prisma generate",
     "prisma:reset": "prisma migrate reset",
@@ -33,6 +33,7 @@
     "nodemon": "^3.1.14",
     "prisma": "^6.19.2",
     "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }
 }

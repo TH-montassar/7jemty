@@ -63,7 +63,7 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!isUserLoggedIn) {
       // mouch connecte -> Home Client
       nextPage = const ClientHomePage();
-    // ignore: dead_code
+      // ignore: dead_code
     } else {
       if (userRole == "barber") {
         // connecte w 7ajem -> Espace 7ajem
