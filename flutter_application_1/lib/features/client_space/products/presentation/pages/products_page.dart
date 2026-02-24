@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/constants/app_colors.dart';
+// 1. 🚀 عملنا Import لصفحة تفاصيل المنتج وصفحة السلة
+import 'product_details_page.dart';
+import 'cart_page.dart';
 
 class ProductsPage extends StatefulWidget {
   const ProductsPage({super.key});
@@ -13,32 +16,11 @@ class _ProductsPageState extends State<ProductsPage> {
   
   final List<String> _categories = ["Tous", "Cheveux", "Barbe", "Visage", "Accessoires"];
 
-  // Mock Data mta3 les produits
   final List<Map<String, dynamic>> _products = [
-    {
-      'name': 'Cire Coiffante Matte',
-      'brand': 'Barber King',
-      'price': '25 DT',
-      'image': 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=500&q=80',
-    },
-    {
-      'name': 'Huile à Barbe Bio',
-      'brand': 'The Classic',
-      'price': '35 DT',
-      'image': 'https://images.unsplash.com/photo-1621607512214-68297480165e?auto=format&fit=crop&w=500&q=80',
-    },
-    {
-      'name': 'Shampooing Anti-Chute',
-      'brand': 'Salon El Baze',
-      'price': '40 DT',
-      'image': 'https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?auto=format&fit=crop&w=500&q=80',
-    },
-    {
-      'name': 'Peigne en Bois',
-      'brand': 'Barber Shop',
-      'price': '15 DT',
-      'image': 'https://images.unsplash.com/photo-1622288432450-277d0fce5b15?auto=format&fit=crop&w=500&q=80',
-    },
+    {'name': 'Cire Coiffante Matte', 'brand': 'Barber King', 'price': '25 DT', 'image': 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=500&q=80'},
+    {'name': 'Huile à Barbe Bio', 'brand': 'The Classic', 'price': '35 DT', 'image': 'https://images.unsplash.com/photo-1621607512214-68297480165e?auto=format&fit=crop&w=500&q=80'},
+    {'name': 'Shampooing Anti-Chute', 'brand': 'Salon El Baze', 'price': '40 DT', 'image': 'https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?auto=format&fit=crop&w=500&q=80'},
+    {'name': 'Peigne en Bois', 'brand': 'Barber Shop', 'price': '15 DT', 'image': 'https://images.unsplash.com/photo-1622288432450-277d0fce5b15?auto=format&fit=crop&w=500&q=80'},
   ];
 
   @override
@@ -49,7 +31,7 @@ class _ProductsPageState extends State<ProductsPage> {
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
-        automaticallyImplyLeading: false, // Na7iwha 5aterha fel BottomNav
+        automaticallyImplyLeading: false, 
         title: const Text("Boutique", style: TextStyle(color: AppColors.textDark, fontWeight: FontWeight.bold)),
         actions: [
           IconButton(
@@ -58,7 +40,11 @@ class _ProductsPageState extends State<ProductsPage> {
               child: Icon(Icons.shopping_cart_outlined, color: AppColors.textDark),
             ),
             onPressed: () {
-              // TODO: Aller au Panier
+              // 🚀 تهزك للسلة (Panier)
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const CartPage()),
+              );
             },
           ),
           const SizedBox(width: 10),
@@ -87,7 +73,7 @@ class _ProductsPageState extends State<ProductsPage> {
             ),
           ),
 
-          // 2. Catégories (Horizontal List)
+          // 2. Catégories
           SizedBox(
             height: 40,
             child: ListView.builder(
@@ -121,20 +107,19 @@ class _ProductsPageState extends State<ProductsPage> {
           ),
           const SizedBox(height: 20),
 
-          // 3. Grille des produits (Grid View)
+          // 3. Grille des produits
           Expanded(
             child: GridView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,           // Zouz produits fel ligne
-                crossAxisSpacing: 15,        // Espace bel 3ardh
-                mainAxisSpacing: 15,         // Espace bel toul
-                childAspectRatio: 0.75,      // Formaat mta3 l'karta (Toul akber mel 3ardh)
+                crossAxisCount: 2,
+                crossAxisSpacing: 15,
+                mainAxisSpacing: 15,
+                childAspectRatio: 0.72,
               ),
               itemCount: _products.length,
               itemBuilder: (context, index) {
-                final p = _products[index];
-                return _buildProductCard(p);
+                return _buildProductCard(_products[index]);
               },
             ),
           ),
@@ -145,56 +130,75 @@ class _ProductsPageState extends State<ProductsPage> {
 
   // --- Karta mta3 Produit wa7ed ---
   Widget _buildProductCard(Map<String, dynamic> product) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 15, offset: const Offset(0, 5))],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Taswira mta3 l'produit
-          Expanded(
-            child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-              child: Image.network(
-                product['image'],
-                width: double.infinity,
-                fit: BoxFit.cover,
+    // 🚀 2. حطينا الكارطة كاملة في GestureDetector باش تهزك للتفاصيل
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => ProductDetailsPage(product: product)),
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 15, offset: const Offset(0, 5))],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                // 🚀 3. زدنا الـ Hero باش التصويرة تتأنما وقتلي تدخل للصفحة
+                child: Hero(
+                  tag: product['name'], 
+                  child: Image.network(
+                    product['image'],
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
+                ),
               ),
             ),
-          ),
-          // Les informations (Esem, Soum, Bouton +)
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(product['brand'], style: const TextStyle(color: Colors.grey, fontSize: 11)),
-                const SizedBox(height: 4),
-                Text(
-                  product['name'], 
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.textDark),
-                  maxLines: 1, 
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(product['price'], style: const TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold, fontSize: 14)),
-                    Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: const BoxDecoration(color: AppColors.primaryBlue, shape: BoxShape.circle),
-                      child: const Icon(Icons.add, color: Colors.white, size: 16),
-                    ),
-                  ],
-                ),
-              ],
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(product['brand'], style: const TextStyle(color: Colors.grey, fontSize: 11)),
+                  const SizedBox(height: 4),
+                  Text(
+                    product['name'], 
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.textDark),
+                    maxLines: 1, 
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(product['price'], style: const TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold, fontSize: 14)),
+                      // 🚀 4. حطينا الفلسة (+) في GestureDetector باش تزيد للسلة
+                      GestureDetector(
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("${product['name']} ajouté! 🛒"), backgroundColor: Colors.green, duration: const Duration(seconds: 2)),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: const BoxDecoration(color: Color(0xFFFF3366), shape: BoxShape.circle), // اللون الوردي باش تخطف العين
+                          child: const Icon(Icons.add, color: Colors.white, size: 16),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
