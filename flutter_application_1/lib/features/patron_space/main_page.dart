@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'home_page.dart';
-import 'calendar_page.dart';
-import 'salon_page.dart';
-import 'profile_page.dart';
+import '../../pages/home_page.dart';
+import '../../pages/calendar_page.dart';
+import 'salon_dashboard_screen.dart';
+import '../../pages/profile_page.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -18,7 +18,7 @@ class _MainPageState extends State<MainPage> {
   final List<Widget> _pages = [
     const HomePage(), // Index 0
     const CalendarPage(), // Index 1
-    const SalonPage(), // Index 2
+    const SalonDashboardScreen(), // Index 2
     const ProfilePage(), // Index 3
   ];
 

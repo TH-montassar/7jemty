@@ -43,9 +43,14 @@ export const registerUser = async (data: any) => {
 };
 
 export const loginUser = async (data: any) => {
-    // 1. Nlawjou 3al l'user b numro l'telifoun
+    // 1. Nlawjou 3al l'user b numro l'telifoun w nchoufou chnouwa 3andou salons (ken role PATRON)
     const user = await prisma.user.findUnique({
-        where: { phoneNumber: data.phoneNumber }
+        where: { phoneNumber: data.phoneNumber },
+        include: {
+            _count: {
+                select: { salonsOwned: true }
+            }
+        }
     });
 
     // 2. Ken ma l9inehoch wala l'mot de passe ghalet
@@ -64,6 +69,10 @@ export const loginUser = async (data: any) => {
         expiresIn: '30d',
     });
 
-    const { passwordHash: _, ...userWithoutPassword } = user;
-    return { user: userWithoutPassword, token };
+    const { passwordHash: _, _count, ...userWithoutPassword } = user;
+
+    // Nraj3ou hasSalon (boolean) bech l'Frontend ya3ref yوجهou l'CreateSalon wala l'Dashboard
+    const hasSalon = _count.salonsOwned > 0;
+
+    return { user: { ...userWithoutPassword, hasSalon }, token };
 };

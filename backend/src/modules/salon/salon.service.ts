@@ -21,3 +21,37 @@ export const createSalon = async (patronId: number, data: any) => {
 
     return newSalon;
 };
+
+export const updateSalon = async (patronId: number, data: any) => {
+    // Nthabtou ken l'Patron 3andou salon 9bal ma nbadlou fih
+    const existingSalon = await prisma.salon.findFirst({
+        where: { patronId: patronId },
+    });
+
+    if (!existingSalon) {
+        throw new Error("Ma 3andekch salon bech tbadlou");
+    }
+
+    // Nbadlou l'données eli jew fel request
+    const updatedSalon = await prisma.salon.update({
+        where: { id: existingSalon.id },
+        data: {
+            description: data.description !== undefined ? data.description : existingSalon.description,
+            contactPhone: data.contactPhone !== undefined ? data.contactPhone : existingSalon.contactPhone,
+        },
+    });
+
+    return updatedSalon;
+};
+
+export const getSalonByPatronId = async (patronId: number) => {
+    const salon = await prisma.salon.findFirst({
+        where: { patronId: patronId },
+    });
+
+    if (!salon) {
+        throw new Error("Salon introuvable");
+    }
+
+    return salon;
+};

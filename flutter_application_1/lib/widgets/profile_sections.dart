@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../pages/splash_screen.dart';
 import 'shared_widgets.dart';
 
 // 1. Gallery Section
@@ -178,11 +180,24 @@ class SettingsSection extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Divider(height: 1, color: Colors.grey[100]),
                 ),
-                const SettingsTile(
+                SettingsTile(
                   icon: Icons.logout,
                   title: "Se Déconnecter",
                   color: Colors.red,
                   isDestructive: true,
+                  onTap: () async {
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.remove('jwt_token');
+                    await prefs.remove('user_role');
+                    if (!context.mounted) return;
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SplashScreen(),
+                      ),
+                      (route) => false,
+                    );
+                  },
                 ),
               ],
             ),

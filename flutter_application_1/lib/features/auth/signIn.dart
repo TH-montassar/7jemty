@@ -2,6 +2,12 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import 'signUp.dart';
 import '../../services/auth_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../patron_space/main_page.dart';
+import '../client_space/home/presentation/pages/client_home_page.dart';
+import '../admin_space/presentation/pages/admin_home_page.dart';
+import '../patron_space/employee/pages/presentation/employee_home_page.dart';
+import '../patron_space/create_salon_screen.dart'; // 👈 Nzidou hedhi hena
 
 class SignInScreen extends StatefulWidget {
   final String? prefilledPhone;
@@ -130,16 +136,111 @@ class _SignInScreenState extends State<SignInScreen> {
 
                     // Bouton Connexion
                     ElevatedButton(
-                      onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          // هوني تحط الكود متاع Login
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Connexion en cours...'),
-                            ),
-                          );
-                        }
-                      },
+                      onPressed: _isLoading
+                          ? null
+                          : () async {
+                              if (_formKey.currentState!.validate()) {
+                                setState(() {
+                                  _isLoading = true;
+                                });
+
+                                try {
+                                  final response = await AuthService.loginUser(
+                                    phoneNumber: _phoneController.text.trim(),
+                                    password: _passwordController.text,
+                                  );
+
+                                  // Backend yarja3 { success: true, data: { user: {...}, token: "..." } }
+                                  final token = response['data']['token'];
+                                  final userRole =
+                                      response['data']['user']['role'];
+                                  final hasSalon = 
+                                      response['data']['user']['hasSalon'] ?? false;
+
+                                  // Nsobba fi SharedPreferences
+                                  final prefs =
+                                      await SharedPreferences.getInstance();
+                                  await prefs.setString('jwt_token', token);
+                                  await prefs.setString('user_role', userRole);
+
+                                  if (!mounted) return;
+
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Connexion réussie !'),
+                                      backgroundColor: Colors.green,
+                                    ),
+                                  );
+
+                                  // ken role PATRON yemchi ll CreateSalonScreen
+                                  if (userRole == 'PATRON') {
+                                    if (hasSalon == true) {
+                                      Navigator.pushAndRemoveUntil(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => const MainPage(),
+                                        ),
+                                        (route) => false,
+                                      );
+                                    } else {
+                                      Navigator.pushAndRemoveUntil(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => const CreateSalonScreen(),
+                                        ),
+                                        (route) => false,
+                                      );
+                                    }
+                                  } else if (userRole == 'ADMIN') {
+                                    Navigator.pushAndRemoveUntil(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const AdminHomePage(),
+                                      ),
+                                      (route) => false,
+                                    );
+                                  } else if (userRole == 'EMPLOYEE') {
+                                    Navigator.pushAndRemoveUntil(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const EmployeeHomePage(),
+                                      ),
+                                      (route) => false,
+                                    );
+                                  } else {
+                                    Navigator.pushAndRemoveUntil(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const ClientHomePage(),
+                                      ),
+                                      (route) => false,
+                                    );
+                                  }
+                                } catch (e) {
+                                  if (!mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        e.toString().replaceAll(
+                                          'Exception: ',
+                                          '',
+                                        ),
+                                      ),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                } finally {
+                                  if (mounted) {
+                                    setState(() {
+                                      _isLoading = false;
+                                    });
+                                  }
+                                }
+                              }
+                            },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primaryBlue,
                         foregroundColor: Colors.white,
@@ -149,14 +250,23 @@ class _SignInScreenState extends State<SignInScreen> {
                         ),
                         elevation: 2,
                       ),
-                      child: const Text(
-                        "Se connecter",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              height: 24,
+                              width: 24,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 3,
+                              ),
+                            )
+                          : const Text(
+                              "Se connecter",
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
                     ),
                     const SizedBox(height: 30),
 
