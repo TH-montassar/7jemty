@@ -41,3 +41,29 @@ export const registerUser = async (data: any) => {
     const { passwordHash: _, ...userWithoutPassword } = user;
     return { user: userWithoutPassword, token };
 };
+
+export const loginUser = async (data: any) => {
+    // 1. Nlawjou 3al l'user b numro l'telifoun
+    const user = await prisma.user.findUnique({
+        where: { phoneNumber: data.phoneNumber }
+    });
+
+    // 2. Ken ma l9inehoch wala l'mot de passe ghalet
+    if (!user) {
+        throw new Error('Numéro de téléphone ou mot de passe incorrect');
+    }
+
+    // 3. N9arnou l'mot de passe elli ktebou bel mot de passe l'mcheffer fel base
+    const isPasswordValid = await bcrypt.compare(data.password, user.passwordHash);
+    if (!isPasswordValid) {
+        throw new Error('Numéro de téléphone ou mot de passe incorrect');
+    }
+
+    // 4. Ken kol chay s7i7, nasn3ou l'Token jdid
+    const token = jwt.sign({ userId: user.id, role: user.role }, env.JWT_SECRET, {
+        expiresIn: '30d',
+    });
+
+    const { passwordHash: _, ...userWithoutPassword } = user;
+    return { user: userWithoutPassword, token };
+};
