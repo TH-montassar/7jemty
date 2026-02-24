@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hjamty/features/client_space/products/presentation/pages/products_page.dart';
 
 // 1. N3aytou lel pages lkol
 import '../../../home/presentation/pages/client_home_page.dart';
@@ -21,8 +22,8 @@ class _ClientMainLayoutState extends State<ClientMainLayout> {
 
   final List<Widget> _pages = [
     const ClientHomePage(), 
-    const Scaffold(body: Center(child: Text("⭐ Top Avis (En cours...)"))), 
     const AppointmentsPage(), 
+     const ProductsPage(),
     const ProfilePage(), 
   ];
 
