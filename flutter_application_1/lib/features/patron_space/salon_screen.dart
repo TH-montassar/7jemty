@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:toastification/toastification.dart';
 import '../../core/constants/app_colors.dart';
 import '../../services/salon_service.dart';
+import 'create_salon_screen.dart';
 
 class SalonSettingsScreen extends StatefulWidget {
   const SalonSettingsScreen({super.key});
@@ -55,6 +56,12 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
+
+      // Si le salon n'existe pas encore, on affiche la page de création sans l'alerte d'erreur
+      if (e.toString().contains('Salon introuvable')) {
+        return; // SetState(isLoading=false) wa7adha tfichy el UI mta3 l'empty state
+      }
+
       toastification.show(
         context: context,
         type: ToastificationType.error,
@@ -66,7 +73,7 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         description: Text(
-          e.toString(),
+          e.toString().replaceAll('Exception: ', ''),
           style: const TextStyle(color: Colors.white),
         ),
         primaryColor: AppColors.actionRed,
@@ -178,9 +185,42 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
               style: TextStyle(fontSize: 18, color: Colors.grey),
             ),
             const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _fetchSalonData,
-              child: const Text("Rafraîchir"),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const CreateSalonScreen(),
+                      ),
+                    ).then((_) => _fetchSalonData());
+                  },
+                  icon: const Icon(Icons.add, size: 18, color: Colors.white),
+                  label: const Text(
+                    "Créer votre salon",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryBlue,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                OutlinedButton.icon(
+                  onPressed: _fetchSalonData,
+                  icon: const Icon(Icons.refresh, size: 18),
+                  label: const Text("Rafraîchir"),
+                  style: OutlinedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

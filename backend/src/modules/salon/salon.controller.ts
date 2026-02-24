@@ -1,6 +1,6 @@
 import type { Response } from 'express';
 import type { AuthRequest } from '../../middlewares/auth.middleware.js';
-import { createSalonSchema, updateSalonSchema } from './salon.schema.js';
+import { createSalonSchema, updateSalonSchema, createEmployeeAccountSchema } from './salon.schema.js';
 import * as salonService from './salon.service.js';
 
 export const createSalonHandler = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -45,5 +45,19 @@ export const getMySalonHandler = async (req: AuthRequest, res: Response): Promis
         res.status(200).json({ success: true, data: salon });
     } catch (error: any) {
         res.status(404).json({ success: false, message: error.message });
+    }
+};
+
+export const createEmployeeAccountHandler = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const patronId = req.user!.userId;
+        const validatedData = createEmployeeAccountSchema.parse(req.body);
+
+        const newEmployee = await salonService.createEmployeeAccount(patronId, validatedData);
+
+        res.status(201).json({ success: true, data: newEmployee });
+    } catch (error: any) {
+        const message = error.errors ? error.errors[0].message : error.message;
+        res.status(400).json({ success: false, message });
     }
 };

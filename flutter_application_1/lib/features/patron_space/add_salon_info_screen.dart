@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:toastification/toastification.dart';
 import '../../core/constants/app_colors.dart';
 import '../../services/salon_service.dart';
-import 'main_page.dart'; // Bech Nhezzou lil MainPage
+import 'main_page.dart';
 
 class AddSalonInfoScreen extends StatefulWidget {
   const AddSalonInfoScreen({super.key});
@@ -58,11 +58,15 @@ class _AddSalonInfoScreenState extends State<AddSalonInfoScreen> {
       );
 
       // 2. Nhezzouh lel MainPage (elli fiha e-SalonPage s7i7a)
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const MainPage()),
-        (route) => false,
-      );
+      if (mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const MainPage(initialIndex: 2),
+          ),
+          (route) => false,
+        );
+      }
     } catch (error) {
       if (!mounted) return;
 
@@ -97,7 +101,7 @@ class _AddSalonInfoScreenState extends State<AddSalonInfoScreen> {
   void _skip() {
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (context) => const MainPage()),
+      MaterialPageRoute(builder: (context) => const MainPage(initialIndex: 2)),
       (route) => false,
     );
   }
@@ -114,6 +118,8 @@ class _AddSalonInfoScreenState extends State<AddSalonInfoScreen> {
     return Scaffold(
       backgroundColor: AppColors.bgColor,
       appBar: AppBar(
+        automaticallyImplyLeading:
+            false, // Previent le retour vers CreateSalonScreen
         title: const Text(
           "Détails Supplémentaires",
           style: TextStyle(

@@ -5,14 +5,21 @@ import 'salon_dashboard_screen.dart';
 import '../../pages/profile_page.dart';
 
 class MainPage extends StatefulWidget {
-  const MainPage({super.key});
+  final int initialIndex;
+  const MainPage({super.key, this.initialIndex = 0});
 
   @override
   State<MainPage> createState() => _MainPageState();
 }
 
 class _MainPageState extends State<MainPage> {
-  int _selectedIndex = 0;
+  late int _selectedIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.initialIndex;
+  }
 
   // هذي القايمة متاع الصفحات اللي بش يظهرو في الوسط
   final List<Widget> _pages = [
@@ -36,7 +43,7 @@ class _MainPageState extends State<MainPage> {
         title: Row(
           children: [
             Image.asset(
-              'assets/logo.png',
+              'assets/images/logo.png',
               height: 24,
               errorBuilder: (context, error, stackTrace) =>
                   const Icon(Icons.cut, color: Colors.blue),
@@ -55,7 +62,7 @@ class _MainPageState extends State<MainPage> {
                   backgroundColor: Colors.grey[300],
                   child: ClipOval(
                     child: Image.asset(
-                      'assets/profile_pic.png',
+                      'assets/images/img1.jpg',
                       fit: BoxFit.cover,
                       width: 30,
                       height: 30,
