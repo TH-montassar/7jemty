@@ -1,18 +1,40 @@
-
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import 'signUp.dart';
+import '../../services/auth_service.dart';
 
 class SignInScreen extends StatefulWidget {
-  const SignInScreen({super.key});
+  final String? prefilledPhone;
+  final String? prefilledPassword;
+  const SignInScreen({super.key, this.prefilledPhone, this.prefilledPassword});
 
   @override
   State<SignInScreen> createState() => _SignInScreenState();
 }
 
 class _SignInScreenState extends State<SignInScreen> {
+  late final TextEditingController _phoneController;
+  late final TextEditingController _passwordController;
+
   final _formKey = GlobalKey<FormState>();
   bool _obscurePassword = true;
+  bool _isLoading = false;
+  @override
+  void initState() {
+    super.initState();
+    // Houni nsobou l valeurs eli jewna mel register (ken famma)
+    _phoneController = TextEditingController(text: widget.prefilledPhone ?? '');
+    _passwordController = TextEditingController(
+      text: widget.prefilledPassword ?? '',
+    );
+  }
+
+  @override
+  void dispose() {
+    _phoneController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,6 +89,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
                     // Numéro de téléphone
                     _buildTextField(
+                      controller: _phoneController,
                       hintText: "Numéro de téléphone",
                       icon: Icons.phone_android_outlined,
                       keyboardType: TextInputType.phone,
@@ -76,6 +99,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     // Mot de passe
                     _buildTextField(
                       hintText: "Mot de passe",
+                      controller: _passwordController,
                       icon: Icons.lock_outline,
                       keyboardType: TextInputType.visiblePassword,
                       isPassword: true,
@@ -92,9 +116,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
-                        onPressed: () {
-                         
-                        },
+                        onPressed: () {},
                         child: const Text(
                           "Mot de passe oublié ?",
                           style: TextStyle(
@@ -180,6 +202,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
   // نفس الـ Widget متاع الـ TextFields في l'SignUp
   Widget _buildTextField({
+    required TextEditingController controller,
     required String hintText,
     required IconData icon,
     required TextInputType keyboardType,
@@ -200,6 +223,7 @@ class _SignInScreenState extends State<SignInScreen> {
         ],
       ),
       child: TextFormField(
+        controller: controller,
         obscureText: obscureText,
         keyboardType: keyboardType,
         style: const TextStyle(fontWeight: FontWeight.w500),

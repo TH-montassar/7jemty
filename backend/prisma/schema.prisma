@@ -13,7 +13,7 @@ datasource db {
 enum Role {
   CLIENT
   PATRON
-  SANA3
+  EMPLOYEE
   ADMIN
 }
 
