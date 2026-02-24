@@ -1,7 +1,7 @@
+
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import 'signUp.dart';
-import '../../services/auth_service.dart';
 
 class SignInScreen extends StatefulWidget {
   final String? prefilledPhone;
@@ -18,7 +18,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
   final _formKey = GlobalKey<FormState>();
   bool _obscurePassword = true;
-  bool _isLoading = false;
+  final bool _isLoading = false;
   @override
   void initState() {
     super.initState();

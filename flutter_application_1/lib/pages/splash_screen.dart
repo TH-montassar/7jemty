@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hjamty/core/constants/app_colors.dart';
-import 'package:hjamty/features/client_space/home/presentation/pages/client_home_page.dart';
+import 'package:hjamty/features/client_space/main_layout/presentation/pages/client_main_layout.dart';
 import 'package:hjamty/pages/main_page.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -62,7 +62,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
     if (!isUserLoggedIn) {
       // mouch connecte -> Home Client
-      nextPage = const ClientHomePage();
+      nextPage = const ClientMainLayout();
     // ignore: dead_code
     } else {
       if (userRole == "barber") {
@@ -70,7 +70,7 @@ class _SplashScreenState extends State<SplashScreen> {
         nextPage = const MainPage();
       } else {
         // connecte w client -> Home Client
-        nextPage = const ClientHomePage();
+        nextPage = const ClientMainLayout();
       }
     }
 
