@@ -76,6 +76,7 @@ class SettingsTile extends StatelessWidget {
   final String title;
   final Color color;
   final bool isDestructive;
+  final VoidCallback? onTap;
 
   const SettingsTile({
     super.key,
@@ -83,6 +84,7 @@ class SettingsTile extends StatelessWidget {
     required this.title,
     required this.color,
     this.isDestructive = false,
+    this.onTap,
   });
 
   @override
@@ -110,7 +112,7 @@ class SettingsTile extends StatelessWidget {
         size: 16,
         color: Colors.grey[400],
       ),
-      onTap: () {},
+      onTap: onTap ?? () {},
     );
   }
 }

@@ -1,0 +1,46 @@
+import type { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
+import { env } from '../config/env.js';
+
+// Nzidou l'user fel Request bech l'TypeScript ma yetghachech
+export interface AuthRequest extends Request {
+    user?: { userId: number; role: string };
+}
+
+export const protect = (req: AuthRequest, res: Response, next: NextFunction): void => {
+    try {
+        // 1. Nchoufou ken l'header fih Authorization
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            res.status(401).json({ success: false, message: 'Non autorisé, token manquant' });
+            return;
+        }
+
+        // 2. Nbadlou l'token mel string (Bearer xxxxx)
+        const token = authHeader.split(' ')[1];
+
+        if (!token) {
+            res.status(401).json({ success: false, message: 'Non autorisé, token mal formaté' });
+            return;
+        }
+
+        // 3. Nverifiw e-token
+        const decoded = jwt.verify(token, env.JWT_SECRET) as unknown as { userId: number; role: string };
+
+        // 4. N7ottou e-data mta3 l'user fel Request bech nesta3mlouha fel Controllers
+        req.user = decoded;
+
+        next(); // T3adda lel etape elli ba3dha
+    } catch (error) {
+        res.status(401).json({ success: false, message: 'Token invalide ou expiré' });
+    }
+};
+
+// Middleware theni bech nthabtou ken l'user Patron
+export const isPatron = (req: AuthRequest, res: Response, next: NextFunction): void => {
+    if (req.user && req.user.role === 'PATRON') {
+        next();
+    } else {
+        res.status(403).json({ success: false, message: 'Accès refusé, réservé aux Patrons' });
+    }
+};

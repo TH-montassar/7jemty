@@ -17,11 +17,7 @@ enum Role {
   ADMIN
 }
 
-enum Tier {
-  SOLO
-  TEAM
-  PRO
-}
+// Removed Tier enum as requested
 
 enum ApprovalStatus {
   PENDING
@@ -97,13 +93,13 @@ model Salon {
   googleMapsUrl  String?
   websiteUrl     String?
   coverImageUrl  String?
-  tier           Tier           @default(SOLO)
+  speciality     String? // NEW: Salon's main speciality
   approvalStatus ApprovalStatus @default(PENDING)
   isForceClosed  Boolean        @default(false)
   createdAt      DateTime       @default(now())
 
   // Relations
-  specialities SalonSpeciality[]
+  employees    Employee[] // NEW: Relation to Employees
   workingHours WorkingHours[]
   socialLinks  SalonSocialLink[]
   portfolio    PortfolioImage[]
@@ -115,11 +111,16 @@ model Salon {
   orders       Order[]
 }
 
-model SalonSpeciality {
-  id             Int    @id @default(autoincrement())
-  salonId        Int
-  salon          Salon  @relation(fields: [salonId], references: [id], onDelete: Cascade)
-  specialityName String
+model Employee {
+  id          Int      @id @default(autoincrement())
+  salonId     Int
+  salon       Salon    @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  name        String
+  role        String? // Ex: Maître Barbier
+  bio         String?
+  description String? // Added as requested
+  imageUrl    String?
+  createdAt   DateTime @default(now())
 }
 
 model WorkingHours {

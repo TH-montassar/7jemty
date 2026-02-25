@@ -53,21 +53,24 @@ class _SplashScreenState extends State<SplashScreen> {
     await Future.delayed(const Duration(milliseconds: 700));
     if (!mounted) return;
 
-    bool isUserLoggedIn = false;
-    // "client" و إلا "barber"
-    String userRole = "client";
-    // =================================================================
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('jwt_token');
+    final userRole = prefs.getString('user_role');
 
     Widget nextPage;
 
-    if (!isUserLoggedIn) {
+    if (token == null || userRole == null) {
       // mouch connecte -> Home Client
       nextPage = const ClientMainLayout();
     // ignore: dead_code
     } else {
-      if (userRole == "barber") {
+      if (userRole == 'PATRON') {
         // connecte w 7ajem -> Espace 7ajem
         nextPage = const MainPage();
+      } else if (userRole == 'ADMIN') {
+        nextPage = const AdminHomePage();
+      } else if (userRole == 'EMPLOYEE') {
+        nextPage = const EmployeeHomePage();
       } else {
         // connecte w client -> Home Client
         nextPage = const ClientMainLayout();
