@@ -47,7 +47,7 @@ class _CreateSalonScreenState extends State<CreateSalonScreen> {
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         description: const Text(
-          'Salon créé avec succès',
+          'Salon mte3ek thal mriguel',
           style: TextStyle(color: Colors.white),
         ),
         primaryColor: AppColors.successGreen,
@@ -72,7 +72,7 @@ class _CreateSalonScreenState extends State<CreateSalonScreen> {
         alignment: Alignment.topCenter,
         autoCloseDuration: const Duration(seconds: 4),
         title: const Text(
-          'Erreur',
+          'Mochkla',
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         description: Text(
@@ -107,7 +107,7 @@ class _CreateSalonScreenState extends State<CreateSalonScreen> {
       backgroundColor: AppColors.bgColor,
       appBar: AppBar(
         title: const Text(
-          "Mon Salon",
+          "Salon mte3i",
           style: TextStyle(
             color: AppColors.textDark,
             fontWeight: FontWeight.bold,
@@ -132,7 +132,7 @@ class _CreateSalonScreenState extends State<CreateSalonScreen> {
                 ),
                 const SizedBox(height: 20),
                 const Text(
-                  "Configurez votre Salon",
+                  "Riguel Salon mte3ek",
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 24,
@@ -142,7 +142,7 @@ class _CreateSalonScreenState extends State<CreateSalonScreen> {
                 ),
                 const SizedBox(height: 10),
                 const Text(
-                  "Donnez un nom et une adresse à votre espace.",
+                  "Aati esm w adresse l salon mte3ek.",
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 14, color: Colors.grey),
                 ),
@@ -151,7 +151,7 @@ class _CreateSalonScreenState extends State<CreateSalonScreen> {
                 // Esem e-Salon
                 _buildTextField(
                   controller: _nameController,
-                  hintText: "Nom du Salon (ex: Barbershop VIP)",
+                  hintText: "Esm Salon (ex: Barbershop VIP)",
                   icon: Icons.title,
                 ),
                 const SizedBox(height: 20),
@@ -159,7 +159,7 @@ class _CreateSalonScreenState extends State<CreateSalonScreen> {
                 // Adresse mta3 e-Salon
                 _buildTextField(
                   controller: _addressController,
-                  hintText: "Adresse complète",
+                  hintText: "L'adresse lkemla",
                   icon: Icons.location_on_outlined,
                 ),
                 const SizedBox(height: 40),
@@ -190,7 +190,7 @@ class _CreateSalonScreenState extends State<CreateSalonScreen> {
                           ),
                         )
                       : const Text(
-                          "Créer mon salon",
+                          "Aamel salon",
                           style: TextStyle(
                             fontSize: 18,
                             color: Colors.white,
@@ -239,7 +239,7 @@ class _CreateSalonScreenState extends State<CreateSalonScreen> {
           contentPadding: const EdgeInsets.symmetric(vertical: 20),
         ),
         validator: (value) => value == null || value.trim().isEmpty
-            ? 'Ce champ est requis'
+            ? 'Hedha lezem taamrou'
             : null,
       ),
     );

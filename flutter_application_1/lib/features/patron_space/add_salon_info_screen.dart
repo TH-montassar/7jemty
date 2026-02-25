@@ -44,11 +44,11 @@ class _AddSalonInfoScreenState extends State<AddSalonInfoScreen> {
         alignment: Alignment.topCenter,
         autoCloseDuration: const Duration(seconds: 4),
         title: const Text(
-          'Succès 🎉',
+          'Jawwek mriguel 🎉',
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         description: const Text(
-          'Informations ajoutées avec succès',
+          'Zidna les infos mriguel',
           style: TextStyle(color: Colors.white),
         ),
         primaryColor: AppColors.successGreen,
@@ -77,7 +77,7 @@ class _AddSalonInfoScreenState extends State<AddSalonInfoScreen> {
         alignment: Alignment.topCenter,
         autoCloseDuration: const Duration(seconds: 4),
         title: const Text(
-          'Erreur',
+          'Mochkla',
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         description: Text(
@@ -121,7 +121,7 @@ class _AddSalonInfoScreenState extends State<AddSalonInfoScreen> {
         automaticallyImplyLeading:
             false, // Previent le retour vers CreateSalonScreen
         title: const Text(
-          "Détails Supplémentaires",
+          "Tafasil okhra",
           style: TextStyle(
             color: AppColors.textDark,
             fontWeight: FontWeight.bold,
@@ -134,7 +134,7 @@ class _AddSalonInfoScreenState extends State<AddSalonInfoScreen> {
           TextButton(
             onPressed: _skip,
             child: const Text(
-              "Plus tard",
+              "Baadin",
               style: TextStyle(
                 color: AppColors.primaryBlue,
                 fontWeight: FontWeight.bold,
@@ -159,7 +159,7 @@ class _AddSalonInfoScreenState extends State<AddSalonInfoScreen> {
                 ),
                 const SizedBox(height: 20),
                 const Text(
-                  "Encore quelques détails",
+                  "Mazzal chwaya tafasil",
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 24,
@@ -169,7 +169,7 @@ class _AddSalonInfoScreenState extends State<AddSalonInfoScreen> {
                 ),
                 const SizedBox(height: 10),
                 const Text(
-                  "Ajoutez une description et un contact pour attirer plus de clients (Optionnel).",
+                  "Zid description w nemrou bech tzid tjib les clients (Optionnel).",
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 14, color: Colors.grey),
                 ),
@@ -178,7 +178,7 @@ class _AddSalonInfoScreenState extends State<AddSalonInfoScreen> {
                 // Description
                 _buildTextField(
                   controller: _descriptionController,
-                  hintText: "Description du salon",
+                  hintText: "Description mtaa salon",
                   icon: Icons.description_outlined,
                   maxLines: 3,
                 ),
@@ -187,7 +187,7 @@ class _AddSalonInfoScreenState extends State<AddSalonInfoScreen> {
                 // Contact Phone
                 _buildTextField(
                   controller: _contactPhoneController,
-                  hintText: "Numéro de contact du salon",
+                  hintText: "Numrou tliphoun mtaa salon",
                   icon: Icons.phone_android_outlined,
                   keyboardType: TextInputType.phone,
                 ),
@@ -212,7 +212,7 @@ class _AddSalonInfoScreenState extends State<AddSalonInfoScreen> {
                           ),
                         )
                       : const Text(
-                          "Enregistrer les infos",
+                          "Sajel les infos",
                           style: TextStyle(
                             fontSize: 18,
                             color: Colors.white,
@@ -232,7 +232,7 @@ class _AddSalonInfoScreenState extends State<AddSalonInfoScreen> {
                     ),
                   ),
                   child: const Text(
-                    "Passer cette étape",
+                    "Fout l'etape hethi",
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ),

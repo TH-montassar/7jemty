@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:hjamty/pages/splash_screen.dart';
 
+import 'package:hjamty/core/localization/translation_service.dart';
+
+// Service de traduction global
+final translationService = TranslationService();
+
 void main() {
-  runApp(const MyApp());
+  runApp(
+    TranslationProvider(notifier: translationService, child: const MyApp()),
+  );
 }
 
 class MyApp extends StatelessWidget {

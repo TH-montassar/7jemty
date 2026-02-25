@@ -4,6 +4,7 @@ import '../widgets/profile_header.dart';
 import '../widgets/loyalty_cards_section.dart';
 import '../widgets/profile_menus.dart';
 
+import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -70,9 +71,9 @@ class _ProfilePageState extends State<ProfilePage> {
         elevation: 0,
         centerTitle: true,
         automaticallyImplyLeading: false,
-        title: const Text(
-          "Mon Profil",
-          style: TextStyle(
+        title: Text(
+          tr(context, 'my_profile'),
+          style: const TextStyle(
             color: AppColors.textDark,
             fontWeight: FontWeight.bold,
           ),
@@ -82,53 +83,53 @@ class _ProfilePageState extends State<ProfilePage> {
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
+          children: [
             // 1. Header: Photo, Nom, Email
-            ProfileHeader(),
-            SizedBox(height: 30),
+            const ProfileHeader(),
+            const SizedBox(height: 30),
 
             // 2. Cartes Salons (Tampons)
             Text(
-              "Cartes de Fidélité 🎁",
-              style: TextStyle(
+              tr(context, 'loyalty_cards'),
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: AppColors.textDark,
               ),
             ),
             SizedBox(height: 15),
-            LoyaltyCardsSection(),
-            SizedBox(height: 30),
+            const LoyaltyCardsSection(),
+            const SizedBox(height: 30),
 
             // 3. Mes Activités (Commandes & Favoris)
             Text(
-              "Mes Activités",
-              style: TextStyle(
+              tr(context, 'my_activities'),
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: AppColors.textDark,
               ),
             ),
             SizedBox(height: 15),
-            ActivityMenu(),
-            SizedBox(height: 30),
+            const ActivityMenu(),
+            const SizedBox(height: 30),
 
             // 4. Paramètres
             Text(
-              "Paramètres",
-              style: TextStyle(
+              tr(context, 'settings'),
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: AppColors.textDark,
               ),
             ),
             SizedBox(height: 15),
-            SettingsMenu(),
-            SizedBox(height: 30),
+            const SettingsMenu(),
+            const SizedBox(height: 30),
 
             // 5. Déconnexion
-            LogoutButton(),
-            SizedBox(height: 50),
+            const LogoutButton(),
+            const SizedBox(height: 50),
           ],
         ),
       ),

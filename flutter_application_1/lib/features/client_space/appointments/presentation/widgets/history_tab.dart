@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/translation_service.dart';
 
 class HistoryTab extends StatelessWidget {
   const HistoryTab({super.key});
@@ -10,21 +11,21 @@ class HistoryTab extends StatelessWidget {
     final List<Map<String, dynamic>> appointments = [
       {
         "date": "10 Janvier 2024",
-        "status": "Terminé",
+        "status": tr(context, 'status_completed'),
         "salon": "The Classic Barber",
         "service": "Dégradé Américain - 20 DT",
       },
       {
         "date": "5 Février 2024",
-        "status": "Annulé",
+        "status": tr(context, 'status_cancelled'),
         "salon": "Salon El Baze",
-        "service": "Coupe Classique",
+        "service": "Hjema Classique",
       },
       {
         "date": "20 Décembre 2023",
-        "status": "Terminé",
+        "status": tr(context, 'status_completed'),
         "salon": "The Classic Barber",
-        "service": "Coupe + Barbe - 35 DT",
+        "service": "Hjema + Lihya - 35 DT",
       },
     ];
 
@@ -33,7 +34,7 @@ class HistoryTab extends StatelessWidget {
       itemCount: appointments.length,
       itemBuilder: (context, index) {
         final apt = appointments[index];
-        final isCancelled = apt["status"] == "Annulé";
+        final isCancelled = apt["status"] == tr(context, 'status_cancelled');
 
         return Container(
           margin: const EdgeInsets.only(bottom: 15),
@@ -120,7 +121,7 @@ class HistoryTab extends StatelessWidget {
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        child: const Text("⭐ Laisser un avis"),
+                        child: const Text("⭐ Khali avis"),
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -137,7 +138,7 @@ class HistoryTab extends StatelessWidget {
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        child: const Text("↻ Réserver"),
+                        child: const Text("↻ Aawed Ahjez"),
                       ),
                     ),
                   ],

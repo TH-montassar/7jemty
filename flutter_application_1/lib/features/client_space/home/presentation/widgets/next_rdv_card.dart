@@ -13,7 +13,9 @@ class NextRdvCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04), // Shadow خفيف برشا باش يطلع أنيق
+            color: Colors.black.withValues(
+              alpha: 0.04,
+            ), // Shadow خفيف برشا باش يطلع أنيق
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -27,7 +29,7 @@ class NextRdvCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                "Prochain Rendez-vous",
+                "Rendez-vous jey",
                 style: TextStyle(
                   color: AppColors.primaryBlue,
                   fontWeight: FontWeight.bold,
@@ -39,11 +41,11 @@ class NextRdvCard extends StatelessWidget {
                 onTap: () {
                   // TODO: حل الـ Google Maps ولا صفحة الخريطة
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Ouverture de la carte 🗺️")),
+                    const SnackBar(content: Text("Kaaed yhel fel map 🗺️")),
                   );
                 },
                 child: const Text(
-                  "Voir sur la Map 🗺️",
+                  "Chouf fil map 🗺️",
                   style: TextStyle(
                     color: AppColors.primaryBlue,
                     fontWeight: FontWeight.bold,
@@ -58,10 +60,14 @@ class NextRdvCard extends StatelessWidget {
           // 2. التاريخ والوقت (Date & Heure)
           Row(
             children: const [
-              Icon(Icons.calendar_today, color: AppColors.textDark, size: 20), // بدلت اللون باش يطابق التصويرة
+              Icon(
+                Icons.calendar_today,
+                color: AppColors.textDark,
+                size: 20,
+              ), // بدلت اللون باش يطابق التصويرة
               SizedBox(width: 12),
               Text(
-                "Aujourd'hui, 15:00",
+                "Lyoum, 15:00",
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
@@ -82,7 +88,8 @@ class NextRdvCard extends StatelessWidget {
                   "Barber King - Coupe Cheveux + Barbe",
                   style: TextStyle(color: Colors.grey, fontSize: 13),
                   maxLines: 1,
-                  overflow: TextOverflow.ellipsis, // باش الكتيبة ما تخرجش على السطر
+                  overflow:
+                      TextOverflow.ellipsis, // باش الكتيبة ما تخرجش على السطر
                 ),
               ),
             ],
@@ -95,17 +102,24 @@ class NextRdvCard extends StatelessWidget {
             children: [
               Row(
                 children: const [
-                  Icon(Icons.access_time, color: AppColors.primaryBlue, size: 18),
+                  Icon(
+                    Icons.access_time,
+                    color: AppColors.primaryBlue,
+                    size: 18,
+                  ),
                   SizedBox(width: 8),
                   Text(
-                    "Dans 2h 30min",
+                    "Mazel 2h 30min",
                     style: TextStyle(color: Colors.grey, fontSize: 13),
                   ),
                 ],
               ),
               // Badge الأخضر متاع Confirmé
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.green.withValues(alpha: 0.1), // أخضر شفاف
                   borderRadius: BorderRadius.circular(8),
@@ -115,7 +129,7 @@ class NextRdvCard extends StatelessWidget {
                     Icon(Icons.check, color: Colors.green, size: 14),
                     SizedBox(width: 4),
                     Text(
-                      "Confirmé",
+                      "M'akd",
                       style: TextStyle(
                         color: Colors.green,
                         fontWeight: FontWeight.bold,

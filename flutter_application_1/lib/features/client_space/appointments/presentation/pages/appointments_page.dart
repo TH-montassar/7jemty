@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../widgets/upcoming_tab.dart';
 import '../widgets/history_tab.dart';
+import '../../../../../core/localization/translation_service.dart';
 
 class AppointmentsPage extends StatelessWidget {
   const AppointmentsPage({super.key});
@@ -18,22 +19,22 @@ class AppointmentsPage extends StatelessWidget {
           centerTitle: true,
           // Na7ina l'flèche mta3 retour 5ater hethi page principale fel BottomNav
           automaticallyImplyLeading: false,
-          title: const Text(
-            "Mes Rendez-vous",
-            style: TextStyle(
+          title: Text(
+            tr(context, 'my_appointments'),
+            style: const TextStyle(
               color: AppColors.textDark,
               fontWeight: FontWeight.bold,
             ),
           ),
-          bottom: const TabBar(
+          bottom: TabBar(
             labelColor: AppColors.primaryBlue,
             unselectedLabelColor: Colors.grey,
             indicatorColor: AppColors.primaryBlue,
             indicatorWeight: 3,
-            labelStyle: TextStyle(fontWeight: FontWeight.bold),
+            labelStyle: const TextStyle(fontWeight: FontWeight.bold),
             tabs: [
-              Tab(text: "À venir"),
-              Tab(text: "Historique"),
+              Tab(text: tr(context, 'upcoming')),
+              Tab(text: tr(context, 'history')),
             ],
           ),
         ),

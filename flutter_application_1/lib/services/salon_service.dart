@@ -127,4 +127,54 @@ class SalonService {
       throw Exception(e.toString().replaceAll('Exception: ', ''));
     }
   }
+
+  // 📝 Fonction bech tzid employé we ta3melou compte User
+  static Future<Map<String, dynamic>> createEmployeeAccount({
+    required String name,
+    required String phoneNumber,
+    required String password,
+    String? role,
+    String? bio,
+    String? description,
+    String? imageUrl,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token');
+
+      if (token == null) {
+        throw Exception('Rak mouch connecté! (Token manquant)');
+      }
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/employee/create-account'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'name': name,
+          'phoneNumber': phoneNumber,
+          'password': password,
+          if (role != null && role.isNotEmpty) 'role': role,
+          if (bio != null && bio.isNotEmpty) 'bio': bio,
+          if (description != null && description.isNotEmpty)
+            'description': description,
+          if (imageUrl != null && imageUrl.isNotEmpty) 'imageUrl': imageUrl,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return data;
+      } else {
+        throw Exception(
+          data['message'] ?? 'Erreur lors de la création du compte employé',
+        );
+      }
+    } catch (e) {
+      throw Exception(e.toString().replaceAll('Exception: ', ''));
+    }
+  }
 }
