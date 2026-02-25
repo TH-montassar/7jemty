@@ -1,7 +1,13 @@
-
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import 'signUp.dart';
+import '../../services/auth_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../patron_space/main_page.dart';
+import '../client_space/home/presentation/pages/client_home_page.dart';
+import '../admin_space/presentation/pages/admin_home_page.dart';
+import '../patron_space/employee/pages/presentation/employee_home_page.dart';
+import '../patron_space/create_salon_screen.dart'; // 👈 Nzidou hedhi hena
 
 class SignInScreen extends StatefulWidget {
   final String? prefilledPhone;
@@ -18,7 +24,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
   final _formKey = GlobalKey<FormState>();
   bool _obscurePassword = true;
-  final bool _isLoading = false;
+  bool _isLoading = false;
   @override
   void initState() {
     super.initState();

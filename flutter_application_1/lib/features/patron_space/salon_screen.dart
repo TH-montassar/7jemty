@@ -753,7 +753,7 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
                 const SizedBox(height: 16),
               ],
             );
-          }).toList(),
+          }),
         ],
       ),
     );

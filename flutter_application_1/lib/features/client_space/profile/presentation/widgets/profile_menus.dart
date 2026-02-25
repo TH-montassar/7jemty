@@ -68,7 +68,7 @@ class _SettingsMenuState extends State<SettingsMenu> {
             title: const Text("Notifications", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
             trailing: Switch(
               value: _isNotifOn,
-              activeColor: AppColors.primaryBlue,
+              activeThumbColor: AppColors.primaryBlue,
               onChanged: (val) => setState(() => _isNotifOn = val),
             ),
           ),

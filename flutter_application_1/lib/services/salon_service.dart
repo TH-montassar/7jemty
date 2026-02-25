@@ -77,8 +77,8 @@ class SalonService {
           'Authorization': 'Bearer $token',
         },
         body: jsonEncode({
-          if (description != null) 'description': description,
-          if (contactPhone != null) 'contactPhone': contactPhone,
+          'description': ?description,
+          'contactPhone': ?contactPhone,
         }),
       );
 
