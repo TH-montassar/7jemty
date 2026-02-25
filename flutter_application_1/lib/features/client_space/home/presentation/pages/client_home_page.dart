@@ -6,12 +6,48 @@ import '../widgets/next_rdv_card.dart';
 import '../widgets/quick_categories.dart';
 import '../widgets/near_you_list.dart';
 
-// 🚀 Radineha StatelessWidget 5ater ma3adech fiha BottomNav w state
-class ClientHomePage extends StatelessWidget {
+import 'package:shared_preferences/shared_preferences.dart';
+
+class ClientHomePage extends StatefulWidget {
   const ClientHomePage({super.key});
 
   @override
+  State<ClientHomePage> createState() => _ClientHomePageState();
+}
+
+class _ClientHomePageState extends State<ClientHomePage> {
+  bool _isLoggedIn = false;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkLoginStatus();
+  }
+
+  Future<void> _checkLoginStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('jwt_token');
+
+    if (mounted) {
+      setState(() {
+        _isLoggedIn = token != null && token.isNotEmpty;
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: AppColors.bgColor,
+        body: Center(
+          child: CircularProgressIndicator(color: AppColors.primaryBlue),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppColors.bgColor,
       body: SingleChildScrollView(
@@ -34,9 +70,11 @@ class ClientHomePage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 20),
-                      const NextRdvCard(),
+                      if (_isLoggedIn) ...[
+                        const NextRdvCard(),
+                        const SizedBox(height: 25),
+                      ],
 
-                      const SizedBox(height: 25),
                       const Text(
                         "Catégories Rapides",
                         style: TextStyle(

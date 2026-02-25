@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hjamty/features/client_space/products/presentation/pages/products_page.dart';
 
 // 1. N3aytou lel pages lkol
@@ -21,43 +22,45 @@ class _ClientMainLayoutState extends State<ClientMainLayout> {
   int _selectedIndex = 0;
 
   final List<Widget> _pages = [
-    const ClientHomePage(), 
-    const AppointmentsPage(), 
-     const ProductsPage(),
-    const ProfilePage(), 
+    const ClientHomePage(),
+    const AppointmentsPage(),
+    const ProductsPage(),
+    const ProfilePage(),
   ];
 
-  void _onItemTapped(int index) {
+  void _onItemTapped(int index) async {
     // 🚀 Houni ntestiwa l'Auth 9bal ma nbadlou l'onglet
-    if (index == 3) { // Index 3 houwa l'onglet mta3 Profil
-      
-      // === هوني تبدل اللوجيك متاعك بعدين بالـ Firebase أو SharedPrefs ===
-      bool isUserLoggedIn = true; // 👈 tawa hatineha false bech njarrbou l'Login
-      // =================================================================
+    if (index == 3) {
+      // Index 3 houwa l'onglet mta3 Profil
+
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token');
+      bool isUserLoggedIn = token != null && token.isNotEmpty;
 
       if (!isUserLoggedIn) {
         // Mouch connecté -> Thezzou lel SignIn
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const SignInScreen()),
-        );
+        if (mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const SignInScreen()),
+          );
+        }
         return; // 👈 Na3mlou return bech l'application ma tbadalech l'onglet louta
       }
     }
 
     // Ken mouch index 3, wala ken l'utilisateur connecté, nbaddlou l'onglet 3adi
-    setState(() {
-      _selectedIndex = index;
-    });
+    if (mounted) {
+      setState(() {
+        _selectedIndex = index;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _pages,
-      ),
+      body: IndexedStack(index: _selectedIndex, children: _pages),
       bottomNavigationBar: ClientBottomNav(
         selectedIndex: _selectedIndex,
         onTap: _onItemTapped, // 👈 N3aytou lel fonction elli fiha l'Auth check
