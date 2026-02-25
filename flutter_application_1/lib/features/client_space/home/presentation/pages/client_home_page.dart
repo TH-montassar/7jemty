@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:hjamty/features/client_space/home/presentation/widgets/top_rated_list.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../widgets/client_header_section.dart';
 import '../widgets/next_rdv_card.dart';
 import '../widgets/quick_categories.dart';
 import '../widgets/near_you_list.dart';
-import '../widgets/top_rated_list.dart';
 
 // 🚀 Radineha StatelessWidget 5ater ma3adech fiha BottomNav w state
 class ClientHomePage extends StatelessWidget {

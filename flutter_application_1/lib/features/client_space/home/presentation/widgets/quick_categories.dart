@@ -1,46 +1,68 @@
 import 'package:flutter/material.dart';
-import '../../../../../../core/constants/app_colors.dart';
+import '../../../../../core/constants/app_colors.dart';
 
-class QuickCategories extends StatelessWidget {
+class QuickCategories extends StatefulWidget {
   const QuickCategories({super.key});
 
   @override
+  State<QuickCategories> createState() => _QuickCategoriesState();
+}
+
+class _QuickCategoriesState extends State<QuickCategories> {
+  int _selectedIndex = 0;
+
+  // 💡 هذي ليستة الخدمات الصحيحة
+  final List<Map<String, dynamic>> _categories = [
+    {'title': 'Cheveux', 'icon': Icons.content_cut},
+    {'title': 'Barbe', 'icon': Icons.face},
+    {'title': 'Soin Visage', 'icon': Icons.spa_outlined},
+    {'title': 'Enfants', 'icon': Icons.child_care},
+  ];
+
+  @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          // زر A9reb lik (أزرق)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            decoration: BoxDecoration(color: AppColors.primaryBlue, borderRadius: BorderRadius.circular(25)),
-            child: Row(children: const [
-              Text("A9reb lik ", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-              Icon(Icons.location_on, color: Colors.white, size: 18),
-            ]),
-          ),
-          const SizedBox(width: 15),
-          // زر Top Avis (أبيض)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(25), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)]),
-            child: Row(children: const [
-              Text("Top Avis ", style: TextStyle(color: AppColors.textDark, fontWeight: FontWeight.bold, fontSize: 16)),
-              Icon(Icons.star, color: Colors.grey, size: 18),
-              Icon(Icons.star, color: Colors.grey, size: 18),
-            ]),
-          ),
-          const SizedBox(width: 15),
-          // زر Produits (دائري)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(25), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)]),
-            child: Column(children: const [
-              Icon(Icons.shopping_cart_outlined, color: Colors.grey, size: 20),
-              Text("Produits", style: TextStyle(color: Colors.grey, fontSize: 10)),
-            ]),
-          ),
-        ],
+    return SizedBox(
+      height: 45,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: _categories.length,
+        itemBuilder: (context, index) {
+          final isSelected = _selectedIndex == index;
+          return GestureDetector(
+            onTap: () {
+              setState(() => _selectedIndex = index);
+              // TODO: نزيدو اللوجيك باش نفيلتريو الصالونات اللوطة
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              margin: const EdgeInsets.only(right: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              decoration: BoxDecoration(
+                color: isSelected ? AppColors.primaryBlue : Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: isSelected ? AppColors.primaryBlue : Colors.grey.shade300),
+                boxShadow: isSelected ? [BoxShadow(color: AppColors.primaryBlue.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 3))] : [],
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    _categories[index]['icon'],
+                    color: isSelected ? Colors.white : AppColors.textDark,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    _categories[index]['title'],
+                    style: TextStyle(
+                      color: isSelected ? Colors.white : AppColors.textDark,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }

@@ -1,109 +1,121 @@
 import 'package:flutter/material.dart';
-import '../../../../../../core/constants/app_colors.dart';
+import '../../../../../core/constants/app_colors.dart';
 
 class ClientHeaderSection extends StatelessWidget {
   const ClientHeaderSection({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // 💡 هذي باش تحسب طول الـ Status Bar متاع أي تليفون
-    final double statusBarHeight = MediaQuery.of(context).padding.top;
-
     return Container(
-      // 👈 نقصنا في الـ top والـ bottom باش الهيدر يتلم ويصغار
-      padding: EdgeInsets.only(top: statusBarHeight + 15, left: 20, right: 20, bottom: 30),
-      decoration: const BoxDecoration(color: AppColors.primaryBlue),
+      // Padding الفوقاني باش يتفادى الـ Status Bar متاع التليفون (البلاصة اللي فيها البطارية والريزو)
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + 20,
+        left: 20,
+        right: 20,
+        bottom: 40, // خلينا مساحة اللوطة باش المحتوى الأبيض يركب فوقها
+      ),
+      decoration: const BoxDecoration(
+        color: AppColors.primaryBlue,
+      ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. التحية والإشعارات
+          // 1. الترحيب (Ahla, Sami) والأيقونة متاع الإشعارات
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text("Ahla, Sami 👋", style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+              const Text(
+                "Ahla, Sami 👋",
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              // 🔔 أيقونة الإشعارات مع النقطة الحمراء (Badge)
               Stack(
                 clipBehavior: Clip.none,
                 children: [
                   const Icon(Icons.notifications_none, color: Colors.white, size: 28),
                   Positioned(
-                    right: 2, top: 2,
+                    right: 2,
+                    top: 2,
                     child: Container(
-                      width: 10, 
-                      height: 10, 
-                      decoration: const BoxDecoration(color: AppColors.actionRed, shape: BoxShape.circle)
+                      width: 10,
+                      height: 10,
+                      decoration: const BoxDecoration(
+                        color: AppColors.actionRed, // لون النقطة أحمر
+                        shape: BoxShape.circle,
+                      ),
                     ),
-                  )
+                  ),
                 ],
               ),
             ],
           ),
-          const SizedBox(height: 20), // 👈 نقصنا في الفراغ
+          const SizedBox(height: 20),
           
-          // 2. الموقع (Location) 
-          Center(
-            child: GestureDetector(
-              onTap: () {
-                // TODO: حل بوب أب باش يبدل البلاصة
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: const [
-                    Icon(Icons.location_on, color: Colors.white, size: 18),
-                    SizedBox(width: 8),
-                    Text(
-                      "Ariana, Tunis", 
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 14)
-                    ),
-                    SizedBox(width: 4),
-                    Icon(Icons.keyboard_arrow_down, color: Colors.white, size: 18),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 20), // 👈 نقصنا في الفراغ
-
-          // 3. شريط البحث
+          // 2. الموقع (Localisation) - الفلسة اللّي في الوسط
           Container(
-            height: 50,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.white, 
-              borderRadius: BorderRadius.circular(16), 
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 20,
-                  offset: const Offset(0, 5),
-                )
-              ]
+              color: Colors.white.withValues(alpha: 0.15), // أزرق شفاف شوية باش يبرز
+              borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
-              children: [
-                const SizedBox(width: 15),
-                const Icon(Icons.search, color: Colors.grey),
-                const SizedBox(width: 10),
-                const Expanded(
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: "Lawej 3la salon, service...", 
-                      border: InputBorder.none, 
-                      hintStyle: TextStyle(color: Colors.grey, fontSize: 14)
-                    )
-                  )
+              mainAxisSize: MainAxisSize.min, // باش تاخو كان البلاصة اللّي تستحقها
+              children: const [
+                Icon(Icons.location_on, color: Colors.white, size: 16),
+                SizedBox(width: 8),
+                Text(
+                  "Ariana, Tunis", 
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13),
                 ),
-                IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Icons.tune_rounded, color: AppColors.primaryBlue), 
-                ),
-                const SizedBox(width: 5),
+                SizedBox(width: 8),
+                Icon(Icons.keyboard_arrow_down, color: Colors.white, size: 20),
               ],
+            ),
+          ),
+          const SizedBox(height: 25),
+
+          // 3. شريط البحث (Search Bar) - رديناه GestureDetector
+          GestureDetector(
+            onTap: () {
+              // 🚀 هوني باش نزيدو الـ Navigation لصفحة البحث نهار آخر
+              // Navigator.push(context, MaterialPageRoute(builder: (context) => const SearchPage()));
+            
+            },
+            child: Container(
+              height: 50,
+              padding: const EdgeInsets.symmetric(horizontal: 15),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(15),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.search, color: Colors.grey),
+                  const SizedBox(width: 10),
+                  // استعملنا Text في بلاصة TextField باش ما يتحلش الكلافيي
+                  const Expanded(
+                    child: Text(
+                      "Rechercher au un salon, service...",
+                      style: TextStyle(color: Colors.grey, fontSize: 14),
+                    ),
+                  ),
+                  // أيقونة الفلتر (Filtre) في اللخر
+                  Container(
+                    padding: const EdgeInsets.all(5),
+                    child: const Icon(Icons.tune, color: AppColors.primaryBlue),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
