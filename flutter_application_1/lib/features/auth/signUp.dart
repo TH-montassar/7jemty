@@ -3,6 +3,12 @@ import '../../core/constants/app_colors.dart';
 import 'signIn.dart';
 import '../../services/auth_service.dart';
 import 'package:toastification/toastification.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../patron_space/main_page.dart';
+import '../patron_space/create_salon_screen.dart';
+import '../admin_space/presentation/pages/admin_home_page.dart';
+import '../patron_space/employee/pages/presentation/employee_home_page.dart';
+import '../client_space/main_layout/presentation/pages/client_main_layout.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -53,7 +59,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
         role: _isPatron ? 'PATRON' : 'CLIENT',
       );
 
-      print("success! ${result['data']['token']}");
+      // Ba3d l'inscription, na5dhou l'token w l'user ml base de donnees
+      final token = result['data']['token'];
+      final userRole = result['data']['user']['role'];
+      final hasSalon = result['data']['user']['hasSalon'] ?? false;
+
+      // Nsobba fi SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('jwt_token', token);
+      await prefs.setString('user_role', userRole);
 
       if (!mounted) return;
       toastification.show(
@@ -81,15 +95,44 @@ class _SignUpScreenState extends State<SignUpScreen> {
       Future.delayed(const Duration(seconds: 2), () {
         if (!mounted) return;
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => SignInScreen(
-              prefilledPhone: _phoneController.text.trim(), // نبعثو النومرو
-              prefilledPassword: _passwordController.text, // نبعثو المودباس
-            ),
-          ),
-        );
+        // Kif l'Login bedhabt, thezzou lil page mte3ou
+        if (userRole == 'PATRON') {
+          if (hasSalon == true) {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const MainPage()),
+              (route) => false,
+            );
+          } else {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const CreateSalonScreen(),
+              ),
+              (route) => false,
+            );
+          }
+        } else if (userRole == 'ADMIN') {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const AdminHomePage()),
+            (route) => false,
+          );
+        } else if (userRole == 'EMPLOYEE') {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const EmployeeHomePage()),
+            (route) => false,
+          );
+        } else {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const ClientMainLayout(),
+            ), // Na77it ClientHomePage, 7attit ClientMainLayout li fih l'BottomNav
+            (route) => false,
+          );
+        }
       });
     } catch (error) {
       if (!mounted) return;
