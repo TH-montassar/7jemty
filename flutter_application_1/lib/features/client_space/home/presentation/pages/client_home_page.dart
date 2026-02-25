@@ -1,59 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:hjamty/features/client_space/appointments/presentation/pages/appointments_page.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../widgets/client_header_section.dart';
 import '../widgets/next_rdv_card.dart';
 import '../widgets/quick_categories.dart';
 import '../widgets/near_you_list.dart';
 import '../widgets/top_rated_list.dart';
-import '../widgets/client_bottom_nav.dart';
-import '../../../../auth/signIn.dart';
-import 'profile_page_client.dart';
 
-class ClientHomePage extends StatefulWidget {
+// 🚀 Radineha StatelessWidget 5ater ma3adech fiha BottomNav w state
+class ClientHomePage extends StatelessWidget {
   const ClientHomePage({super.key});
 
-  @override
-  State<ClientHomePage> createState() => _ClientHomePageState();
-}
-
-class _ClientHomePageState extends State<ClientHomePage> {
-  int _selectedIndex = 0;
-
- void _onNavTapped(int index) {
-    if (index == 1) {
-      // Index 1 houwa "Mes RDV"
-      // Thezzou ditect lel page mta3 l'historique wel RDV
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const AppointmentsPage()),
-      );
-    } else if (index == 3) {
-      // Index 3 houwa l'Profil fel BottomNavigation
-      // === هوني تبدل اللوجيك متاعك بعدين بالـ Firebase أو SharedPrefs ===
-      bool isUserLoggedIn = false; // tawa hatineha false bech njarrbou l'Login
-      // =================================================================
-
-      if (!isUserLoggedIn) {
-        // Mouch connecte -> Thezzou lel SignIn
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const SignInScreen()),
-        );
-      } else {
-        // Connecte -> Thezzou lel ProfilePage mt3o (Client)
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const ProfilePageClient()),
-        );
-      }
-    } else {
-      // Les autres tabs (Accueil, Moins Cher) yetbaddlou 3adi
-      setState(() {
-        _selectedIndex = index;
-      });
-    }
-  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -133,10 +89,6 @@ class _ClientHomePageState extends State<ClientHomePage> {
             ),
           ],
         ),
-      ),
-      bottomNavigationBar: ClientBottomNav(
-        selectedIndex: _selectedIndex,
-        onTap: _onNavTapped,
       ),
     );
   }

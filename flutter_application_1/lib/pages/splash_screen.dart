@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hjamty/core/constants/app_colors.dart';
-import 'package:hjamty/features/client_space/home/presentation/pages/client_home_page.dart';
-import 'package:hjamty/features/patron_space/main_page.dart';
-import 'package:hjamty/features/admin_space/presentation/pages/admin_home_page.dart';
-import 'package:hjamty/features/patron_space/employee/pages/presentation/employee_home_page.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hjamty/features/client_space/main_layout/presentation/pages/client_main_layout.dart';
+import 'package:hjamty/pages/main_page.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -64,7 +61,8 @@ class _SplashScreenState extends State<SplashScreen> {
 
     if (token == null || userRole == null) {
       // mouch connecte -> Home Client
-      nextPage = const ClientHomePage();
+      nextPage = const ClientMainLayout();
+    // ignore: dead_code
     } else {
       if (userRole == 'PATRON') {
         // connecte w 7ajem -> Espace 7ajem
@@ -75,7 +73,7 @@ class _SplashScreenState extends State<SplashScreen> {
         nextPage = const EmployeeHomePage();
       } else {
         // connecte w client -> Home Client
-        nextPage = const ClientHomePage();
+        nextPage = const ClientMainLayout();
       }
     }
 
