@@ -61,3 +61,16 @@ export const createEmployeeAccountHandler = async (req: AuthRequest, res: Respon
         res.status(400).json({ success: false, message });
     }
 };
+
+export const getAllSalonsHandler = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const lat = req.query.lat ? parseFloat(req.query.lat as string) : undefined;
+        const lng = req.query.lng ? parseFloat(req.query.lng as string) : undefined;
+
+        const salons = await salonService.getAllSalons(lat, lng);
+
+        res.status(200).json({ success: true, data: salons });
+    } catch (error: any) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};

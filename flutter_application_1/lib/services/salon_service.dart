@@ -177,4 +177,30 @@ class SalonService {
       throw Exception(e.toString().replaceAll('Exception: ', ''));
     }
   }
+
+  // 📝 Fonction bech njibou e-salons lkol w nrajjouhom lel client
+  static Future<List<dynamic>> getAllSalons({double? lat, double? lng}) async {
+    try {
+      final String query = (lat != null && lng != null)
+          ? '?lat=$lat&lng=$lng'
+          : '';
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/all$query'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        return data['data'];
+      } else {
+        throw Exception(
+          data['message'] ?? 'Erreur lors de la récupération des salons',
+        );
+      }
+    } catch (e) {
+      throw Exception('Erreur de connexion: $e');
+    }
+  }
 }

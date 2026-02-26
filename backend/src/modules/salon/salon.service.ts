@@ -140,3 +140,56 @@ export const createEmployeeAccount = async (patronId: number, data: any) => {
         createdAt: newUser.createdAt
     };
 };
+
+export const getAllSalons = async (lat?: number, lng?: number) => {
+    // Njibou tous les salons approuvés men base de données
+    const salons = await prisma.salon.findMany({
+        where: {
+            approvalStatus: 'APPROVED',
+            isForceClosed: false
+        },
+        include: {
+            services: true,
+            workingHours: true,
+            // nzidou ay relation nestanfe3ou beha kima l'reviews ken theb
+        }
+    });
+
+    // Ken 3ana les coordonnées mta3 el client, n7esbou el distance (en km mthln)
+    let salonsWithDistance = salons.map(salon => {
+        let distance: string | null = null;
+        if (lat && lng && salon.latitude && salon.longitude) {
+            // Calcul basique de distance Haversine
+            const R = 6371; // Rayon de la terre en km
+            const dLat = (salon.latitude - lat) * (Math.PI / 180);
+            const dLon = (salon.longitude - lng) * (Math.PI / 180);
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat * (Math.PI / 180)) * Math.cos(salon.latitude * (Math.PI / 180)) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            const _distance = R * c;
+            distance = _distance.toFixed(1) + ' km';
+        }
+
+        return {
+            ...salon,
+            distance: distance,
+            // l'app yesta3mel 'image' ltaw fi mocked data, nejmou nraj3ou coverImageUrl 
+            image: salon.coverImageUrl || 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=500&q=80',
+            // Default rating for now, or you can calculate if reviews relation is added
+            rating: "4.5"
+        };
+    });
+
+    // Ken distance mawjouda lel salons lkol wella partie menhom, nratbouhom (Ascendant)
+    if (lat && lng) {
+        salonsWithDistance.sort((a, b) => {
+            if (!a.distance && !b.distance) return 0;
+            if (!a.distance) return 1;
+            if (!b.distance) return -1;
+            return parseFloat(a.distance) - parseFloat(b.distance);
+        });
+    }
+
+    return salonsWithDistance;
+};
