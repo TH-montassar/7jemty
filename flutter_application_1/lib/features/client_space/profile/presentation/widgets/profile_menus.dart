@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/localization/translation_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hjamty/features/auth/signIn.dart';
 
 // --------------------------------------------------------
 // 1. Menu des Activités (Commandes & Favoris)
@@ -186,6 +188,20 @@ class _SettingsMenuState extends State<SettingsMenu> {
 class LogoutButton extends StatelessWidget {
   const LogoutButton({super.key});
 
+  Future<void> _logout(BuildContext context) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('jwt_token');
+    await prefs.remove('user_role');
+
+    if (context.mounted) {
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const SignInScreen()),
+        (route) => false,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -217,9 +233,7 @@ class LogoutButton extends StatelessWidget {
             color: AppColors.actionRed,
           ),
         ),
-        onTap: () {
-          // TODO: Logique de déconnexion
-        },
+        onTap: () => _logout(context),
       ),
     );
   }
