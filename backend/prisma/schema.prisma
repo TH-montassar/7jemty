@@ -51,6 +51,7 @@ model User {
   // Relations (الروابط)
   profile            Profile?
   salonsOwned        Salon[]         @relation("PatronSalons")
+  workplaceSalon     Salon?          @relation("SalonEmployees", fields: [workplaceSalonId], references: [id])
   appointmentsClient Appointment[]   @relation("ClientAppointments")
   appointmentsBarber Appointment[]   @relation("BarberAppointments")
   reviews            Review[]
@@ -65,6 +66,7 @@ model Profile {
   email                    String?
   avatarUrl                String?
   bio                      String?
+  description              String?
   specialityTitle          String?
   fcmToken                 String?
   pushNotificationsEnabled Boolean  @default(true)
@@ -99,7 +101,7 @@ model Salon {
   createdAt      DateTime       @default(now())
 
   // Relations
-  employees    Employee[] // NEW: Relation to Employees
+  employees    User[]            @relation("SalonEmployees")
   workingHours WorkingHours[]
   socialLinks  SalonSocialLink[]
   portfolio    PortfolioImage[]
@@ -109,18 +111,6 @@ model Salon {
   favoritedBy  FavoriteSalon[]
   products     Product[]
   orders       Order[]
-}
-
-model Employee {
-  id          Int      @id @default(autoincrement())
-  salonId     Int
-  salon       Salon    @relation(fields: [salonId], references: [id], onDelete: Cascade)
-  name        String
-  role        String? // Ex: Maître Barbier
-  bio         String?
-  description String? // Added as requested
-  imageUrl    String?
-  createdAt   DateTime @default(now())
 }
 
 model WorkingHours {

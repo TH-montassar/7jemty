@@ -3,6 +3,12 @@ import '../../core/constants/app_colors.dart';
 import 'signIn.dart';
 import '../../services/auth_service.dart';
 import 'package:toastification/toastification.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../patron_space/main_page.dart';
+import '../patron_space/create_salon_screen.dart';
+import '../admin_space/presentation/pages/admin_home_page.dart';
+import '../patron_space/employee/pages/presentation/employee_home_page.dart';
+import '../client_space/main_layout/presentation/pages/client_main_layout.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -32,7 +38,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Les mots de passe ne correspondent pas',
+            'Mot de passe mouch kif kif',
             style: TextStyle(color: AppColors.bgColor),
           ),
           backgroundColor: AppColors.actionRed,
@@ -53,7 +59,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
         role: _isPatron ? 'PATRON' : 'CLIENT',
       );
 
-      print("success! ${result['data']['token']}");
+      // Ba3d l'inscription, na5dhou l'token w l'user ml base de donnees
+      final token = result['data']['token'];
+      final userRole = result['data']['user']['role'];
+      final hasSalon = result['data']['user']['hasSalon'] ?? false;
+
+      // Nsobba fi SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('jwt_token', token);
+      await prefs.setString('user_role', userRole);
 
       if (!mounted) return;
       toastification.show(
@@ -63,13 +77,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
         alignment: Alignment.topCenter, // تطلع من الفوق
         autoCloseDuration: const Duration(seconds: 4),
         title: const Text(
-          'Succès 🎉',
+          'Jawwek mriguel 🎉',
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         description: Text(
           _isPatron
-              ? 'Mabrouk! Votre compte Salon est créé. Bienvenue Patron! ✂️'
-              : 'Bienvenue ${_nameController.text.trim()} chez 7jemty!',
+              ? 'Mabrouk! Compte Salon mte3ek thal. Marhba bik ya Patron! ✂️'
+              : 'Marhba bik ${_nameController.text.trim()} fi 7jemty!',
           style: const TextStyle(color: Colors.white),
         ),
         primaryColor: AppColors.successGreen, // لونك المزيان
@@ -81,15 +95,44 @@ class _SignUpScreenState extends State<SignUpScreen> {
       Future.delayed(const Duration(seconds: 2), () {
         if (!mounted) return;
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => SignInScreen(
-              prefilledPhone: _phoneController.text.trim(), // نبعثو النومرو
-              prefilledPassword: _passwordController.text, // نبعثو المودباس
-            ),
-          ),
-        );
+        // Kif l'Login bedhabt, thezzou lil page mte3ou
+        if (userRole == 'PATRON') {
+          if (hasSalon == true) {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const MainPage()),
+              (route) => false,
+            );
+          } else {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const CreateSalonScreen(),
+              ),
+              (route) => false,
+            );
+          }
+        } else if (userRole == 'ADMIN') {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const AdminHomePage()),
+            (route) => false,
+          );
+        } else if (userRole == 'EMPLOYEE') {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const EmployeeHomePage()),
+            (route) => false,
+          );
+        } else {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const ClientMainLayout(),
+            ), // Na77it ClientHomePage, 7attit ClientMainLayout li fih l'BottomNav
+            (route) => false,
+          );
+        }
       });
     } catch (error) {
       if (!mounted) return;
@@ -100,7 +143,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         alignment: Alignment.topCenter, // تطلع من الفوق
         autoCloseDuration: const Duration(seconds: 4),
         title: const Text(
-          'Erreur',
+          'Mochkla',
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         description: Text(
@@ -154,7 +197,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                     // Titre
                     const Text(
-                      "Créer un compte",
+                      "Aamel compte",
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 28,
@@ -164,7 +207,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                     const SizedBox(height: 10),
                     const Text(
-                      "Rejoignez 7jemty et profitez de nos services.",
+                      "Idkhol l 7jemty w temtaa b les services mteana.",
                       textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 14, color: Colors.grey),
                     ),
@@ -173,7 +216,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     // Nom Complet
                     _buildTextField(
                       controller: _nameController, // ربطنا الـ Controller
-                      hintText: "Nom Complet",
+                      hintText: "Esmek l'kemel",
                       icon: Icons.person_outline,
                       keyboardType: TextInputType.name,
                     ),
@@ -182,7 +225,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     // Numéro de téléphone
                     _buildTextField(
                       controller: _phoneController, // ربطنا الـ Controller
-                      hintText: "Numéro de téléphone",
+                      hintText: "Numrou Tlifoun",
                       icon: Icons.phone_android_outlined,
                       keyboardType: TextInputType.phone,
                     ),
@@ -208,7 +251,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     _buildTextField(
                       controller:
                           _confirmPasswordController, // ربطنا الـ Controller
-                      hintText: "Confirmer le mot de passe",
+                      hintText: "Aawed l'mot de passe",
                       icon: Icons.lock_outline,
                       keyboardType: TextInputType.visiblePassword,
                       isPassword: true,
@@ -241,14 +284,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                       child: CheckboxListTile(
                         title: const Text(
-                          "Je suis un gérant de salon (Patron)",
+                          "Ena moulé salon (Patron)",
                           style: TextStyle(
                             fontWeight: FontWeight.w500,
                             fontSize: 14,
                           ),
                         ),
                         subtitle: const Text(
-                          "Cochez si vous voulez inscrire votre salon de coiffure",
+                          "Cochi hethi ken theb tzid salon mte3ek",
                           style: TextStyle(fontSize: 12, color: Colors.grey),
                         ),
                         value: _isPatron,
@@ -295,7 +338,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               ),
                             )
                           : const Text(
-                              "S'inscrire",
+                              "Aamel compte",
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -310,7 +353,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const Text(
-                          "Vous avez déjà un compte ? ",
+                          "Aandek compte deja ? ",
                           style: TextStyle(color: Colors.grey, fontSize: 14),
                         ),
                         GestureDetector(
@@ -323,7 +366,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             );
                           },
                           child: const Text(
-                            "Se connecter",
+                            "Connecti",
                             style: TextStyle(
                               color: AppColors.primaryBlue,
                               fontWeight: FontWeight.bold,
@@ -395,7 +438,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         ),
         validator: (value) {
           if (value == null || value.trim().isEmpty) {
-            return 'Ce champ est requis';
+            return 'Hedha lezem taamrou';
           }
           // تنجم تزيد Validation متع طول المودباس هوني زادة
           return null;

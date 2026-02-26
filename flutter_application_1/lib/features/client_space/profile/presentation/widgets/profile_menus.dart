@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/translation_service.dart';
 
 // --------------------------------------------------------
 // 1. Menu des Activités (Commandes & Favoris)
@@ -13,13 +14,27 @@ class ActivityMenu extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 20, offset: const Offset(0, 5))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 20,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: Column(
-        children: const [
-          _ProfileMenuItem(icon: Icons.local_shipping_outlined, title: "Mes Commandes Produits", subtitle: "2 en cours"),
+        children: [
+          _ProfileMenuItem(
+            icon: Icons.local_shipping_outlined,
+            title: tr(context, 'product_orders'),
+            subtitle: "2 mazelou",
+          ),
           Divider(height: 1, indent: 60),
-          _ProfileMenuItem(icon: Icons.favorite_border, title: "Mes Salons Favoris", subtitle: "4 salons"),
+          _ProfileMenuItem(
+            icon: Icons.favorite_border,
+            title: tr(context, 'favorite_salons'),
+            subtitle: "4 salons",
+          ),
         ],
       ),
     );
@@ -45,27 +60,54 @@ class _SettingsMenuState extends State<SettingsMenu> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 20, offset: const Offset(0, 5))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 20,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: Column(
         children: [
           ListTile(
             leading: _buildIconBox(Icons.language),
-            title: const Text("Langue", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+            title: Text(
+              tr(context, 'language'),
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+            ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
-              children: const [
-                Text("FR", style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold)),
-                SizedBox(width: 5),
-                Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+              children: [
+                Text(
+                  TranslationProvider.of(context).currentLang == 'tn'
+                      ? "TN"
+                      : "EN",
+                  style: const TextStyle(
+                    color: AppColors.primaryBlue,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(width: 5),
+                const Icon(
+                  Icons.arrow_forward_ios,
+                  size: 14,
+                  color: Colors.grey,
+                ),
               ],
             ),
-            onTap: () {},
+            onTap: () {
+              // Ouvrir un dialog de choix de langue
+              _showLanguageDialog();
+            },
           ),
           const Divider(height: 1, indent: 60),
           ListTile(
             leading: _buildIconBox(Icons.notifications_outlined),
-            title: const Text("Notifications", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+            title: Text(
+              tr(context, 'notifications'),
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+            ),
             trailing: Switch(
               value: _isNotifOn,
               activeThumbColor: AppColors.primaryBlue,
@@ -73,18 +115,66 @@ class _SettingsMenuState extends State<SettingsMenu> {
             ),
           ),
           const Divider(height: 1, indent: 60),
-          const _ProfileMenuItem(icon: Icons.help_outline, title: "Aide & Support"),
+          _ProfileMenuItem(
+            icon: Icons.help_outline,
+            title: tr(context, 'help_support'),
+          ),
           const Divider(height: 1, indent: 60),
-          const _ProfileMenuItem(icon: Icons.description_outlined, title: "Conditions Générales"),
+          _ProfileMenuItem(
+            icon: Icons.description_outlined,
+            title: tr(context, 'terms'),
+          ),
         ],
       ),
+    );
+  }
+
+  void _showLanguageDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: Text(tr(context, 'language')),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: const Text("Tounsi"),
+                trailing: TranslationProvider.of(context).currentLang == 'tn'
+                    ? const Icon(Icons.check, color: AppColors.primaryBlue)
+                    : null,
+                onTap: () {
+                  TranslationProvider.of(context).setLanguage('tn');
+                  Navigator.pop(dialogContext);
+                },
+              ),
+              ListTile(
+                title: const Text("English"),
+                trailing: TranslationProvider.of(context).currentLang == 'en'
+                    ? const Icon(Icons.check, color: AppColors.primaryBlue)
+                    : null,
+                onTap: () {
+                  TranslationProvider.of(context).setLanguage('en');
+                  Navigator.pop(dialogContext);
+                },
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
   Widget _buildIconBox(IconData icon) {
     return Container(
       padding: const EdgeInsets.all(8),
-      decoration: const BoxDecoration(color: AppColors.bgColor, shape: BoxShape.circle),
+      decoration: const BoxDecoration(
+        color: AppColors.bgColor,
+        shape: BoxShape.circle,
+      ),
       child: Icon(icon, color: AppColors.textDark, size: 20),
     );
   }
@@ -102,15 +192,31 @@ class LogoutButton extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 20, offset: const Offset(0, 5))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 20,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: ListTile(
         leading: Container(
           padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(color: AppColors.actionRed.withValues(alpha: 0.1), shape: BoxShape.circle),
+          decoration: BoxDecoration(
+            color: AppColors.actionRed.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+          ),
           child: const Icon(Icons.logout, color: AppColors.actionRed, size: 20),
         ),
-        title: const Text("Déconnexion", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppColors.actionRed)),
+        title: Text(
+          tr(context, 'logout'),
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 15,
+            color: AppColors.actionRed,
+          ),
+        ),
         onTap: () {
           // TODO: Logique de déconnexion
         },
@@ -127,19 +233,38 @@ class _ProfileMenuItem extends StatelessWidget {
   final String title;
   final String? subtitle;
 
-  const _ProfileMenuItem({required this.icon, required this.title, this.subtitle});
+  const _ProfileMenuItem({
+    required this.icon,
+    required this.title,
+    this.subtitle,
+  });
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
       leading: Container(
         padding: const EdgeInsets.all(8),
-        decoration: const BoxDecoration(color: AppColors.bgColor, shape: BoxShape.circle),
+        decoration: const BoxDecoration(
+          color: AppColors.bgColor,
+          shape: BoxShape.circle,
+        ),
         child: Icon(icon, color: AppColors.textDark, size: 20),
       ),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
-      subtitle: subtitle != null ? Text(subtitle!, style: const TextStyle(fontSize: 12, color: Colors.grey)) : null,
-      trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+      title: Text(
+        title,
+        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+      ),
+      subtitle: subtitle != null
+          ? Text(
+              subtitle!,
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            )
+          : null,
+      trailing: const Icon(
+        Icons.arrow_forward_ios,
+        size: 14,
+        color: Colors.grey,
+      ),
       onTap: () {},
     );
   }

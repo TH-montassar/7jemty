@@ -13,10 +13,10 @@ class _QuickCategoriesState extends State<QuickCategories> {
 
   // 💡 هذي ليستة الخدمات الصحيحة
   final List<Map<String, dynamic>> _categories = [
-    {'title': 'Cheveux', 'icon': Icons.content_cut},
-    {'title': 'Barbe', 'icon': Icons.face},
+    {'title': 'Hjema', 'icon': Icons.content_cut},
+    {'title': 'Lihya', 'icon': Icons.face},
     {'title': 'Soin Visage', 'icon': Icons.spa_outlined},
-    {'title': 'Enfants', 'icon': Icons.child_care},
+    {'title': 'Sghar', 'icon': Icons.child_care},
   ];
 
   @override
@@ -40,8 +40,20 @@ class _QuickCategoriesState extends State<QuickCategories> {
               decoration: BoxDecoration(
                 color: isSelected ? AppColors.primaryBlue : Colors.white,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: isSelected ? AppColors.primaryBlue : Colors.grey.shade300),
-                boxShadow: isSelected ? [BoxShadow(color: AppColors.primaryBlue.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 3))] : [],
+                border: Border.all(
+                  color: isSelected
+                      ? AppColors.primaryBlue
+                      : Colors.grey.shade300,
+                ),
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: AppColors.primaryBlue.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ]
+                    : [],
               ),
               child: Row(
                 children: [
@@ -55,7 +67,9 @@ class _QuickCategoriesState extends State<QuickCategories> {
                     _categories[index]['title'],
                     style: TextStyle(
                       color: isSelected ? Colors.white : AppColors.textDark,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.w500,
                     ),
                   ),
                 ],

@@ -1,5 +1,8 @@
+import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:toastification/toastification.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../core/constants/app_colors.dart';
 import '../../services/salon_service.dart';
 import 'create_salon_screen.dart';
@@ -26,9 +29,38 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
   // Controllers pour l'onglet "Personnel"
   final TextEditingController _specUrlController = TextEditingController();
   final TextEditingController _specNameController = TextEditingController();
+  final TextEditingController _specPhoneController =
+      TextEditingController(); // NEW
+  final TextEditingController _specPasswordController =
+      TextEditingController(); // NEW
   final TextEditingController _specRoleController = TextEditingController();
   final TextEditingController _specBioController = TextEditingController();
   bool _isAddingSpecialist = false;
+
+  bool _isUrlMode = true;
+  Uint8List? _selectedImageBytes;
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> _pickImage() async {
+    try {
+      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+      if (image != null) {
+        final bytes = await image.readAsBytes();
+        setState(() {
+          _selectedImageBytes = bytes;
+          _isUrlMode = false;
+        });
+      }
+    } catch (e) {
+      toastification.show(
+        context: context,
+        type: ToastificationType.error,
+        title: const Text("Erreur"),
+        description: Text("Ma najamnech nkhayrou taswira: $e"),
+        autoCloseDuration: const Duration(seconds: 4),
+      );
+    }
+  }
 
   @override
   void initState() {
@@ -96,7 +128,7 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
         alignment: Alignment.topCenter,
         autoCloseDuration: const Duration(seconds: 2),
         title: const Text(
-          'Enregistrement...',
+          'Kaad ysajjel...',
           style: TextStyle(color: Colors.white),
         ),
         primaryColor: AppColors.primaryBlue,
@@ -119,7 +151,7 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
         alignment: Alignment.topCenter,
         autoCloseDuration: const Duration(seconds: 4),
         title: const Text(
-          'Enregistré 🎉',
+          'Tsayyev mriguel 🎉',
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         primaryColor: AppColors.successGreen,
@@ -135,17 +167,116 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
         alignment: Alignment.topCenter,
         autoCloseDuration: const Duration(seconds: 4),
         title: const Text(
-          'Erreur',
+          'Mochkla',
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         description: Text(
           error.toString(),
           style: const TextStyle(color: Colors.white),
         ),
-        primaryColor: AppColors.actionRed,
-        backgroundColor: AppColors.actionRed,
         icon: const Icon(Icons.error_outline, color: Colors.white),
         showProgressBar: false,
+      );
+    }
+  }
+
+  Future<void> _handleAddSpecialist() async {
+    if (_specNameController.text.isEmpty ||
+        _specPhoneController.text.isEmpty ||
+        _specPasswordController.text.isEmpty) {
+      toastification.show(
+        context: context,
+        type: ToastificationType.warning,
+        style: ToastificationStyle.fillColored,
+        alignment: Alignment.topCenter,
+        autoCloseDuration: const Duration(seconds: 3),
+        title: const Text('Mochkla', style: TextStyle(color: Colors.white)),
+        description: const Text(
+          'L\'esm wel numrou wel mot de passe lezmin',
+          style: TextStyle(color: Colors.white),
+        ),
+      );
+      return;
+    }
+
+    try {
+      FocusScope.of(context).unfocus();
+      toastification.show(
+        context: context,
+        type: ToastificationType.info,
+        style: ToastificationStyle.fillColored,
+        alignment: Alignment.topCenter,
+        autoCloseDuration: const Duration(seconds: 2),
+        title: const Text(
+          'Kaad yasnaa fi compte...',
+          style: TextStyle(color: Colors.white),
+        ),
+        primaryColor: AppColors.primaryBlue,
+        backgroundColor: AppColors.primaryBlue,
+      );
+
+      String? finalImageUrl;
+      if (_isUrlMode) {
+        finalImageUrl = _specUrlController.text.trim();
+        if (finalImageUrl.isEmpty) finalImageUrl = null;
+      } else if (_selectedImageBytes != null) {
+        final base64Image = base64Encode(_selectedImageBytes!);
+        finalImageUrl = "data:image/jpeg;base64,$base64Image";
+      }
+
+      await SalonService.createEmployeeAccount(
+        name: _specNameController.text,
+        phoneNumber: _specPhoneController.text,
+        password: _specPasswordController.text,
+        role: _specRoleController.text,
+        bio: _specBioController.text,
+        imageUrl: finalImageUrl,
+      );
+
+      if (!mounted) return;
+      toastification.show(
+        context: context,
+        type: ToastificationType.success,
+        style: ToastificationStyle.fillColored,
+        alignment: Alignment.topCenter,
+        autoCloseDuration: const Duration(seconds: 4),
+        title: const Text(
+          'Zadna specialiste 🎉',
+          style: TextStyle(color: Colors.white),
+        ),
+        primaryColor: AppColors.successGreen,
+        backgroundColor: AppColors.successGreen,
+        icon: const Icon(Icons.check_circle_outline, color: Colors.white),
+      );
+
+      // Reset fields
+      _specNameController.clear();
+      _specPhoneController.clear();
+      _specPasswordController.clear();
+      _specRoleController.clear();
+      _specBioController.clear();
+      _specUrlController.clear();
+
+      setState(() {
+        _isAddingSpecialist = false;
+      });
+
+      _fetchSalonData(); // Refresh the personnel list
+    } catch (e) {
+      if (!mounted) return;
+      toastification.show(
+        context: context,
+        type: ToastificationType.error,
+        style: ToastificationStyle.fillColored,
+        alignment: Alignment.topCenter,
+        autoCloseDuration: const Duration(seconds: 4),
+        title: const Text('Mochkla', style: TextStyle(color: Colors.white)),
+        description: Text(
+          e.toString().replaceAll('Exception: ', ''),
+          style: const TextStyle(color: Colors.white),
+        ),
+        primaryColor: AppColors.actionRed,
+        backgroundColor: AppColors.actionRed,
       );
     }
   }
@@ -160,6 +291,8 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
 
     _specUrlController.dispose();
     _specNameController.dispose();
+    _specPhoneController.dispose(); // NEW
+    _specPasswordController.dispose(); // NEW
     _specRoleController.dispose();
     _specBioController.dispose();
     super.dispose();
@@ -181,7 +314,7 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
             const Icon(Icons.storefront_outlined, size: 80, color: Colors.grey),
             const SizedBox(height: 16),
             const Text(
-              "Aucun salon trouvé.",
+              "Ma famma hatta salon.",
               style: TextStyle(fontSize: 18, color: Colors.grey),
             ),
             const SizedBox(height: 20),
@@ -199,7 +332,7 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
                   },
                   icon: const Icon(Icons.add, size: 18, color: Colors.white),
                   label: const Text(
-                    "Créer votre salon",
+                    "Aamel salon mte3ek",
                     style: TextStyle(color: Colors.white),
                   ),
                   style: ElevatedButton.styleFrom(
@@ -213,7 +346,7 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
                 OutlinedButton.icon(
                   onPressed: _fetchSalonData,
                   icon: const Icon(Icons.refresh, size: 18),
-                  label: const Text("Rafraîchir"),
+                  label: const Text("Aawed chargi"),
                   style: OutlinedButton.styleFrom(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -236,7 +369,7 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              "Paramètres du salon",
+              "Parametres mtaa salon",
               style: TextStyle(
                 color: AppColors.textDark,
                 fontWeight: FontWeight.bold,
@@ -267,7 +400,7 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
                 color: Colors.white,
               ),
               label: const Text(
-                "Tout enregistrer",
+                "Sajjel kol chay",
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -328,7 +461,7 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
                       children: [
                         Icon(Icons.group_outlined, size: 16),
                         SizedBox(width: 6),
-                        Text("Personnel"),
+                        Text("Equipe"),
                       ],
                     ),
                   ),
@@ -340,7 +473,7 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
                       children: [
                         Icon(Icons.access_time, size: 16),
                         SizedBox(width: 6),
-                        Text("Horaires"),
+                        Text("Wakt"),
                       ],
                     ),
                   ),
@@ -352,7 +485,7 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
                       children: [
                         Icon(Icons.image_outlined, size: 16),
                         SizedBox(width: 6),
-                        Text("Galerie"),
+                        Text("Tsawer"),
                       ],
                     ),
                   ),
@@ -386,7 +519,7 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const Text(
-            "Informations générales",
+            "Maaloumet aamma",
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -394,30 +527,30 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
             ),
           ),
           const SizedBox(height: 24),
-          _buildLabelInput("Nom du salon"),
+          _buildLabelInput("Esm salon"),
           _buildInputField(
             _nameController,
-            "Nom du Salon (ex: Barbershop VIP)",
+            "Esm Salon (ex: Barbershop VIP)",
             Icons.title,
           ),
           const SizedBox(height: 16),
           _buildLabelInput("Description"),
           _buildInputField(
             _descController,
-            "Description du salon",
+            "Description mtaa salon",
             Icons.description_outlined,
             maxLines: 4,
           ),
           const SizedBox(height: 16),
-          _buildLabelInput("Téléphone de contact"),
+          _buildLabelInput("Numrou de contact"),
           _buildInputField(
             _phoneController,
-            "Numéro de contact du salon",
+            "Numrou mtaa salon",
             Icons.phone_android_outlined,
             keyboardType: TextInputType.phone,
           ),
           const SizedBox(height: 16),
-          _buildLabelInput("Adresse complète"),
+          _buildLabelInput("Adresse lkemla"),
           _buildInputField(
             _addressController,
             "Adresse",
@@ -432,7 +565,7 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
   Widget _buildServicesTab() {
     return const Center(
       child: Text(
-        "Gestion des services (À venir)",
+        "Gestion mtaa les services (Mazel)",
         style: TextStyle(color: Colors.grey),
       ),
     );
@@ -448,7 +581,7 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                "Gérer le personnel",
+                "Riguel l'equipe",
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -473,7 +606,7 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
                   color: Colors.white,
                 ),
                 label: Text(
-                  _isAddingSpecialist ? "Fermer" : "Ajouter un spécialiste",
+                  _isAddingSpecialist ? "Saker" : "Zid specialiste",
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -495,7 +628,7 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const Text(
-                    "NOUVEAU SPÉCIALISTE",
+                    "SPECIALISTE JDID",
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
@@ -506,46 +639,127 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
                   Row(
                     children: [
                       ElevatedButton.icon(
-                        onPressed: () {},
+                        onPressed: () {
+                          setState(() {
+                            _isUrlMode = true;
+                            _selectedImageBytes = null;
+                          });
+                        },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: AppColors.textDark,
+                          backgroundColor: _isUrlMode
+                              ? AppColors.primaryBlue
+                              : Colors.white,
+                          foregroundColor: _isUrlMode
+                              ? Colors.white
+                              : AppColors.textDark,
                           elevation: 0,
-                          side: BorderSide(color: Colors.grey.shade300),
+                          side: BorderSide(
+                            color: _isUrlMode
+                                ? AppColors.primaryBlue
+                                : Colors.grey.shade300,
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(20),
                           ),
                         ),
-                        icon: const Icon(Icons.link, size: 16),
+                        icon: Icon(
+                          Icons.link,
+                          size: 16,
+                          color: _isUrlMode ? Colors.white : AppColors.textDark,
+                        ),
                         label: const Text("URL"),
                       ),
                       const SizedBox(width: 8),
-                      TextButton.icon(
-                        onPressed: () {},
-                        icon: const Icon(
+                      ElevatedButton.icon(
+                        onPressed: _pickImage,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: !_isUrlMode
+                              ? AppColors.primaryBlue
+                              : Colors.white,
+                          foregroundColor: !_isUrlMode
+                              ? Colors.white
+                              : AppColors.textDark,
+                          elevation: 0,
+                          side: BorderSide(
+                            color: !_isUrlMode
+                                ? AppColors.primaryBlue
+                                : Colors.grey.shade300,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                        icon: Icon(
                           Icons.upload,
                           size: 16,
-                          color: Colors.grey,
+                          color: !_isUrlMode ? Colors.white : Colors.grey,
                         ),
-                        label: const Text(
-                          "Upload",
-                          style: TextStyle(color: Colors.grey),
+                        label: Text(
+                          "uploadi taswira",
+                          style: TextStyle(
+                            color: !_isUrlMode ? Colors.white : Colors.grey,
+                          ),
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
+                  if (_isUrlMode)
+                    _buildInputField(
+                      _specUrlController,
+                      "Hott lien mtaa taswira...",
+                      null,
+                    )
+                  else if (_selectedImageBytes != null)
+                    Center(
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.memory(
+                              _selectedImageBytes!,
+                              height: 100,
+                              width: 100,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          Positioned(
+                            top: -10,
+                            right: -10,
+                            child: IconButton(
+                              icon: const Icon(Icons.cancel, color: Colors.red),
+                              onPressed: () {
+                                setState(() {
+                                  _selectedImageBytes = null;
+                                  _isUrlMode = true;
+                                });
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  const SizedBox(height: 12),
+                  _buildInputField(_specNameController, "Esm lkemel", null),
+                  const SizedBox(height: 12),
                   _buildInputField(
-                    _specUrlController,
-                    "Enter direct image URL...",
+                    _specPhoneController,
+                    "Numrou tlifoun",
                     null,
+                    keyboardType: TextInputType.phone,
                   ),
                   const SizedBox(height: 12),
-                  _buildInputField(_specNameController, "Nom complet", null),
+                  _buildInputField(
+                    _specPasswordController,
+                    "Mot de passe mo'akat",
+                    null,
+                    obscureText: true,
+                  ),
                   const SizedBox(height: 12),
                   _buildInputField(
                     _specRoleController,
-                    "Rôle (ex: Maître Barbier)",
+                    "Role (ex: Hajem kbir)",
                     null,
                   ),
                   const SizedBox(height: 12),
@@ -560,7 +774,7 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
                     children: [
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: () {},
+                          onPressed: _handleAddSpecialist,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primaryBlue,
                             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -569,7 +783,7 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
                             ),
                           ),
                           child: const Text(
-                            "Enregistrer",
+                            "Sajjel",
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -589,7 +803,7 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
                             padding: const EdgeInsets.symmetric(vertical: 16),
                           ),
                           child: const Text(
-                            "Annuler",
+                            "Batel",
                             style: TextStyle(
                               color: Colors.grey,
                               fontWeight: FontWeight.bold,
@@ -603,15 +817,99 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
               ),
             ),
           ] else ...[
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 40),
-                child: Text(
-                  "Aucun spécialiste ajouté",
-                  style: TextStyle(color: Colors.grey.shade500),
+            if (_salonData?['employees'] != null &&
+                (_salonData!['employees'] as List).isNotEmpty)
+              ...(_salonData!['employees'] as List).map(
+                (employee) => Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.grey.shade200),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.02),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 24,
+                        backgroundImage: employee['imageUrl'] != null
+                            ? NetworkImage(employee['imageUrl'])
+                            : null,
+                        backgroundColor: AppColors.primaryBlue.withValues(
+                          alpha: 0.1,
+                        ),
+                        child: employee['imageUrl'] == null
+                            ? const Icon(
+                                Icons.person,
+                                color: AppColors.primaryBlue,
+                              )
+                            : null,
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              employee['name'] ?? 'Khaddem',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                color: AppColors.textDark,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              employee['role'] ?? 'Specialiste',
+                              style: const TextStyle(
+                                color: Colors.grey,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.edit_outlined,
+                          color: Colors.grey,
+                          size: 20,
+                        ),
+                        onPressed: () {
+                          // TODO: Implement edit
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          color: AppColors.actionRed,
+                          size: 20,
+                        ),
+                        onPressed: () {
+                          // TODO: Implement delete
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 40),
+                  child: Text(
+                    "Ma zadet hatta specialiste",
+                    style: TextStyle(color: Colors.grey.shade500),
+                  ),
                 ),
               ),
-            ),
           ],
         ],
       ),
@@ -620,13 +918,13 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
 
   Widget _buildHorairesTab() {
     final List<String> jours = [
-      "Lundi",
-      "Mardi",
-      "Mercredi",
-      "Jeudi",
-      "Vendredi",
-      "Samedi",
-      "Dimanche",
+      "Lethnin",
+      "Thleth",
+      "Larb3a",
+      "Lkhmis",
+      "Jemaa",
+      "Sbet",
+      "Lhad",
     ];
     // Mocking state (fermé le lundi)
 
@@ -636,7 +934,7 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const Text(
-            "Heures d'ouverture",
+            "Wakt lhallen",
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -645,7 +943,7 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
           ),
           const SizedBox(height: 24),
           ...jours.map((jour) {
-            bool isOuvert = jour != "Lundi";
+            bool isOuvert = jour != "Lethnin";
             return Column(
               children: [
                 Row(
@@ -670,7 +968,7 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        isOuvert ? "Ouvert" : "Fermé",
+                        isOuvert ? "Mahloul" : "Msaker",
                         style: TextStyle(
                           color: isOuvert
                               ? AppColors.successGreen
@@ -766,7 +1064,7 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const Text(
-            "Galerie du salon",
+            "Tsawer el salon",
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -788,7 +1086,7 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const Text(
-                  "AJOUTER À LA GALERIE",
+                  "ZID TSARWER LEL SALON",
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
@@ -821,7 +1119,7 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
                         color: Colors.grey,
                       ),
                       label: const Text(
-                        "Upload",
+                        "Techargi taswira",
                         style: TextStyle(color: Colors.grey),
                       ),
                     ),
@@ -830,7 +1128,7 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
                 const SizedBox(height: 16),
                 _buildInputField(
                   TextEditingController(),
-                  "Enter direct image URL...",
+                  "Hott lien mtaa taswira...",
                   null,
                 ),
               ],
@@ -853,7 +1151,7 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
                 Icon(Icons.add, color: Colors.grey),
                 SizedBox(height: 8),
                 Text(
-                  "NEW IMAGE",
+                  "TASWIRA JDIDA",
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.grey,
@@ -892,6 +1190,7 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
     IconData? icon, {
     TextInputType keyboardType = TextInputType.text,
     int maxLines = 1,
+    bool obscureText = false,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -903,6 +1202,7 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
         controller: controller,
         maxLines: maxLines,
         keyboardType: keyboardType,
+        obscureText: obscureText,
         style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
         decoration: InputDecoration(
           hintText: hintText,

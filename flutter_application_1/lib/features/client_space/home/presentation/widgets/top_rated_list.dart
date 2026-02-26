@@ -14,41 +14,43 @@ class TopRatedList extends StatelessWidget {
       {
         'name': 'Barber King 👑',
         'address': 'Avenue Habib Bourguiba, Ariana',
-        'price': 'à partir de 15 DT',
-        'image': 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=500&q=80',
+        'price': 'ibda min 15 DT',
+        'image':
+            'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=500&q=80',
       },
       {
         'name': 'The Classic Barber',
         'address': 'Ennasr 2, Tunis',
-        'price': 'à partir de 20 DT',
-        'image': 'https://images.unsplash.com/photo-1503342394128-c104d54dba01?auto=format&fit=crop&w=500&q=80',
+        'price': 'ibda min 20 DT',
+        'image':
+            'https://images.unsplash.com/photo-1503342394128-c104d54dba01?auto=format&fit=crop&w=500&q=80',
       },
       {
         'name': 'Salon El Baze',
         'address': 'Menzah 5, Ariana',
-        'price': 'à partir de 12 DT',
-        'image': 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=500&q=80',
+        'price': 'ibda min 12 DT',
+        'image':
+            'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=500&q=80',
       },
     ];
 
     return ListView.builder(
       shrinkWrap: true, // 🚀 مهمة برشا باش تخدم في وسط SingleChildScrollView
-      physics: const NeverScrollableScrollPhysics(), // باش السكرول يتبع الصفحة كاملة موش الليستة بركا
+      physics:
+          const NeverScrollableScrollPhysics(), // باش السكرول يتبع الصفحة كاملة موش الليستة بركا
       padding: EdgeInsets.zero, // باش نحيو الفراغ الزايد من الفوق
       itemCount: topSalons.length,
       itemBuilder: (context, index) {
         final salon = topSalons[index];
-        
+
         return GestureDetector(
           onTap: () {
             // 🚀 2. كي يكليكي على الكارطة يهزو لبروفيل الصالون
-           
+
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const SalonProfilePage()),
             );
-           
-          
           },
           child: Container(
             margin: const EdgeInsets.only(bottom: 15),
@@ -80,13 +82,17 @@ class TopRatedList extends StatelessWidget {
                         width: 80,
                         height: 80,
                         color: Colors.grey.shade100,
-                        child: const Icon(Icons.storefront, color: Colors.grey, size: 30),
+                        child: const Icon(
+                          Icons.storefront,
+                          color: Colors.grey,
+                          size: 30,
+                        ),
                       );
                     },
                   ),
                 ),
                 const SizedBox(width: 15),
-                
+
                 // --- 2. المعلومات (الاسم، العنوان، السوم) ---
                 Expanded(
                   child: Column(
@@ -94,21 +100,31 @@ class TopRatedList extends StatelessWidget {
                     children: [
                       Text(
                         salon['name'],
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: AppColors.textDark),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                          color: AppColors.textDark,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 5),
                       Text(
                         salon['address'],
-                        style: const TextStyle(color: Colors.grey, fontSize: 12),
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 12,
+                        ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 5),
                       Text(
                         salon['price'],
-                        style: const TextStyle(color: Colors.grey, fontSize: 12),
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 12,
+                        ),
                       ),
                     ],
                   ),
@@ -121,17 +137,29 @@ class TopRatedList extends StatelessWidget {
                   child: ElevatedButton(
                     onPressed: () {
                       // 🚀 هوني تنجم تهزو ديركت لصفحة الحجز زادة كان تحب
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => const SalonProfilePage()));
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SalonProfilePage(),
+                        ),
+                      );
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.actionRed, // اللون الوردي/الأحمر
+                      backgroundColor:
+                          AppColors.actionRed, // اللون الوردي/الأحمر
                       elevation: 0,
                       padding: const EdgeInsets.symmetric(horizontal: 15),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                     child: const Text(
-                      "Réserver",
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white),
+                      "Resservi",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),

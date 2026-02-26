@@ -72,7 +72,7 @@ class _MainPageState extends State<MainPage> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Text('Salon Name', style: TextStyle(color: Colors.black)),
+                const Text('Esm Salon', style: TextStyle(color: Colors.black)),
                 const SizedBox(width: 16),
                 CircleAvatar(
                   backgroundColor: Colors.blue,
@@ -113,12 +113,12 @@ class _MainPageState extends State<MainPage> {
             BottomNavigationBarItem(
               icon: Icon(Icons.calendar_today_outlined),
               activeIcon: Icon(Icons.calendar_today),
-              label: 'Mon Calendar',
+              label: 'Agenda mte3i',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.storefront_outlined),
               activeIcon: Icon(Icons.storefront),
-              label: 'Mon Salon',
+              label: 'Salon mte3i',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.person_outline),

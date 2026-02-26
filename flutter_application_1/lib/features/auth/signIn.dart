@@ -77,7 +77,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
                     // Titre
                     const Text(
-                      "Connexion",
+                      "Connecti",
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 28,
@@ -87,7 +87,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     ),
                     const SizedBox(height: 10),
                     const Text(
-                      "Heureux de vous revoir !",
+                      "Marhba bik marra okhra !",
                       textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 14, color: Colors.grey),
                     ),
@@ -96,7 +96,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     // Numéro de téléphone
                     _buildTextField(
                       controller: _phoneController,
-                      hintText: "Numéro de téléphone",
+                      hintText: "Numrou Tlifoun",
                       icon: Icons.phone_android_outlined,
                       keyboardType: TextInputType.phone,
                     ),
@@ -124,7 +124,7 @@ class _SignInScreenState extends State<SignInScreen> {
                       child: TextButton(
                         onPressed: () {},
                         child: const Text(
-                          "Mot de passe oublié ?",
+                          "Nsitt l'mot de passe ?",
                           style: TextStyle(
                             color: AppColors.primaryBlue,
                             fontWeight: FontWeight.w600,
@@ -154,8 +154,9 @@ class _SignInScreenState extends State<SignInScreen> {
                                   final token = response['data']['token'];
                                   final userRole =
                                       response['data']['user']['role'];
-                                  final hasSalon = 
-                                      response['data']['user']['hasSalon'] ?? false;
+                                  final hasSalon =
+                                      response['data']['user']['hasSalon'] ??
+                                      false;
 
                                   // Nsobba fi SharedPreferences
                                   final prefs =
@@ -167,7 +168,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                      content: Text('Connexion réussie !'),
+                                      content: Text('Dkholt mriguel !'),
                                       backgroundColor: Colors.green,
                                     ),
                                   );
@@ -178,7 +179,8 @@ class _SignInScreenState extends State<SignInScreen> {
                                       Navigator.pushAndRemoveUntil(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (context) => const MainPage(),
+                                          builder: (context) =>
+                                              const MainPage(),
                                         ),
                                         (route) => false,
                                       );
@@ -186,7 +188,8 @@ class _SignInScreenState extends State<SignInScreen> {
                                       Navigator.pushAndRemoveUntil(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (context) => const CreateSalonScreen(),
+                                          builder: (context) =>
+                                              const CreateSalonScreen(),
                                         ),
                                         (route) => false,
                                       );
@@ -260,7 +263,7 @@ class _SignInScreenState extends State<SignInScreen> {
                               ),
                             )
                           : const Text(
-                              "Se connecter",
+                              "Connecti",
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -275,7 +278,7 @@ class _SignInScreenState extends State<SignInScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const Text(
-                          "Vous n'avez pas de compte ? ",
+                          "Ma aandekch compte ? ",
                           style: TextStyle(color: Colors.grey, fontSize: 14),
                         ),
                         GestureDetector(
@@ -289,7 +292,7 @@ class _SignInScreenState extends State<SignInScreen> {
                             );
                           },
                           child: const Text(
-                            "S'inscrire",
+                            "Aamel compte",
                             style: TextStyle(
                               color: AppColors.primaryBlue,
                               fontWeight: FontWeight.bold,
@@ -360,7 +363,7 @@ class _SignInScreenState extends State<SignInScreen> {
         ),
         validator: (value) {
           if (value == null || value.isEmpty) {
-            return 'Ce champ est requis';
+            return 'Hedha lezem taamrou';
           }
           return null;
         },

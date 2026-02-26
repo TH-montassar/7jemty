@@ -17,13 +17,13 @@ class ClientBottomNav extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
-  BoxShadow(
-    color: Colors.black.withValues(alpha: 0.05), // شفافية عالية جداً
-    blurRadius: 30,                              // انتشار واسع للظل
-    spreadRadius: 0,
-    offset: const Offset(0, 10),                 // الظل يميل للأسفل
-  )
-]
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05), // شفافية عالية جداً
+            blurRadius: 30, // انتشار واسع للظل
+            spreadRadius: 0,
+            offset: const Offset(0, 10), // الظل يميل للأسفل
+          ),
+        ],
       ),
       child: BottomNavigationBar(
         currentIndex: selectedIndex,
@@ -33,15 +33,27 @@ class ClientBottomNav extends StatelessWidget {
         elevation: 0,
         selectedItemColor: AppColors.primaryBlue,
         unselectedItemColor: Colors.grey,
-        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+        selectedLabelStyle: const TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 12,
+        ),
         unselectedLabelStyle: const TextStyle(fontSize: 12),
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Accueil"),
-         
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+
           // 🔄 Houni badelna el bouton wel icône
-          BottomNavigationBarItem(icon: Icon(Icons.calendar_month_outlined), label: "Mes RDV"),
-           BottomNavigationBarItem(icon: Icon(Icons.production_quantity_limits), label: "Mes Produits"),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: "Profil"),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.calendar_month_outlined),
+            label: "RDV Mte3i",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.production_quantity_limits),
+            label: "Produits",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            label: "Profil",
+          ),
         ],
       ),
     );

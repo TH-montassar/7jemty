@@ -36,6 +36,7 @@ dependencies:
   flutter_secure_storage: ^10.0.0
   toastification: ^3.0.3
   shared_preferences: ^2.5.4
+  image_picker: ^1.2.1
 
 dev_dependencies:
   flutter_test:

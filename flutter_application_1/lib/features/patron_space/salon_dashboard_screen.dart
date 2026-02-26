@@ -47,7 +47,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
         alignment: Alignment.topCenter,
         autoCloseDuration: const Duration(seconds: 4),
         title: const Text(
-          'Erreur',
+          'Mochkla',
           style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         description: Text(
@@ -87,7 +87,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
               ),
               const SizedBox(height: 16),
               const Text(
-                "Aucun salon trouvé.",
+                "Ma famma hatta salon.",
                 style: TextStyle(fontSize: 18, color: Colors.grey),
               ),
               const SizedBox(height: 20),
@@ -105,7 +105,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                     },
                     icon: const Icon(Icons.add, size: 18, color: Colors.white),
                     label: const Text(
-                      "Créer votre salon",
+                      "Aamel salon mte3ek",
                       style: TextStyle(color: Colors.white),
                     ),
                     style: ElevatedButton.styleFrom(
@@ -119,7 +119,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                   OutlinedButton.icon(
                     onPressed: _fetchSalonData,
                     icon: const Icon(Icons.refresh, size: 18),
-                    label: const Text("Rafraîchir"),
+                    label: const Text("Aawed chargi"),
                     style: OutlinedButton.styleFrom(
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -210,7 +210,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                         children: [
                           Expanded(
                             child: Text(
-                              _salonData?['name'] ?? 'Mon Salon',
+                              _salonData?['name'] ?? 'Salon mte3i',
                               style: const TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
@@ -228,7 +228,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: const Text(
-                              "Ouvert",
+                              "Mahloul",
                               style: TextStyle(
                                 color: AppColors.successGreen,
                                 fontWeight: FontWeight.bold,
@@ -250,7 +250,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                           Expanded(
                             child: Text(
                               _salonData?['address'] ??
-                                  'Aucune adresse renseignée',
+                                  'Ma famma hatta adresse',
                               style: const TextStyle(
                                 fontSize: 14,
                                 color: Colors.grey,
@@ -299,8 +299,8 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                     indicatorWeight: 3,
                     labelStyle: const TextStyle(fontWeight: FontWeight.bold),
                     tabs: const [
-                      Tab(text: "Aperçu"),
-                      Tab(text: "Réservations"),
+                      Tab(text: "Tafasil"),
+                      Tab(text: "Rendez-vous"),
                       Tab(text: "Services"),
                       Tab(text: "Avis"),
                     ],
@@ -331,7 +331,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            "À propos",
+            "Aal salon",
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -340,8 +340,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            _salonData?['description'] ??
-                'Aucune description disponible pour le moment.',
+            _salonData?['description'] ?? 'Ma famma hatta description tawa.',
             style: const TextStyle(
               fontSize: 14,
               color: Colors.grey,
@@ -363,7 +362,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
               const Icon(Icons.phone, size: 20, color: AppColors.primaryBlue),
               const SizedBox(width: 12),
               Text(
-                _salonData?['contactPhone'] ?? 'Non renseigné',
+                _salonData?['contactPhone'] ?? 'Mouch m9ayed',
                 style: const TextStyle(
                   fontSize: 14,
                   color: AppColors.textDark,
@@ -380,7 +379,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
   Widget _buildServicesTab() {
     return const Center(
       child: Text(
-        "Vos services apparaîtront ici",
+        "Les services mte3ek bech yodh'hrou houni",
         style: TextStyle(color: Colors.grey),
       ),
     );
@@ -398,7 +397,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
           ),
           const SizedBox(height: 16),
           const Text(
-            "Aucune réservation pour aujourd'hui.",
+            "Ma famma hatta rendez-vous lyoum.",
             style: TextStyle(color: Colors.grey),
           ),
         ],
@@ -409,7 +408,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
   Widget _buildAvisTab() {
     return const Center(
       child: Text(
-        "Aucun avis client pour le moment.",
+        "Ma famma hatta avis mtaa client tawa.",
         style: TextStyle(color: Colors.grey),
       ),
     );
