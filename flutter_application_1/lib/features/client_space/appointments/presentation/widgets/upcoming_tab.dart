@@ -83,7 +83,7 @@ class UpcomingTab extends StatelessWidget {
               ),
               const SizedBox(height: 5),
               Row(
-                children: const [
+                children: [
                   Icon(Icons.cut, size: 16, color: Colors.grey),
                   SizedBox(width: 5),
                   Text(
@@ -137,8 +137,8 @@ class UpcomingTab extends StatelessWidget {
                     child: ElevatedButton.icon(
                       onPressed: () {},
                       icon: const Icon(Icons.map_outlined, size: 18),
-                      label: const Text(
-                        "Thneya",
+                      label: Text(
+                        tr(context, 'direction'),
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       style: ElevatedButton.styleFrom(
@@ -170,7 +170,7 @@ class UpcomingTab extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
           ),
           title: Row(
-            children: const [
+            children: [
               Icon(
                 Icons.warning_amber_rounded,
                 color: AppColors.actionRed,
@@ -178,7 +178,7 @@ class UpcomingTab extends StatelessWidget {
               ),
               SizedBox(width: 10),
               Text(
-                "Rod belek",
+                tr(context, 'appointments_warning_title'),
                 style: TextStyle(
                   color: AppColors.actionRed,
                   fontWeight: FontWeight.bold,
@@ -186,15 +186,15 @@ class UpcomingTab extends StatelessWidget {
               ),
             ],
           ),
-          content: const Text(
-            "Met'aked theb tbatel e-rendez-vous?\n\n⚠️ Kan tbatel 3 marrat wra baadhom comptek yetbloka.",
+          content: Text(
+            tr(context, 'appointments_cancel_confirm_msg'),
             style: TextStyle(height: 1.4),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text(
-                "Rjou3",
+              child: Text(
+                tr(context, 'back'),
                 style: TextStyle(
                   color: Colors.grey,
                   fontWeight: FontWeight.bold,
@@ -205,8 +205,8 @@ class UpcomingTab extends StatelessWidget {
               onPressed: () {
                 Navigator.of(context).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Rendez-vous tbatel"),
+                  SnackBar(
+                    content: Text(tr(context, 'appointment_cancelled')),
                     backgroundColor: AppColors.actionRed,
                   ),
                 );
@@ -217,8 +217,8 @@ class UpcomingTab extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              child: const Text(
-                "Ey, Batel",
+              child: Text(
+                tr(context, 'yes_cancel'),
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,

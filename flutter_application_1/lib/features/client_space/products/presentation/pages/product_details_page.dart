@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/translation_service.dart';
 
 class ProductDetailsPage extends StatefulWidget {
   final Map<String, dynamic> product;
@@ -72,7 +73,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                               style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textDark),
                             ),
                             const SizedBox(height: 5),
-                            const Text("Marque / Salon Professionnel", style: TextStyle(color: Colors.grey, fontSize: 14)),
+                            Text(tr(context, 'brand_professional'), style: const TextStyle(color: Colors.grey, fontSize: 14)),
                           ],
                         ),
                       ),
@@ -85,25 +86,25 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                   const SizedBox(height: 30),
 
                   // Description
-                  const Text("Description", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textDark)),
+                  Text(tr(context, 'description'), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textDark)),
                   const SizedBox(height: 10),
-                  const Text(
-                    "Ce produit professionnel est spécialement conçu pour offrir une tenue parfaite tout au long de la journée. Idéal pour tous les types de cheveux, il ne laisse pas de résidus et se lave facilement.",
+                  Text(
+                    tr(context, 'product_description_text'),
                     style: TextStyle(color: Colors.grey, height: 1.5),
                   ),
                   const SizedBox(height: 25),
 
                 // Conseils d'utilisation
-        const Text("Conseils d'utilisation", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textDark)),
+        Text(tr(context, 'usage_tips'), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textDark)),
         const SizedBox(height: 10),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start, // 👈 هذي تريڨل الأيقونة
-          children: const [
+          children: [
             Icon(Icons.check_circle_outline, color: AppColors.primaryBlue, size: 20),
             SizedBox(width: 10),
             Expanded( // 🚀 هذي اللّي باش تنحي الـ Overflow
               child: Text(
-                "Appliquer sur cheveux secs ou légèrement humides.", 
+                tr(context, 'usage_tip_line'), 
                 style: TextStyle(color: Colors.grey, height: 1.5),
               ),
             ),
@@ -160,7 +161,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                     onPressed: () {
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Ajouté au panier avec succès 🛒"), backgroundColor: Colors.green),
+                        SnackBar(content: Text(tr(context, 'added_to_cart_success')), backgroundColor: Colors.green),
                       );
                     },
                     style: ElevatedButton.styleFrom(
@@ -168,7 +169,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                       elevation: 0,
                     ),
-                    child: const Text("Ajouter au panier", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                    child: Text(tr(context, 'add_to_cart'), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                   ),
                 ),
               ),

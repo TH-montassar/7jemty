@@ -234,7 +234,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
                     controller: _reviewController,
                     maxLines: 3,
                     decoration: InputDecoration(
-                      hintText: "Khali commentaire (optionnel)...",
+                      hintText: tr(context, 'review_comment_hint'),
                       hintStyle: TextStyle(color: Colors.grey.shade400),
                       filled: true,
                       fillColor: Colors.grey.shade100,
@@ -252,8 +252,8 @@ class _ClientHomePageState extends State<ClientHomePage> {
                       onPressed: () {
                         Navigator.pop(context);
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Avis tbaath mriguel! Aaychek 🎉"),
+                          SnackBar(
+                            content: Text(tr(context, 'review_sent')),
                             backgroundColor: AppColors.successGreen,
                           ),
                         );
@@ -264,8 +264,8 @@ class _ClientHomePageState extends State<ClientHomePage> {
                           borderRadius: BorderRadius.circular(15),
                         ),
                       ),
-                      child: const Text(
-                        "Abaath l'avis",
+                      child: Text(
+                        tr(context, 'send_review'),
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -277,8 +277,8 @@ class _ClientHomePageState extends State<ClientHomePage> {
                   const SizedBox(height: 10),
                   TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Text(
-                      "Fout",
+                    child: Text(
+                      tr(context, 'skip'),
                       style: TextStyle(color: Colors.grey),
                     ),
                   ),

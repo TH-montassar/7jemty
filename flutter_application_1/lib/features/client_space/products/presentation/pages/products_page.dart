@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/translation_service.dart';
 // 1. 🚀 عملنا Import لصفحة تفاصيل المنتج وصفحة السلة
 import 'product_details_page.dart';
 import 'cart_page.dart';
@@ -14,8 +15,6 @@ class ProductsPage extends StatefulWidget {
 class _ProductsPageState extends State<ProductsPage> {
   int _selectedCategoryIndex = 0;
   
-  final List<String> _categories = ["Tous", "Cheveux", "Barbe", "Visage", "Accessoires"];
-
   final List<Map<String, dynamic>> _products = [
     {'name': 'Cire Coiffante Matte', 'brand': 'Barber King', 'price': '25 DT', 'image': 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=500&q=80'},
     {'name': 'Huile à Barbe Bio', 'brand': 'The Classic', 'price': '35 DT', 'image': 'https://images.unsplash.com/photo-1621607512214-68297480165e?auto=format&fit=crop&w=500&q=80'},
@@ -25,6 +24,14 @@ class _ProductsPageState extends State<ProductsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final categories = [
+      tr(context, 'category_all'),
+      tr(context, 'category_hair'),
+      tr(context, 'category_beard'),
+      tr(context, 'category_face'),
+      tr(context, 'category_accessories'),
+    ];
+
     return Scaffold(
       backgroundColor: AppColors.bgColor,
       appBar: AppBar(
@@ -32,7 +39,7 @@ class _ProductsPageState extends State<ProductsPage> {
         elevation: 0,
         centerTitle: true,
         automaticallyImplyLeading: false, 
-        title: const Text("Boutique", style: TextStyle(color: AppColors.textDark, fontWeight: FontWeight.bold)),
+        title: Text(tr(context, 'shop'), style: const TextStyle(color: AppColors.textDark, fontWeight: FontWeight.bold)),
         actions: [
           IconButton(
             icon: const Badge(
@@ -62,9 +69,9 @@ class _ProductsPageState extends State<ProductsPage> {
                 borderRadius: BorderRadius.circular(15),
                 boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 15, offset: const Offset(0, 5))],
               ),
-              child: const TextField(
+              child: TextField(
                 decoration: InputDecoration(
-                  hintText: "Chercher un produit...",
+                  hintText: tr(context, 'search_product'),
                   prefixIcon: Icon(Icons.search, color: Colors.grey),
                   border: InputBorder.none,
                   contentPadding: EdgeInsets.symmetric(vertical: 15),
@@ -79,7 +86,7 @@ class _ProductsPageState extends State<ProductsPage> {
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 15),
-              itemCount: _categories.length,
+              itemCount: categories.length,
               itemBuilder: (context, index) {
                 bool isSelected = _selectedCategoryIndex == index;
                 return GestureDetector(
@@ -94,7 +101,7 @@ class _ProductsPageState extends State<ProductsPage> {
                     ),
                     alignment: Alignment.center,
                     child: Text(
-                      _categories[index],
+                      categories[index],
                       style: TextStyle(
                         color: isSelected ? Colors.white : Colors.grey,
                         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
@@ -183,7 +190,7 @@ class _ProductsPageState extends State<ProductsPage> {
                       GestureDetector(
                         onTap: () {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("${product['name']} ajouté! 🛒"), backgroundColor: Colors.green, duration: const Duration(seconds: 2)),
+                            SnackBar(content: Text("${product['name']} ${tr(context, 'added_to_cart')}"), backgroundColor: Colors.green, duration: const Duration(seconds: 2)),
                           );
                         },
                         child: Container(

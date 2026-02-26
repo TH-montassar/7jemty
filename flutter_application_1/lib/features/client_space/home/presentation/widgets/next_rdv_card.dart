@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/translation_service.dart';
 
 class NextRdvCard extends StatelessWidget {
   const NextRdvCard({super.key});
@@ -28,8 +29,8 @@ class NextRdvCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                "Rendez-vous jey",
+              Text(
+                tr(context, 'next_appointment'),
                 style: TextStyle(
                   color: AppColors.primaryBlue,
                   fontWeight: FontWeight.bold,
@@ -41,11 +42,11 @@ class NextRdvCard extends StatelessWidget {
                 onTap: () {
                   // TODO: حل الـ Google Maps ولا صفحة الخريطة
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Kaaed yhel fel map 🗺️")),
+                    SnackBar(content: Text(tr(context, 'map_opening'))),
                   );
                 },
-                child: const Text(
-                  "Chouf fil map 🗺️",
+                child: Text(
+                  tr(context, 'see_on_map'),
                   style: TextStyle(
                     color: AppColors.primaryBlue,
                     fontWeight: FontWeight.bold,

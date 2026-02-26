@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../../core/constants/app_colors.dart';
+import '../../../../../../core/localization/translation_service.dart';
 
 class ClientBottomNav extends StatelessWidget {
   final int selectedIndex;
@@ -38,21 +39,21 @@ class ClientBottomNav extends StatelessWidget {
           fontSize: 12,
         ),
         unselectedLabelStyle: const TextStyle(fontSize: 12),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+        items: [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: tr(context, 'home')),
 
           // 🔄 Houni badelna el bouton wel icône
           BottomNavigationBarItem(
             icon: Icon(Icons.calendar_month_outlined),
-            label: "RDV Mte3i",
+            label: tr(context, 'appointments_short'),
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.production_quantity_limits),
-            label: "Produits",
+            label: tr(context, 'products'),
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
-            label: "Profil",
+            label: tr(context, 'profile'),
           ),
         ],
       ),
