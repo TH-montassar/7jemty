@@ -32,7 +32,7 @@ class _ClientMainLayoutState extends State<ClientMainLayout> {
     if (index == 3) { // Index 3 houwa l'onglet mta3 Profil
       
       // === هوني تبدل اللوجيك متاعك بعدين بالـ Firebase أو SharedPrefs ===
-      bool isUserLoggedIn = true; // 👈 tawa hatineha false bech njarrbou l'Login
+      bool isUserLoggedIn = false; // 👈 tawa hatineha false bech njarrbou l'Login
       // =================================================================
 
       if (!isUserLoggedIn) {
