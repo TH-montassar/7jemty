@@ -1,3 +1,4 @@
+import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:flutter/material.dart';
 
 class CalendarPage extends StatelessWidget {
@@ -7,7 +8,7 @@ class CalendarPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Mon Calendrier"),
+        title: Text(tr(context, 'my_calendar')),
         backgroundColor: Colors.white,
         elevation: 0,
         // Bouton rjou3 yji automatique fi Flutter ki tbadhel page,

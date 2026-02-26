@@ -1,3 +1,4 @@
+import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:flutter/material.dart';
 import '../../../../../core/constants/app_colors.dart';
 
@@ -33,7 +34,7 @@ class ReviewsTab extends StatelessWidget {
                     Container(width: 50, height: 5, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(10))),
                     const SizedBox(height: 20),
                     
-                    const Text("Notez ce salon", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textDark)),
+                    Text(tr(context, 'rate_this_salon'), style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textDark)),
                     const SizedBox(height: 20),
 
                     Row(
@@ -78,8 +79,8 @@ class ReviewsTab extends StatelessWidget {
                         onPressed: selectedStars > 0 ? () {
                           Navigator.pop(context); 
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text("Merci pour votre avis ! ⭐"),
+                            SnackBar(
+                              content: Text(tr(context, 'thank_you_for_review')),
                               backgroundColor: Colors.green,
                               behavior: SnackBarBehavior.floating,
                             ),
@@ -90,7 +91,7 @@ class ReviewsTab extends StatelessWidget {
                           disabledBackgroundColor: Colors.grey.shade300,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                         ),
-                        child: const Text("Envoyer l'avis", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                        child: Text(tr(context, 'send_the_review'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                       ),
                     ),
                   ],
@@ -119,14 +120,14 @@ class ReviewsTab extends StatelessWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const Text("4.9", style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: AppColors.textDark)),
+            Text(tr(context, 'rating_4_9'), style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: AppColors.textDark)),
             const SizedBox(width: 15),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(children: List.generate(5, (index) => const Icon(Icons.star, color: Colors.amber, size: 18))),
                 const SizedBox(height: 5),
-                const Text("Basé sur 120 avis", style: TextStyle(color: Colors.grey)),
+                Text(tr(context, 'based_on_120_reviews'), style: TextStyle(color: Colors.grey)),
               ],
             ),
           ],
@@ -142,7 +143,7 @@ class ReviewsTab extends StatelessWidget {
               _showAddReviewSheet(context); // نعيطولها هوني
             },
             icon: const Icon(Icons.edit, size: 18),
-            label: const Text("Écrire un avis", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+            label: Text(tr(context, 'write_a_review'), style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.primaryBlue,
               side: const BorderSide(color: AppColors.primaryBlue),

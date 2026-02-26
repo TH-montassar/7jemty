@@ -1,3 +1,4 @@
+import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:flutter/material.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../booking/presentation/pages/booking_page.dart';
@@ -63,7 +64,7 @@ class ServicesTab extends StatelessWidget {
                   elevation: 0,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
-                child: const Text("Réserver", style: TextStyle(fontWeight: FontWeight.bold)),
+                child: Text(tr(context, 'reserve_btn'), style: TextStyle(fontWeight: FontWeight.bold)),
               ),
             ],
           ),

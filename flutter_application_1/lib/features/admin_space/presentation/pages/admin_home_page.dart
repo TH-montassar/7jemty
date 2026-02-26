@@ -1,3 +1,4 @@
+import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:flutter/material.dart';
 
 class AdminHomePage extends StatelessWidget {
@@ -7,7 +8,7 @@ class AdminHomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Admin Dashboard'),
+        title: Text(tr(context, 'admin_dashboard')),
         backgroundColor: Colors.redAccent,
       ),
       body: const Center(

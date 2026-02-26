@@ -205,8 +205,8 @@ class UpcomingTab extends StatelessWidget {
               onPressed: () {
                 Navigator.of(context).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Rendez-vous tbatel"),
+                  SnackBar(
+                    content: Text(tr(context, 'appointment_cancelled')),
                     backgroundColor: AppColors.actionRed,
                   ),
                 );

@@ -1,3 +1,4 @@
+import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:flutter/material.dart';
 import '../../../../../core/constants/app_colors.dart';
 
@@ -72,7 +73,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                               style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textDark),
                             ),
                             const SizedBox(height: 5),
-                            const Text("Marque / Salon Professionnel", style: TextStyle(color: Colors.grey, fontSize: 14)),
+                            Text(tr(context, 'professional_salon_brand'), style: TextStyle(color: Colors.grey, fontSize: 14)),
                           ],
                         ),
                       ),
@@ -85,7 +86,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                   const SizedBox(height: 30),
 
                   // Description
-                  const Text("Description", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textDark)),
+                  Text(tr(context, 'description_title'), style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textDark)),
                   const SizedBox(height: 10),
                   const Text(
                     "Ce produit professionnel est spécialement conçu pour offrir une tenue parfaite tout au long de la journée. Idéal pour tous les types de cheveux, il ne laisse pas de résidus et se lave facilement.",
@@ -94,7 +95,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                   const SizedBox(height: 25),
 
                 // Conseils d'utilisation
-        const Text("Conseils d'utilisation", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textDark)),
+        Text(tr(context, 'usage_tips'), style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textDark)),
         const SizedBox(height: 10),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start, // 👈 هذي تريڨل الأيقونة
@@ -160,7 +161,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                     onPressed: () {
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Ajouté au panier avec succès 🛒"), backgroundColor: Colors.green),
+                        SnackBar(content: Text(tr(context, 'added_to_cart_success')), backgroundColor: Colors.green),
                       );
                     },
                     style: ElevatedButton.styleFrom(
@@ -168,7 +169,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                       elevation: 0,
                     ),
-                    child: const Text("Ajouter au panier", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                    child: Text(tr(context, 'add_to_cart_btn'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                   ),
                 ),
               ),

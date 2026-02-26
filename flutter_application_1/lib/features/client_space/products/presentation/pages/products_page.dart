@@ -42,8 +42,8 @@ class _ProductsPageState extends State<ProductsPage> {
         title: Text(tr(context, 'shop'), style: const TextStyle(color: AppColors.textDark, fontWeight: FontWeight.bold)),
         actions: [
           IconButton(
-            icon: const Badge(
-              label: Text('2'),
+            icon: Badge(
+              label: Text(tr(context, 'quantity_2')),
               child: Icon(Icons.shopping_cart_outlined, color: AppColors.textDark),
             ),
             onPressed: () {

@@ -142,7 +142,7 @@ class _SettingsMenuState extends State<SettingsMenu> {
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                title: const Text("Tounsi"),
+                title: Text(tr(context, 'tunisian_lang')),
                 trailing: TranslationProvider.of(context).currentLang == 'tn'
                     ? const Icon(Icons.check, color: AppColors.primaryBlue)
                     : null,
@@ -152,7 +152,7 @@ class _SettingsMenuState extends State<SettingsMenu> {
                 },
               ),
               ListTile(
-                title: const Text("English"),
+                title: Text(tr(context, 'english_lang_title')),
                 trailing: TranslationProvider.of(context).currentLang == 'en'
                     ? const Icon(Icons.check, color: AppColors.primaryBlue)
                     : null,

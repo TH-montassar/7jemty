@@ -1,11 +1,22 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/translation_service.dart';
 
 class NextRdvCard extends StatelessWidget {
-  const NextRdvCard({super.key});
+  final DateTime? appointmentDate;
+
+  const NextRdvCard({super.key, this.appointmentDate});
 
   @override
   Widget build(BuildContext context) {
+    // If appointmentDate is null, fallback to current time for UI demo
+    final dateToDisplay = appointmentDate ?? DateTime.now();
+
+    // Format the time as HH:mm
+    // Usually you'd use DateFormat('HH:mm').format(date) via the intl package,
+    // but a simple string padding works just as well without extra imports:
+    final timeStr =
+        "\${dateToDisplay.hour.toString().padLeft(2, '0')}:\${dateToDisplay.minute.toString().padLeft(2, '0')}";
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -28,8 +39,8 @@ class NextRdvCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                "Rendez-vous jey",
+              Text(
+                tr(context, 'next_appointment'),
                 style: TextStyle(
                   color: AppColors.primaryBlue,
                   fontWeight: FontWeight.bold,
@@ -41,7 +52,7 @@ class NextRdvCard extends StatelessWidget {
                 onTap: () {
                   // TODO: حل الـ Google Maps ولا صفحة الخريطة
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Kaaed yhel fel map 🗺️")),
+                    SnackBar(content: Text(tr(context, 'opening_map'))),
                   );
                 },
                 child: const Text(
@@ -59,16 +70,17 @@ class NextRdvCard extends StatelessWidget {
 
           // 2. التاريخ والوقت (Date & Heure)
           Row(
-            children: const [
-              Icon(
+            children: [
+              const Icon(
                 Icons.calendar_today,
                 color: AppColors.textDark,
                 size: 20,
               ), // بدلت اللون باش يطابق التصويرة
-              SizedBox(width: 12),
+              const SizedBox(width: 12),
               Text(
-                "Lyoum, 15:00",
-                style: TextStyle(
+                // Example with string parameter insertion!
+                tr(context, 'dynamic_today_time', args: [timeStr]),
+                style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
                   color: AppColors.textDark,

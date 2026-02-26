@@ -1,3 +1,4 @@
+import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:flutter/material.dart';
 import 'calendar_page.dart';
 import 'all_appointments_page.dart';
@@ -104,14 +105,14 @@ class _HomePageState extends State<HomePage> {
                         showDialog(
                           context: context,
                           builder: (context) => AlertDialog(
-                            title: const Text("Information"),
+                            title: Text(tr(context, 'information_title')),
                             content: const Text(
                               "Vous n'avez aucun rendez-vous pour aujourd'hui.",
                             ),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.pop(context),
-                                child: const Text("OK"),
+                                child: Text(tr(context, 'ok_btn')),
                               ),
                             ],
                           ),

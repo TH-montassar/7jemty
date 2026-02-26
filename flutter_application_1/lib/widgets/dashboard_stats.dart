@@ -1,3 +1,4 @@
+import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:flutter/material.dart';
 import 'info_card.dart';
 
@@ -59,7 +60,7 @@ class DashboardStats extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                    child: const Text('Renouveler'),
+                    child: Text(tr(context, 'renew_btn')),
                   ),
                 ),
               ],

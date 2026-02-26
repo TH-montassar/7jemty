@@ -1,3 +1,4 @@
+import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:flutter/material.dart';
 import '../../../../../core/constants/app_colors.dart';
 
@@ -44,7 +45,7 @@ class _CartPageState extends State<CartPage> {
           icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.textDark, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text("Mon Panier", style: TextStyle(color: AppColors.textDark, fontWeight: FontWeight.bold)),
+        title: Text(tr(context, 'my_cart'), style: TextStyle(color: AppColors.textDark, fontWeight: FontWeight.bold)),
       ),
       body: _cartItems.isEmpty 
           ? _buildEmptyCart() 
@@ -166,7 +167,7 @@ class _CartPageState extends State<CartPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text("Total à payer", style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.w600)),
+                Text(tr(context, 'total_to_pay'), style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.w600)),
                 Text("${_totalPrice.toInt()} DT", style: const TextStyle(color: AppColors.primaryBlue, fontSize: 24, fontWeight: FontWeight.bold)),
               ],
             ),
@@ -178,7 +179,7 @@ class _CartPageState extends State<CartPage> {
                 onPressed: () {
                   // TODO: تعدية الكوموند
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Commande validée avec succès 🎉"), backgroundColor: Colors.green),
+                    SnackBar(content: Text(tr(context, 'order_validated_successfully')), backgroundColor: Colors.green),
                   );
                   Navigator.pop(context);
                 },
@@ -187,7 +188,7 @@ class _CartPageState extends State<CartPage> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                   elevation: 0,
                 ),
-                child: const Text("Valider la commande", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                child: Text(tr(context, 'validate_order'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
               ),
             ),
           ],
@@ -204,7 +205,7 @@ class _CartPageState extends State<CartPage> {
         children: [
           Icon(Icons.shopping_cart_outlined, size: 80, color: Colors.grey.withValues(alpha: 0.3)),
           const SizedBox(height: 20),
-          const Text("Votre panier est vide", style: TextStyle(fontSize: 18, color: Colors.grey, fontWeight: FontWeight.bold)),
+          Text(tr(context, 'your_cart_is_empty'), style: TextStyle(fontSize: 18, color: Colors.grey, fontWeight: FontWeight.bold)),
           const SizedBox(height: 20),
           ElevatedButton(
             onPressed: () => Navigator.pop(context),
@@ -214,7 +215,7 @@ class _CartPageState extends State<CartPage> {
               elevation: 0,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            child: const Text("Retourner à la boutique"),
+            child: Text(tr(context, 'return_to_shop')),
           ),
         ],
       ),

@@ -1,3 +1,4 @@
+import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:flutter/material.dart';
 import '../../../../../core/constants/app_colors.dart';
 
@@ -24,10 +25,10 @@ class ProfileHeader extends StatelessWidget {
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text("Sami", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textDark)),
+              children: [
+                Text(tr(context, 'sami_name'), style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textDark)),
                 SizedBox(height: 4),
-                Text("sami@gmail.com", style: TextStyle(color: Colors.grey, fontSize: 14)),
+                Text(tr(context, 'sami_email'), style: TextStyle(color: Colors.grey, fontSize: 14)),
               ],
             ),
           ),

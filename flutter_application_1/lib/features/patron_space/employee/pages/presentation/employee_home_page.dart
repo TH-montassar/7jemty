@@ -1,3 +1,4 @@
+import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:flutter/material.dart';
 import 'package:toastification/toastification.dart';
 import '../../../../../core/constants/app_colors.dart';
@@ -92,7 +93,7 @@ class _EmployeeHomePageState extends State<EmployeeHomePage> {
         style: ToastificationStyle.fillColored,
         alignment: Alignment.topCenter,
         autoCloseDuration: const Duration(seconds: 4),
-        title: const Text('Mochkla', style: TextStyle(color: Colors.white)),
+        title: Text(tr(context, 'error_issue'), style: TextStyle(color: Colors.white)),
         description: Text(
           e.toString(),
           style: const TextStyle(color: Colors.white),
@@ -256,7 +257,7 @@ class _EmployeeHomePageState extends State<EmployeeHomePage> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                    child: const Text("Orfodh"),
+                    child: Text(tr(context, 'reject_btn')),
                   ),
                 ),
                 const SizedBox(width: 12),

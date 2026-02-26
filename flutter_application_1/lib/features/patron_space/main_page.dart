@@ -1,3 +1,4 @@
+import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:flutter/material.dart';
 import '../../pages/home_page.dart';
 import '../../pages/calendar_page.dart';
@@ -49,7 +50,7 @@ class _MainPageState extends State<MainPage> {
                   const Icon(Icons.cut, color: Colors.blue),
             ),
             const SizedBox(width: 8),
-            const Text('7jemty'),
+            Text(tr(context, 'app_name_7jemty')),
           ],
         ),
         actions: [
@@ -72,7 +73,7 @@ class _MainPageState extends State<MainPage> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Text('Esm Salon', style: TextStyle(color: Colors.black)),
+                Text(tr(context, 'salon_name_label'), style: TextStyle(color: Colors.black)),
                 const SizedBox(width: 16),
                 CircleAvatar(
                   backgroundColor: Colors.blue,

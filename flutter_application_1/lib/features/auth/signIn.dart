@@ -1,3 +1,4 @@
+import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import 'signUp.dart';
@@ -167,8 +168,8 @@ class _SignInScreenState extends State<SignInScreen> {
                                   if (!mounted) return;
 
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Dkholt mriguel !'),
+                                    SnackBar(
+                                      content: Text(tr(context, 'logged_in_successfully')),
                                       backgroundColor: Colors.green,
                                     ),
                                   );

@@ -1,3 +1,4 @@
+import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:flutter/material.dart';
 
 class AllAppointmentsPage extends StatelessWidget {
@@ -10,7 +11,7 @@ class AllAppointmentsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Tous les Rendez-vous"),
+        title: Text(tr(context, 'all_appointments')),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,

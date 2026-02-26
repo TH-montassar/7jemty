@@ -252,8 +252,8 @@ class _ClientHomePageState extends State<ClientHomePage> {
                       onPressed: () {
                         Navigator.pop(context);
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Avis tbaath mriguel! Aaychek 🎉"),
+                          SnackBar(
+                            content: Text(tr(context, 'review_sent_thank_you')),
                             backgroundColor: AppColors.successGreen,
                           ),
                         );

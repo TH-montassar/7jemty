@@ -1,4 +1,5 @@
 // TODO Implement this library.
+import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 // Houni n3aytou lel page mta3 l'client elli 5demnaha
@@ -161,11 +162,11 @@ class BarberTestPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Espace 7ajem"),
+        title: Text(tr(context, 'barber_space')),
         backgroundColor: AppColors.textDark,
       ),
-      body: const Center(
-        child: Text("Hetha l'espace mta3 l'7ajem (En cours de dev...)"),
+      body: Center(
+        child: Text(tr(context, 'barber_space_wip')),
       ),
     );
   }

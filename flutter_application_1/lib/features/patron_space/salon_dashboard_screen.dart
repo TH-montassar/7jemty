@@ -1,3 +1,4 @@
+import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../services/salon_service.dart';
@@ -119,7 +120,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                   OutlinedButton.icon(
                     onPressed: _fetchSalonData,
                     icon: const Icon(Icons.refresh, size: 18),
-                    label: const Text("Aawed chargi"),
+                    label: Text(tr(context, 'reload_btn')),
                     style: OutlinedButton.styleFrom(
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),

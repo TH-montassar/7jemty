@@ -1,3 +1,4 @@
+import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:flutter/material.dart';
 import '../widgets/appointment_card.dart';
 
@@ -9,7 +10,7 @@ class TodayAppointmentsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Rendez-vous d'aujourd'hui")),
+      appBar: AppBar(title: Text(tr(context, 'today_appointments_title'))),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ListView.separated(

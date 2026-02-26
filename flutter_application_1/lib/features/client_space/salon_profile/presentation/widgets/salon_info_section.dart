@@ -1,3 +1,4 @@
+import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:flutter/material.dart';
 import '../../../../../core/constants/app_colors.dart';
 
@@ -27,7 +28,7 @@ class SalonInfoSection extends StatelessWidget {
                   color: Colors.green.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Text("Ouvert", style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+                child: Text(tr(context, 'open_status'), style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -37,20 +38,20 @@ class SalonInfoSection extends StatelessWidget {
               // TODO: Ouvre GPS
             },
             child: Row(
-              children: const [
+              children: [
                 Icon(Icons.location_on, color: AppColors.primaryBlue, size: 18),
                 SizedBox(width: 5),
-                Text("Avenue Habib Bourguiba, Ariana", style: TextStyle(color: Colors.grey, fontSize: 14, decoration: TextDecoration.underline)),
+                Text(tr(context, 'address_ariana'), style: TextStyle(color: Colors.grey, fontSize: 14, decoration: TextDecoration.underline)),
               ],
             ),
           ),
           const SizedBox(height: 15),
           Row(
-            children: const [
+            children: [
               Icon(Icons.star, color: Colors.amber, size: 20),
               SizedBox(width: 5),
-              Text("4.9", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-              Text(" (120 avis)", style: TextStyle(color: Colors.grey, fontSize: 14)),
+              Text(tr(context, 'rating_4_9'), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              Text(tr(context, 'reviews_120'), style: TextStyle(color: Colors.grey, fontSize: 14)),
             ],
           ),
         ],

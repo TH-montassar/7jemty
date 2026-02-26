@@ -1,3 +1,4 @@
+import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:flutter/material.dart';
 import '../../../../../core/constants/app_colors.dart';
 
@@ -79,11 +80,11 @@ class _PortfolioGalleryPageState extends State<PortfolioGalleryPage> {
                   // TODO: تهزو لصفحة الـ Booking
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Redirection vers la réservation..."), backgroundColor: AppColors.primaryBlue),
+                    SnackBar(content: Text(tr(context, 'redirecting_to_reservation')), backgroundColor: AppColors.primaryBlue),
                   );
                 },
                 icon: const Icon(Icons.content_cut, color: Colors.white, size: 20),
-                label: const Text("Réserver ce style", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                label: Text(tr(context, 'reserve_this_style'), style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.actionRed, // لون يجبد العين
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),

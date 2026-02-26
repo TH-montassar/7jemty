@@ -1,3 +1,4 @@
+import 'package:hjamty/core/localization/translation_service.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
@@ -55,7 +56,7 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
       toastification.show(
         context: context,
         type: ToastificationType.error,
-        title: const Text("Erreur"),
+        title: Text(tr(context, 'error_title')),
         description: Text("Ma najamnech nkhayrou taswira: $e"),
         autoCloseDuration: const Duration(seconds: 4),
       );
@@ -190,7 +191,10 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
         style: ToastificationStyle.fillColored,
         alignment: Alignment.topCenter,
         autoCloseDuration: const Duration(seconds: 3),
-        title: const Text('Mochkla', style: TextStyle(color: Colors.white)),
+        title: Text(
+          tr(context, 'error_issue'),
+          style: TextStyle(color: Colors.white),
+        ),
         description: const Text(
           'L\'esm wel numrou wel mot de passe lezmin',
           style: TextStyle(color: Colors.white),
@@ -270,7 +274,10 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
         style: ToastificationStyle.fillColored,
         alignment: Alignment.topCenter,
         autoCloseDuration: const Duration(seconds: 4),
-        title: const Text('Mochkla', style: TextStyle(color: Colors.white)),
+        title: Text(
+          tr(context, 'error_issue'),
+          style: TextStyle(color: Colors.white),
+        ),
         description: Text(
           e.toString().replaceAll('Exception: ', ''),
           style: const TextStyle(color: Colors.white),
@@ -346,7 +353,7 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
                 OutlinedButton.icon(
                   onPressed: _fetchSalonData,
                   icon: const Icon(Icons.refresh, size: 18),
-                  label: const Text("Aawed chargi"),
+                  label: Text(tr(context, 'reload_btn')),
                   style: OutlinedButton.styleFrom(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -429,7 +436,7 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
                 fontWeight: FontWeight.bold,
                 fontSize: 13,
               ),
-              tabs: const [
+              tabs: [
                 Tab(
                   child: Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16),
@@ -437,7 +444,7 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
                       children: [
                         Icon(Icons.info_outline, size: 16),
                         SizedBox(width: 6),
-                        Text("Info"),
+                        Text(tr(context, 'info_tab')),
                       ],
                     ),
                   ),
@@ -449,7 +456,7 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
                       children: [
                         Icon(Icons.cut_outlined, size: 16),
                         SizedBox(width: 6),
-                        Text("Services"),
+                        Text(tr(context, 'services_tab_val')),
                       ],
                     ),
                   ),
@@ -461,7 +468,7 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
                       children: [
                         Icon(Icons.group_outlined, size: 16),
                         SizedBox(width: 6),
-                        Text("Equipe"),
+                        Text(tr(context, 'team_tab')),
                       ],
                     ),
                   ),
@@ -473,7 +480,7 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
                       children: [
                         Icon(Icons.access_time, size: 16),
                         SizedBox(width: 6),
-                        Text("Wakt"),
+                        Text(tr(context, 'schedule_tab')),
                       ],
                     ),
                   ),
@@ -485,7 +492,7 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
                       children: [
                         Icon(Icons.image_outlined, size: 16),
                         SizedBox(width: 6),
-                        Text("Tsawer"),
+                        Text(tr(context, 'photos_tab')),
                       ],
                     ),
                   ),
@@ -667,7 +674,7 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
                           size: 16,
                           color: _isUrlMode ? Colors.white : AppColors.textDark,
                         ),
-                        label: const Text("URL"),
+                        label: Text(tr(context, 'url_label')),
                       ),
                       const SizedBox(width: 8),
                       ElevatedButton.icon(
@@ -1108,7 +1115,7 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
                         ),
                       ),
                       icon: const Icon(Icons.link, size: 16),
-                      label: const Text("URL"),
+                      label: Text(tr(context, 'url_label')),
                     ),
                     const SizedBox(width: 8),
                     TextButton.icon(
