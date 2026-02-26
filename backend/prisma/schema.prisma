@@ -71,6 +71,9 @@ model Profile {
   fcmToken                 String?
   pushNotificationsEnabled Boolean  @default(true)
   darkModeEnabled          Boolean  @default(false)
+  address                  String?
+  latitude                 Float?
+  longitude                Float?
   createdAt                DateTime @default(now())
 }
 

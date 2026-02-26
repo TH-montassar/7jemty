@@ -17,6 +17,8 @@ export const createSalon = async (patronId: number, data: any) => {
         data: {
             name: data.name,
             address: data.address,
+            latitude: data.latitude, // <-- Save latitude
+            longitude: data.longitude, // <-- Save longitude
             patronId: patronId, // 👈 Narbtou l'salon bel Patron mta3ou
         },
     });
@@ -40,6 +42,9 @@ export const updateSalon = async (patronId: number, data: any) => {
         data: {
             description: data.description !== undefined ? data.description : existingSalon.description,
             contactPhone: data.contactPhone !== undefined ? data.contactPhone : existingSalon.contactPhone,
+            address: data.address !== undefined ? data.address : existingSalon.address,
+            latitude: data.latitude !== undefined ? data.latitude : existingSalon.latitude,
+            longitude: data.longitude !== undefined ? data.longitude : existingSalon.longitude,
         },
     });
 
@@ -142,12 +147,8 @@ export const createEmployeeAccount = async (patronId: number, data: any) => {
 };
 
 export const getAllSalons = async (lat?: number, lng?: number) => {
-    // Njibou tous les salons approuvés men base de données
+    // Njibou tous les salons men base de données (sans conditions)
     const salons = await prisma.salon.findMany({
-        where: {
-            approvalStatus: 'APPROVED',
-            isForceClosed: false
-        },
         include: {
             services: true,
             workingHours: true,

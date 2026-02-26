@@ -24,7 +24,11 @@ export const registerUser = async (data: any) => {
             passwordHash,
             role: data.role,
             profile: {
-                create: {}
+                create: {
+                    address: data.address,
+                    latitude: data.latitude,
+                    longitude: data.longitude
+                }
             }
         },
         include: {
