@@ -4,7 +4,7 @@ import 'signUp.dart';
 import '../../services/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../patron_space/main_page.dart';
-import '../client_space/home/presentation/pages/client_home_page.dart';
+import '../client_space/main_layout/presentation/pages/client_main_layout.dart';
 import '../admin_space/presentation/pages/admin_home_page.dart';
 import '../patron_space/employee/pages/presentation/employee_home_page.dart';
 import '../patron_space/create_salon_screen.dart'; // 👈 Nzidou hedhi hena
@@ -217,7 +217,7 @@ class _SignInScreenState extends State<SignInScreen> {
                                       context,
                                       MaterialPageRoute(
                                         builder: (context) =>
-                                            const ClientHomePage(),
+                                            const ClientMainLayout(),
                                       ),
                                       (route) => false,
                                     );
