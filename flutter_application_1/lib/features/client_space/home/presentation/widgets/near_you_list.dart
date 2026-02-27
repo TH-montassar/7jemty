@@ -60,7 +60,8 @@ class _NearYouListState extends State<NearYouList> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const SalonProfilePage(),
+                      builder: (context) =>
+                          SalonProfilePage(salonId: salon['id']),
                     ),
                   );
                 },

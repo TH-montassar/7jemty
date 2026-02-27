@@ -178,6 +178,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bgColor,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppColors.textDark),
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const SignInScreen()),
+            );
+          },
+        ),
+      ),
       body: SafeArea(
         child: SelectionArea(
           child: SingleChildScrollView(
@@ -366,7 +379,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             );
                           },
                           child: const Text(
-                            "Connecti",
+                            "Connecter",
                             style: TextStyle(
                               color: AppColors.primaryBlue,
                               fontWeight: FontWeight.bold,
