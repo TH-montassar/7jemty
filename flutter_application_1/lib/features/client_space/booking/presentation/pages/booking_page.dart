@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../widgets/booking_summary_card.dart';
 import '../widgets/checkout_bottom_bar.dart';
@@ -29,6 +31,31 @@ class _BookingPageState extends State<BookingPage> {
   int _selectedTimeIndex = -1;
   bool _isPhotoUploaded = false;
 
+  // Date variables
+  late List<DateTime> _dates;
+  late DateTime _startDate;
+  late ScrollController _dateScrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    initializeDateFormatting('fr_FR', null).then((_) {
+      setState(() {});
+    });
+    _startDate = DateTime.now();
+    _dates = List.generate(
+      30,
+      (index) => _startDate.add(Duration(days: index)),
+    );
+    _dateScrollController = ScrollController();
+  }
+
+  @override
+  void dispose() {
+    _dateScrollController.dispose();
+    super.dispose();
+  }
+
   // --- Mock Data ---
   List<Map<String, String>> get _barbers {
     return [
@@ -46,13 +73,8 @@ class _BookingPageState extends State<BookingPage> {
     ];
   }
 
-  final List<Map<String, String>> _dates = [
-    {'day': 'Lkhmis', 'num': '15'},
-    {'day': 'Jemaa', 'num': '16'},
-    {'day': 'Sbet', 'num': '17'},
-    {'day': 'Lhad', 'num': '18'},
-    {'day': 'Lethnin', 'num': '19'},
-  ];
+  // Generate date numbers and days dynamically from _dates list
+  // No hardcoded array needed.
 
   final List<Map<String, dynamic>> _timeSlots = [
     {'time': '09:00', 'available': false},
@@ -104,7 +126,72 @@ class _BookingPageState extends State<BookingPage> {
             const SizedBox(height: 30),
 
             // Étape 2: Date & Heure
-            _buildSectionTitle(tr(context, 'date_time')),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildSectionTitle(tr(context, 'date_time')),
+                IconButton(
+                  padding: EdgeInsets.zero,
+                  icon: const Icon(
+                    Icons.calendar_month,
+                    color: AppColors.primaryBlue,
+                  ),
+                  onPressed: () async {
+                    final pickedDate = await showDatePicker(
+                      context: context,
+                      initialDate: _dates[_selectedDateIndex],
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                      builder: (context, child) {
+                        return Theme(
+                          data: Theme.of(context).copyWith(
+                            colorScheme: const ColorScheme.light(
+                              primary: AppColors
+                                  .primaryBlue, // header background color
+                              onPrimary: Colors.white, // header text color
+                              onSurface: AppColors.textDark, // body text color
+                            ),
+                          ),
+                          child: child!,
+                        );
+                      },
+                    );
+
+                    if (pickedDate != null) {
+                      setState(() {
+                        // Check if the picked date is already in our generated 30 days list
+                        int foundIndex = _dates.indexWhere(
+                          (d) =>
+                              d.year == pickedDate.year &&
+                              d.month == pickedDate.month &&
+                              d.day == pickedDate.day,
+                        );
+
+                        if (foundIndex != -1) {
+                          _selectedDateIndex = foundIndex;
+                          // Scroll to that index
+                          _dateScrollController.animateTo(
+                            foundIndex * 80.0, // approx item width + margin
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                          );
+                        } else {
+                          // Regenerate list starting from that month/date if it's too far in
+                          _startDate = pickedDate;
+                          _dates = List.generate(
+                            30,
+                            (index) => _startDate.add(Duration(days: index)),
+                          );
+                          _selectedDateIndex = 0;
+                          _dateScrollController.jumpTo(0);
+                        }
+                        _selectedTimeIndex = -1; // Reset time
+                      });
+                    }
+                  },
+                ),
+              ],
+            ),
             _buildDateSelection(),
             const SizedBox(height: 15),
             _buildTimeSlots(),
@@ -144,7 +231,9 @@ class _BookingPageState extends State<BookingPage> {
 
   Widget _buildSectionTitle(String title) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 15),
+      padding: const EdgeInsets.only(
+        bottom: 5,
+      ), // reduced bottom padding since date row adjusts it
       child: Text(
         title,
         style: const TextStyle(
@@ -218,13 +307,22 @@ class _BookingPageState extends State<BookingPage> {
 
   Widget _buildDateSelection() {
     return SizedBox(
-      height: 80,
+      height: 90,
       child: ListView.builder(
+        controller: _dateScrollController,
         scrollDirection: Axis.horizontal,
         itemCount: _dates.length,
         itemBuilder: (context, index) {
-          final d = _dates[index];
+          final date = _dates[index];
           final isSelected = _selectedDateIndex == index;
+
+          // Custom mapping for tunisian dart, or we can just use generic fr format
+          String dayName = DateFormat(
+            'EEE',
+            'fr_FR',
+          ).format(date); // e.g. "lun.", "mar."
+          String dayNumber = date.day.toString();
+
           return GestureDetector(
             onTap: () => setState(() {
               _selectedDateIndex = index;
@@ -232,35 +330,44 @@ class _BookingPageState extends State<BookingPage> {
             }),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              width: 65,
+              width: 70,
               margin: const EdgeInsets.only(right: 15),
               decoration: BoxDecoration(
                 color: isSelected ? AppColors.primaryBlue : Colors.white,
                 borderRadius: BorderRadius.circular(15),
-                // 👈 Sala7na l'opacity
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 5,
-                  ),
-                ],
+                border: Border.all(
+                  color: isSelected
+                      ? AppColors.primaryBlue
+                      : Colors.grey.shade200,
+                  width: 1,
+                ),
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: AppColors.primaryBlue.withValues(alpha: 0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ]
+                    : null,
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    d['day']!,
+                    dayName.capitalize(),
                     style: TextStyle(
                       color: isSelected ? Colors.white70 : Colors.grey,
                       fontSize: 13,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    d['num']!,
+                    dayNumber,
                     style: TextStyle(
                       color: isSelected ? Colors.white : AppColors.textDark,
-                      fontSize: 20,
+                      fontSize: 22,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -358,5 +465,12 @@ class _BookingPageState extends State<BookingPage> {
         ),
       ),
     );
+  }
+}
+
+// Extension pour le majuscule
+extension StringExtension on String {
+  String capitalize() {
+    return "${this[0].toUpperCase()}${substring(1)}";
   }
 }

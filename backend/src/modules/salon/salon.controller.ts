@@ -100,3 +100,27 @@ export const getServicesHandler = async (req: AuthRequest, res: Response): Promi
         res.status(500).json({ success: false, message: error.message });
     }
 };
+
+export const getTopRatedSalonsHandler = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const salons = await salonService.getTopRatedSalons();
+        res.status(200).json({ success: true, data: salons });
+    } catch (error: any) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+export const getSalonByIdHandler = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const id = parseInt(req.params.id as string);
+        if (isNaN(id)) {
+            res.status(400).json({ success: false, message: 'ID invalide' });
+            return;
+        }
+
+        const salon = await salonService.getSalonById(id);
+        res.status(200).json({ success: true, data: salon });
+    } catch (error: any) {
+        res.status(404).json({ success: false, message: error.message });
+    }
+};

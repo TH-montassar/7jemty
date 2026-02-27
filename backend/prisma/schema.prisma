@@ -99,6 +99,7 @@ model Salon {
   websiteUrl     String?
   coverImageUrl  String?
   speciality     String? // NEW: Salon's main speciality
+  rating         Float?  // Random initial rating
   approvalStatus ApprovalStatus @default(PENDING)
   isForceClosed  Boolean        @default(false)
   createdAt      DateTime       @default(now())

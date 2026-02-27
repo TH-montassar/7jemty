@@ -12,6 +12,8 @@ export const createSalon = async (patronId: number, data: any) => {
         throw new Error('3andek salon deja m9ayed fel system');
     }
 
+    const randomRating = parseFloat((Math.random() * (5.0 - 3.5) + 3.5).toFixed(1));
+
     // 2. Nasn3ou e-salon
     const newSalon = await prisma.salon.create({
         data: {
@@ -21,6 +23,7 @@ export const createSalon = async (patronId: number, data: any) => {
             longitude: data.longitude, // <-- Save longitude
             googleMapsUrl: data.googleMapsUrl, // <-- Save fields from new onboarding
             speciality: data.speciality,
+            rating: randomRating,
             patronId: patronId, // 👈 Narbtou l'salon bel Patron mta3ou
         },
     });
@@ -203,7 +206,7 @@ export const getAllSalons = async (lat?: number, lng?: number) => {
             // l'app yesta3mel 'image' ltaw fi mocked data, nejmou nraj3ou coverImageUrl 
             image: salon.coverImageUrl || 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=500&q=80',
             // Default rating for now, or you can calculate if reviews relation is added
-            rating: "4.5"
+            rating: (salon as any).rating ? ((salon as any).rating as number).toFixed(1) : "4.5"
         };
     });
 
@@ -221,7 +224,6 @@ export const getAllSalons = async (lat?: number, lng?: number) => {
 };
 
 export const createService = async (patronId: number, data: any) => {
-    // 1. Nthabtou l'patron 3andou salon bech nzidoulou service
     const salon = await prisma.salon.findFirst({
         where: { patronId: patronId },
     });
@@ -230,7 +232,6 @@ export const createService = async (patronId: number, data: any) => {
         throw new Error("Lazem ykoun 3andek salon bech tzid service");
     }
 
-    // 2. Nasn3ou l'service
     const newService = await prisma.service.create({
         data: {
             salonId: salon.id,
@@ -256,8 +257,62 @@ export const getServices = async (patronId: number) => {
 
     const services = await prisma.service.findMany({
         where: { salonId: salon.id },
-        orderBy: { id: 'asc' },
     });
 
     return services;
+};
+
+export const getSalonById = async (id: number) => {
+    const salon = await prisma.salon.findUnique({
+        where: { id },
+        include: {
+            services: true,
+            employees: {
+                include: {
+                    profile: true,
+                }
+            },
+            socialLinks: true,
+            workingHours: true,
+        },
+    });
+
+    if (!salon) {
+        throw new Error(`Salon avec l'ID ${id} introuvable`);
+    }
+
+    const formattedEmployees = salon.employees.map(emp => ({
+        id: emp.id,
+        userId: emp.id,
+        salonId: salon.id,
+        name: emp.fullName,
+        role: emp.profile?.specialityTitle || 'Spécialiste',
+        bio: emp.profile?.bio || null,
+        description: emp.profile?.description || null,
+        imageUrl: emp.profile?.avatarUrl || null,
+        createdAt: emp.createdAt,
+    }));
+
+    return {
+        ...salon,
+        employees: formattedEmployees,
+        image: salon.coverImageUrl || 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=500&q=80',
+        rating: (salon as any).rating ? ((salon as any).rating as number).toFixed(1) : "4.5",
+    };
+};
+
+export const getTopRatedSalons = async (limit: number = 10) => {
+    const salons = await prisma.salon.findMany({
+        orderBy: { rating: 'desc' } as any,
+        take: limit,
+        include: {
+            services: true,
+        },
+    });
+
+    return salons.map(salon => ({
+        ...salon,
+        image: salon.coverImageUrl || 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=500&q=80',
+        rating: (salon as any).rating ? ((salon as any).rating as number).toFixed(1) : "4.5",
+    }));
 };

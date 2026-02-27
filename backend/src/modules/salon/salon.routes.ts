@@ -1,9 +1,10 @@
 import { Router } from 'express';
-import { createSalonHandler, updateSalonHandler, getMySalonHandler, createEmployeeAccountHandler, getAllSalonsHandler, createServiceHandler, getServicesHandler } from './salon.controller.js';
+import { createSalonHandler, updateSalonHandler, getMySalonHandler, createEmployeeAccountHandler, getAllSalonsHandler, createServiceHandler, getServicesHandler, getTopRatedSalonsHandler, getSalonByIdHandler } from './salon.controller.js';
 import { protect, isPatron } from '../../middlewares/auth.middleware.js';
 
 const router = Router();
 
+router.get('/top-rated', getTopRatedSalonsHandler);
 router.get('/all', getAllSalonsHandler);
 router.post('/create', protect, isPatron, createSalonHandler);
 router.put('/update', protect, isPatron, updateSalonHandler);
@@ -11,5 +12,6 @@ router.get('/my-salon', protect, isPatron, getMySalonHandler);
 router.post('/employee/create-account', protect, isPatron, createEmployeeAccountHandler);
 router.post('/service/create', protect, isPatron, createServiceHandler);
 router.get('/service/list', protect, isPatron, getServicesHandler);
+router.get('/:id', getSalonByIdHandler);
 
 export default router;
