@@ -16,10 +16,11 @@ class SalonService {
     }
   }
 
-  // 📝 Fonction mta3 Creation l'Salon
   static Future<Map<String, dynamic>> createSalon({
     required String name,
     required String address,
+    String? googleMapsUrl,
+    String? speciality,
   }) async {
     try {
       // 1. Njibou e-Token elli khabbineh wa9t l'Login
@@ -39,7 +40,14 @@ class SalonService {
           'Authorization':
               'Bearer $token', // 👈 E-S7OR HOUNI! L'pass mta3 l'Backend
         },
-        body: jsonEncode({'name': name, 'address': address}),
+        body: jsonEncode({
+          'name': name,
+          'address': address,
+          if (googleMapsUrl != null && googleMapsUrl.isNotEmpty)
+            'googleMapsUrl': googleMapsUrl,
+          if (speciality != null && speciality.isNotEmpty)
+            'speciality': speciality,
+        }),
       );
 
       final data = jsonDecode(response.body);
@@ -57,10 +65,18 @@ class SalonService {
     }
   }
 
-  // 📝 Fonction bech nzidou info lil salon existant
   static Future<Map<String, dynamic>> updateSalonInfo({
+    String? name,
     String? description,
     String? contactPhone,
+    String? address,
+    double? latitude,
+    double? longitude,
+    String? googleMapsUrl,
+    String? websiteUrl,
+    String? coverImageUrl,
+    String? speciality,
+    List<Map<String, String>>? socialLinks,
   }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -70,16 +86,26 @@ class SalonService {
         throw Exception('Rak mouch connecté! (Token manquant)');
       }
 
+      final body = <String, dynamic>{};
+      if (name != null && name.isNotEmpty) body['name'] = name;
+      if (description != null) body['description'] = description;
+      if (contactPhone != null) body['contactPhone'] = contactPhone;
+      if (address != null && address.isNotEmpty) body['address'] = address;
+      if (latitude != null) body['latitude'] = latitude;
+      if (longitude != null) body['longitude'] = longitude;
+      if (googleMapsUrl != null) body['googleMapsUrl'] = googleMapsUrl;
+      if (websiteUrl != null) body['websiteUrl'] = websiteUrl;
+      if (coverImageUrl != null) body['coverImageUrl'] = coverImageUrl;
+      if (speciality != null) body['speciality'] = speciality;
+      if (socialLinks != null) body['socialLinks'] = socialLinks;
+
       final response = await http.put(
         Uri.parse('$baseUrl/update'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-        body: jsonEncode({
-          'description': ?description,
-          'contactPhone': ?contactPhone,
-        }),
+        body: jsonEncode(body),
       );
 
       final data = jsonDecode(response.body);
@@ -201,6 +227,84 @@ class SalonService {
       }
     } catch (e) {
       throw Exception('Erreur de connexion: $e');
+    }
+  }
+
+  // 📝 Fonction bech tzid service l salon
+  static Future<Map<String, dynamic>> createService({
+    required String name,
+    required double price,
+    required int durationMinutes,
+    String? description,
+    String? imageUrl,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token');
+
+      if (token == null) {
+        throw Exception('Rak mouch connecté! (Token manquant)');
+      }
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/service/create'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'name': name,
+          'price': price,
+          'durationMinutes': durationMinutes,
+          if (description != null && description.isNotEmpty)
+            'description': description,
+          if (imageUrl != null && imageUrl.isNotEmpty) 'imageUrl': imageUrl,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return data;
+      } else {
+        throw Exception(
+          data['message'] ?? 'Erreur lors de la création du service',
+        );
+      }
+    } catch (e) {
+      throw Exception(e.toString().replaceAll('Exception: ', ''));
+    }
+  }
+
+  // 📝 Fonction bech njibou les services mta3 salon
+  static Future<List<dynamic>> getServices() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token');
+
+      if (token == null) {
+        throw Exception('Rak mouch connecté! (Token manquant)');
+      }
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/service/list'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        return data['data'];
+      } else {
+        throw Exception(
+          data['message'] ?? 'Erreur lors de la récupération des services',
+        );
+      }
+    } catch (e) {
+      throw Exception(e.toString().replaceAll('Exception: ', ''));
     }
   }
 

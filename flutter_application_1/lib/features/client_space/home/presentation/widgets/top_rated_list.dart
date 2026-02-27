@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:hjamty/features/client_space/salon_profile/presentation/pages/salon_profile_page.dart';
+import '../../../salon_profile/presentation/pages/salon_screen_unifiee.dart';
 import '../../../../../core/constants/app_colors.dart';
-// 🚀 1. هوني زادة أعمل Import لصفحة الصالون باش كي يكليكي تهزو ليها
-// import '../../salon_profile/presentation/pages/salon_profile_page.dart';
-
 import '../../../../../services/salon_service.dart';
 
 class TopRatedList extends StatefulWidget {
@@ -64,11 +61,9 @@ class _TopRatedListState extends State<TopRatedList> {
         final topSalons = snapshot.data!;
 
         return ListView.builder(
-          shrinkWrap:
-              true, // 🚀 مهمة برشا باش تخدم في وسط SingleChildScrollView
-          physics:
-              const NeverScrollableScrollPhysics(), // باش السكرول يتبع الصفحة كاملة موش الليستة بركا
-          padding: EdgeInsets.zero, // باش نحيو الفراغ الزايد من الفوق
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          padding: EdgeInsets.zero,
           itemCount: topSalons.length,
           itemBuilder: (context, index) {
             final salon = topSalons[index];
@@ -79,7 +74,7 @@ class _TopRatedListState extends State<TopRatedList> {
                   context,
                   MaterialPageRoute(
                     builder: (context) =>
-                        SalonProfilePage(salonId: salon['id']),
+                        const SalonScreenUnifiee(isPatron: false),
                   ),
                 );
               },
@@ -124,7 +119,7 @@ class _TopRatedListState extends State<TopRatedList> {
                     ),
                     const SizedBox(width: 15),
 
-                    // --- 2. المعلومات (الاسم، العنوان، السوم، w l'Rating jdida) ---
+                    // --- 2. المعلومات (الاسم، العنوان، السوم، Rating) ---
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -195,7 +190,7 @@ class _TopRatedListState extends State<TopRatedList> {
                             context,
                             MaterialPageRoute(
                               builder: (context) =>
-                                  SalonProfilePage(salonId: salon['id']),
+                                  const SalonScreenUnifiee(isPatron: false),
                             ),
                           );
                         },
