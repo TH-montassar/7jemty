@@ -26,14 +26,6 @@ export const updateSalonSchema = z.object({
     })).optional(),
 });
 
-export const createServiceSchema = z.object({
-    name: z.string().min(2, "Nom du service est requis"),
-    description: z.string().optional(),
-    price: z.number().min(0, "Le prix doit être positif"),
-    durationMinutes: z.number().min(1, "La durée doit être d'au moins 1 minute"),
-    imageUrl: z.string().optional(),
-});
-
 export const createEmployeeAccountSchema = z.object({
     phoneNumber: z.string().min(8, "Numéro de téléphone invalide"),
     password: z.string().min(6, "Mot de passe yelzmou 6 caractéres au moins"),
