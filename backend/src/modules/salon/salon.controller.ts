@@ -125,28 +125,3 @@ export const getSalonByIdHandler = async (req: AuthRequest, res: Response): Prom
     }
 };
 
-export const createServiceHandler = async (req: AuthRequest, res: Response): Promise<void> => {
-    try {
-        const patronId = req.user!.userId;
-        const validatedData = createServiceSchema.parse(req.body);
-
-        const newService = await salonService.createService(patronId, validatedData);
-
-        res.status(201).json({ success: true, data: newService });
-    } catch (error: any) {
-        const message = error.errors ? error.errors[0].message : error.message;
-        res.status(400).json({ success: false, message });
-    }
-};
-
-export const getServicesHandler = async (req: AuthRequest, res: Response): Promise<void> => {
-    try {
-        const patronId = req.user!.userId;
-
-        const services = await salonService.getServices(patronId);
-
-        res.status(200).json({ success: true, data: services });
-    } catch (error: any) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-};
