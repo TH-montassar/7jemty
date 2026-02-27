@@ -538,7 +538,9 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
 
             // 2. Infos Salon (Nom, Adresse, Rating, Status)
             if (!widget.isPatron)
-              const SliverToBoxAdapter(child: SalonInfoSection()),
+              SliverToBoxAdapter(
+                child: SalonInfoSection(salonData: _salonData ?? {}),
+              ),
 
             // 3. Sticky Tabs
             SliverPersistentHeader(

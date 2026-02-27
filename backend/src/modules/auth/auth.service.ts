@@ -48,7 +48,7 @@ export const registerUser = async (data: any) => {
 
 export const loginUser = async (data: any) => {
     // 1. Nlawjou 3al l'user b numro l'telifoun w nchoufou chnouwa 3andou salons (ken role PATRON)
-    const user = await prisma.user.findUnique({
+    const user = await prisma.user.findFirst({
         where: { phoneNumber: data.phoneNumber },
         include: {
             _count: {
