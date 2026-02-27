@@ -281,3 +281,42 @@ export const getSalonById = async (id: number) => {
         image: salon.coverImageUrl || 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=500&q=80',
     };
 };
+
+export const createService = async (patronId: number, data: any) => {
+    const salon = await prisma.salon.findFirst({
+        where: { patronId: patronId },
+    });
+
+    if (!salon) {
+        throw new Error("Lazem ykoun 3andek salon bech tzid service");
+    }
+
+    const newService = await prisma.service.create({
+        data: {
+            salonId: salon.id,
+            name: data.name,
+            description: data.description || null,
+            price: data.price,
+            durationMinutes: data.durationMinutes,
+            imageUrl: data.imageUrl || null,
+        },
+    });
+
+    return newService;
+};
+
+export const getServices = async (patronId: number) => {
+    const salon = await prisma.salon.findFirst({
+        where: { patronId: patronId },
+    });
+
+    if (!salon) {
+        throw new Error("Salon introuvable");
+    }
+
+    const services = await prisma.service.findMany({
+        where: { salonId: salon.id },
+    });
+
+    return services;
+};

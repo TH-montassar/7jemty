@@ -9,7 +9,8 @@ import '../../services/salon_service.dart';
 import 'create_salon_screen.dart';
 
 class SalonSettingsScreen extends StatefulWidget {
-  const SalonSettingsScreen({super.key});
+  final int initialIndex;
+  const SalonSettingsScreen({super.key, this.initialIndex = 0});
 
   @override
   State<SalonSettingsScreen> createState() => _SalonSettingsScreenState();
@@ -30,6 +31,17 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
   // Controllers pour l'onglet "Personnel"
   final TextEditingController _specUrlController = TextEditingController();
   final TextEditingController _specNameController = TextEditingController();
+
+  // Controllers pour l'onglet "Services"
+  final TextEditingController _serviceNameController = TextEditingController();
+  final TextEditingController _servicePriceController = TextEditingController();
+  final TextEditingController _serviceDurationController =
+      TextEditingController();
+  final TextEditingController _serviceDescController = TextEditingController();
+  final TextEditingController _serviceUrlController = TextEditingController();
+  bool _isAddingService = false;
+  bool _isServiceUrlMode = true;
+  Uint8List? _selectedServiceImageBytes;
   final TextEditingController _specPhoneController =
       TextEditingController(); // NEW
   final TextEditingController _specPasswordController =
@@ -63,10 +75,35 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
     }
   }
 
+  Future<void> _pickServiceImage() async {
+    try {
+      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+      if (image != null) {
+        final bytes = await image.readAsBytes();
+        setState(() {
+          _selectedServiceImageBytes = bytes;
+          _isServiceUrlMode = false;
+        });
+      }
+    } catch (e) {
+      toastification.show(
+        context: context,
+        type: ToastificationType.error,
+        title: Text(tr(context, 'error_title')),
+        description: Text("Ma najamnech nkhayrou taswira lal service: $e"),
+        autoCloseDuration: const Duration(seconds: 4),
+      );
+    }
+  }
+
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this);
+    _tabController = TabController(
+      length: 5,
+      vsync: this,
+      initialIndex: widget.initialIndex,
+    );
     _fetchSalonData();
   }
 
@@ -140,8 +177,6 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
       await SalonService.updateSalonInfo(
         description: _descController.text,
         contactPhone: _phoneController.text,
-        // TODO: Backend does not currently support updating "name" and "address"
-        // in updateSalonSchema. It only supports description and contactPhone.
       );
 
       if (!mounted) return;
@@ -177,6 +212,111 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
         ),
         icon: const Icon(Icons.error_outline, color: Colors.white),
         showProgressBar: false,
+      );
+    }
+  }
+
+  Future<void> _handleAddService() async {
+    if (_serviceNameController.text.isEmpty ||
+        _servicePriceController.text.isEmpty ||
+        _serviceDurationController.text.isEmpty) {
+      toastification.show(
+        context: context,
+        type: ToastificationType.warning,
+        style: ToastificationStyle.fillColored,
+        alignment: Alignment.topCenter,
+        autoCloseDuration: const Duration(seconds: 3),
+        title: Text(
+          tr(context, 'error_issue'),
+          style: const TextStyle(color: Colors.white),
+        ),
+        description: const Text(
+          'L\'esm wel soum wel wa9t lezmin',
+          style: TextStyle(color: Colors.white),
+        ),
+      );
+      return;
+    }
+
+    try {
+      FocusScope.of(context).unfocus();
+      toastification.show(
+        context: context,
+        type: ToastificationType.info,
+        style: ToastificationStyle.fillColored,
+        alignment: Alignment.topCenter,
+        autoCloseDuration: const Duration(seconds: 2),
+        title: const Text(
+          'Kaad yzid fel service...',
+          style: TextStyle(color: Colors.white),
+        ),
+        primaryColor: AppColors.primaryBlue,
+        backgroundColor: AppColors.primaryBlue,
+      );
+
+      String? finalImageUrl;
+      if (_isServiceUrlMode) {
+        finalImageUrl = _serviceUrlController.text.trim();
+        if (finalImageUrl.isEmpty) finalImageUrl = null;
+      } else if (_selectedServiceImageBytes != null) {
+        final base64Image = base64Encode(_selectedServiceImageBytes!);
+        finalImageUrl = "data:image/jpeg;base64,$base64Image";
+      }
+
+      await SalonService.createService(
+        name: _serviceNameController.text,
+        price: double.parse(_servicePriceController.text),
+        durationMinutes: int.parse(_serviceDurationController.text),
+        description: _serviceDescController.text,
+        imageUrl: finalImageUrl,
+      );
+
+      if (!mounted) return;
+      toastification.show(
+        context: context,
+        type: ToastificationType.success,
+        style: ToastificationStyle.fillColored,
+        alignment: Alignment.topCenter,
+        autoCloseDuration: const Duration(seconds: 4),
+        title: const Text(
+          'Zadna service 🎉',
+          style: TextStyle(color: Colors.white),
+        ),
+        primaryColor: AppColors.successGreen,
+        backgroundColor: AppColors.successGreen,
+        icon: const Icon(Icons.check_circle_outline, color: Colors.white),
+      );
+
+      // Reset fields
+      _serviceNameController.clear();
+      _servicePriceController.clear();
+      _serviceDurationController.clear();
+      _serviceDescController.clear();
+      _serviceUrlController.clear();
+
+      setState(() {
+        _isAddingService = false;
+      });
+
+      _fetchSalonData(); // Refresh data to get the new service
+    } catch (e) {
+      if (!mounted) return;
+      toastification.show(
+        context: context,
+        type: ToastificationType.error,
+        style: ToastificationStyle.fillColored,
+        alignment: Alignment.topCenter,
+        autoCloseDuration: const Duration(seconds: 4),
+        title: Text(
+          tr(context, 'error_issue'),
+          style: const TextStyle(color: Colors.white),
+        ),
+        description: Text(
+          e.toString().replaceAll('Exception: ', ''),
+          style: const TextStyle(color: Colors.white),
+        ),
+        primaryColor: AppColors.actionRed,
+        backgroundColor: AppColors.actionRed,
       );
     }
   }
@@ -298,10 +438,16 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
 
     _specUrlController.dispose();
     _specNameController.dispose();
-    _specPhoneController.dispose(); // NEW
-    _specPasswordController.dispose(); // NEW
+    _specPhoneController.dispose();
+    _specPasswordController.dispose();
     _specRoleController.dispose();
     _specBioController.dispose();
+
+    _serviceNameController.dispose();
+    _servicePriceController.dispose();
+    _serviceDurationController.dispose();
+    _serviceDescController.dispose();
+    _serviceUrlController.dispose();
     super.dispose();
   }
 
@@ -570,10 +716,270 @@ class _SalonSettingsScreenState extends State<SalonSettingsScreen>
   }
 
   Widget _buildServicesTab() {
-    return const Center(
-      child: Text(
-        "Gestion mtaa les services (Mazel)",
-        style: TextStyle(color: Colors.grey),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                "Les services",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textDark,
+                ),
+              ),
+              ElevatedButton.icon(
+                onPressed: () {
+                  setState(() {
+                    _isAddingService = !_isAddingService;
+                  });
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryBlue,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+                icon: Icon(
+                  _isAddingService ? Icons.close : Icons.add,
+                  size: 16,
+                  color: Colors.white,
+                ),
+                label: Text(
+                  _isAddingService ? "Saker" : "Zid service",
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          if (_isAddingService) ...[
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text(
+                    "SERVICE JDID",
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          setState(() {
+                            _isServiceUrlMode = true;
+                            _selectedServiceImageBytes = null;
+                          });
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _isServiceUrlMode
+                              ? AppColors.primaryBlue
+                              : Colors.white,
+                          foregroundColor: _isServiceUrlMode
+                              ? Colors.white
+                              : AppColors.textDark,
+                          elevation: 0,
+                          side: BorderSide(
+                            color: _isServiceUrlMode
+                                ? AppColors.primaryBlue
+                                : Colors.grey.shade300,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                        icon: Icon(
+                          Icons.link,
+                          size: 16,
+                          color: _isServiceUrlMode
+                              ? Colors.white
+                              : AppColors.textDark,
+                        ),
+                        label: Text(tr(context, 'url_label')),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton.icon(
+                        onPressed: _pickServiceImage,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: !_isServiceUrlMode
+                              ? AppColors.primaryBlue
+                              : Colors.white,
+                          foregroundColor: !_isServiceUrlMode
+                              ? Colors.white
+                              : AppColors.textDark,
+                          elevation: 0,
+                          side: BorderSide(
+                            color: !_isServiceUrlMode
+                                ? AppColors.primaryBlue
+                                : Colors.grey.shade300,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                        icon: Icon(
+                          Icons.upload,
+                          size: 16,
+                          color: !_isServiceUrlMode
+                              ? Colors.white
+                              : Colors.grey,
+                        ),
+                        label: Text(
+                          "uploadi taswira",
+                          style: TextStyle(
+                            color: !_isServiceUrlMode
+                                ? Colors.white
+                                : Colors.grey,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  if (_isServiceUrlMode)
+                    _buildInputField(
+                      _serviceUrlController,
+                      "Hott lien mtaa taswira...",
+                      null,
+                    )
+                  else if (_selectedServiceImageBytes != null)
+                    Center(
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.memory(
+                              _selectedServiceImageBytes!,
+                              height: 100,
+                              width: 100,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          Positioned(
+                            top: -10,
+                            right: -10,
+                            child: IconButton(
+                              icon: const Icon(Icons.cancel, color: Colors.red),
+                              onPressed: () {
+                                setState(() {
+                                  _selectedServiceImageBytes = null;
+                                  _isServiceUrlMode = true;
+                                });
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  const SizedBox(height: 12),
+                  _buildInputField(
+                    _serviceNameController,
+                    "Esm service (ex: Coupe normale)",
+                    null,
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildInputField(
+                          _servicePriceController,
+                          "Soum (DT)",
+                          null,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildInputField(
+                          _serviceDurationController,
+                          "Wa9t (min)",
+                          null,
+                          keyboardType: TextInputType.number,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  _buildInputField(
+                    _serviceDescController,
+                    "Description (Facultatif)",
+                    null,
+                    maxLines: 3,
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: _handleAddService,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryBlue,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          child: const Text(
+                            "Sajjel",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ] else ...[
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.cut_outlined,
+                    size: 48,
+                    color: Colors.grey.shade400,
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    "Bech tchouf l'liste lkemla mtaa services mte3ek, ekhtar onglet services fel Dashboard.",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.grey, height: 1.5),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

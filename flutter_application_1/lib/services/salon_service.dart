@@ -227,6 +227,84 @@ class SalonService {
     }
   }
 
+  // 📝 Fonction bech njibou les services mta3 patron el connecté
+  static Future<List<dynamic>> getMyServices() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token');
+
+      if (token == null) {
+        throw Exception('Rak mouch connecté! (Token manquant)');
+      }
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/services'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        return data['data'];
+      } else {
+        throw Exception(
+          data['message'] ?? 'Erreur lors de la récupération des services',
+        );
+      }
+    } catch (e) {
+      throw Exception('Erreur de connexion: $e');
+    }
+  }
+
+  // 📝 Fonction bech nzidou service l'salon
+  static Future<Map<String, dynamic>> createService({
+    required String name,
+    required double price,
+    required int durationMinutes,
+    String? description,
+    String? imageUrl,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token');
+
+      if (token == null) {
+        throw Exception('Rak mouch connecté! (Token manquant)');
+      }
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/service/create'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'name': name,
+          'price': price,
+          'durationMinutes': durationMinutes,
+          if (description != null && description.isNotEmpty)
+            'description': description,
+          if (imageUrl != null && imageUrl.isNotEmpty) 'imageUrl': imageUrl,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return data;
+      } else {
+        throw Exception(
+          data['message'] ?? 'Erreur lors de la création du service',
+        );
+      }
+    } catch (e) {
+      throw Exception(e.toString().replaceAll('Exception: ', ''));
+    }
+  }
+
   // 📝 Fonction bech njibou détail mta3 salon wa7ed b id mta3o
   static Future<Map<String, dynamic>> getSalonById(int id) async {
     try {

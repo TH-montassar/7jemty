@@ -24,3 +24,11 @@ export const createEmployeeAccountSchema = z.object({
     description: z.string().optional(),
     imageUrl: z.string().optional(),
 });
+
+export const createServiceSchema = z.object({
+    name: z.string().min(2, "Esem e-service lezem fih 2 7rouf 3al a9al"),
+    price: z.number().positive("Prix lezem yakoun positif"),
+    durationMinutes: z.number().int().positive("La durée lezem takoun positive"),
+    description: z.string().optional(),
+    imageUrl: z.string().url("URL mech s7i7a").optional().or(z.literal('')),
+});

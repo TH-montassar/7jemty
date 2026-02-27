@@ -303,6 +303,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                       Tab(text: "Tafasil"),
                       Tab(text: "Rendez-vous"),
                       Tab(text: "Services"),
+                      Tab(text: "Spécialistes"),
                       Tab(text: "Avis"),
                     ],
                   ),
@@ -317,6 +318,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
               _buildApercuTab(),
               _buildReservationsTab(),
               _buildServicesTab(),
+              _buildPersonnelTab(),
               _buildAvisTab(),
             ],
           ),
@@ -378,11 +380,403 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
   }
 
   Widget _buildServicesTab() {
-    return const Center(
-      child: Text(
-        "Les services mte3ek bech yodh'hrou houni",
-        style: TextStyle(color: Colors.grey),
-      ),
+    return FutureBuilder<List<dynamic>>(
+      future: SalonService.getMyServices(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: CircularProgressIndicator(color: AppColors.primaryBlue),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 60,
+                    color: Colors.red.shade300,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    snapshot.error.toString().replaceAll('Exception: ', ''),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        final services = snapshot.data ?? [];
+
+        if (services.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.cut_outlined, size: 70, color: Colors.grey.shade300),
+                const SizedBox(height: 16),
+                const Text(
+                  "Ma famma hatta service tawa.",
+                  style: TextStyle(color: Colors.grey, fontSize: 15),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    // Navigate to Settings and select the active tab automatically
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SalonSettingsScreen(
+                          initialIndex: 1,
+                        ), // Index 1 is the Services Tab
+                      ),
+                    ).then((_) => _fetchSalonData());
+                  },
+                  icon: const Icon(Icons.add, size: 16, color: Colors.white),
+                  label: const Text(
+                    "Zid service jdid",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryBlue,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: services.length,
+          itemBuilder: (context, index) {
+            final service = services[index];
+            final String name = service['name'] ?? 'Service';
+            final double price = (service['price'] as num?)?.toDouble() ?? 0.0;
+            final int duration =
+                (service['durationMinutes'] as num?)?.toInt() ?? 0;
+            final String? description = service['description'];
+            final String? imageUrl = service['imageUrl'];
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  // Image or icon
+                  ClipRRect(
+                    borderRadius: const BorderRadius.horizontal(
+                      left: Radius.circular(16),
+                    ),
+                    child: imageUrl != null && imageUrl.isNotEmpty
+                        ? Image.network(
+                            imageUrl,
+                            width: 90,
+                            height: 90,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => _servicePlaceholder(),
+                          )
+                        : _servicePlaceholder(),
+                  ),
+                  // Info
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            name,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: AppColors.textDark,
+                            ),
+                          ),
+                          if (description != null &&
+                              description.isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              description,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Colors.grey,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primaryBlue.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  "${price.toStringAsFixed(0)} DT",
+                                  style: const TextStyle(
+                                    color: AppColors.primaryBlue,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Icon(
+                                Icons.access_time,
+                                size: 14,
+                                color: Colors.grey.shade500,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                "$duration min",
+                                style: TextStyle(
+                                  color: Colors.grey.shade500,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _servicePlaceholder() {
+    return Container(
+      width: 90,
+      height: 90,
+      color: AppColors.primaryBlue.withOpacity(0.1),
+      child: const Icon(Icons.cut, color: AppColors.primaryBlue, size: 32),
+    );
+  }
+
+  Widget _buildPersonnelTab() {
+    return FutureBuilder<Map<String, dynamic>>(
+      future: SalonService.getMySalon(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: CircularProgressIndicator(color: AppColors.primaryBlue),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 60,
+                    color: Colors.red.shade300,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    snapshot.error.toString().replaceAll('Exception: ', ''),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        final salonData = snapshot.data?['data'] as Map<String, dynamic>?;
+        final employees = (salonData?['employees'] as List<dynamic>?) ?? [];
+
+        if (employees.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.people_outline,
+                  size: 70,
+                  color: Colors.grey.shade300,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  "Ma famma hatta spécialiste tawa.",
+                  style: TextStyle(color: Colors.grey, fontSize: 15),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SalonSettingsScreen(
+                          initialIndex: 2,
+                        ), // Index 2 is Personnel Tab
+                      ),
+                    ).then((_) => _fetchSalonData());
+                  },
+                  icon: const Icon(Icons.add, size: 16, color: Colors.white),
+                  label: const Text(
+                    "Zid spécialiste jdid",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryBlue,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "${employees.length} Spécialiste${employees.length > 1 ? 's' : ''}",
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textDark,
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SalonSettingsScreen(
+                            initialIndex: 2,
+                          ), // Index 2 is Personnel Tab
+                        ),
+                      ).then((_) => _fetchSalonData());
+                    },
+                    icon: const Icon(
+                      Icons.add,
+                      size: 16,
+                      color: AppColors.primaryBlue,
+                    ),
+                    label: const Text(
+                      "Zid",
+                      style: TextStyle(color: AppColors.primaryBlue),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: employees.length,
+                itemBuilder: (context, index) {
+                  final emp = employees[index];
+                  final String name = emp['name'] ?? 'Spécialiste';
+                  final String role = emp['role'] ?? 'Coiffeur';
+                  final String? imageUrl = emp['imageUrl'];
+
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.all(12),
+                      leading: CircleAvatar(
+                        radius: 28,
+                        backgroundColor: AppColors.primaryBlue.withOpacity(0.1),
+                        backgroundImage: imageUrl != null && imageUrl.isNotEmpty
+                            ? NetworkImage(imageUrl)
+                            : null,
+                        child: imageUrl == null || imageUrl.isEmpty
+                            ? const Icon(
+                                Icons.person,
+                                color: AppColors.primaryBlue,
+                              )
+                            : null,
+                      ),
+                      title: Text(
+                        name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textDark,
+                        ),
+                      ),
+                      subtitle: Text(
+                        role,
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                      trailing: const Icon(
+                        Icons.chevron_right,
+                        color: Colors.grey,
+                      ),
+                      onTap: () {
+                        // Could navigate to employee details in the future
+                      },
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
