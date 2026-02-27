@@ -12,6 +12,8 @@ export const createSalon = async (patronId: number, data: any) => {
         throw new Error('3andek salon deja m9ayed fel system');
     }
 
+    const randomRating = parseFloat((Math.random() * (5.0 - 3.5) + 3.5).toFixed(1));
+
     // 2. Nasn3ou e-salon
     const newSalon = await prisma.salon.create({
         data: {
@@ -19,6 +21,7 @@ export const createSalon = async (patronId: number, data: any) => {
             address: data.address,
             latitude: data.latitude, // <-- Save latitude
             longitude: data.longitude, // <-- Save longitude
+            rating: randomRating,
             patronId: patronId, // 👈 Narbtou l'salon bel Patron mta3ou
         },
     });
@@ -178,7 +181,7 @@ export const getAllSalons = async (lat?: number, lng?: number) => {
             // l'app yesta3mel 'image' ltaw fi mocked data, nejmou nraj3ou coverImageUrl 
             image: salon.coverImageUrl || 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=500&q=80',
             // Default rating for now, or you can calculate if reviews relation is added
-            rating: "4.5"
+            rating: salon.rating ? salon.rating.toFixed(1) : "4.5"
         };
     });
 
@@ -193,4 +196,88 @@ export const getAllSalons = async (lat?: number, lng?: number) => {
     }
 
     return salonsWithDistance;
+};
+
+export const getTopRatedSalons = async () => {
+    // 1. Fetch approved salons along with their reviews
+    const salons = await prisma.salon.findMany({
+        //   where: { approvalStatus: 'APPROVED' },
+        include: {
+            reviews: { select: { rating: true } }
+        }
+    });
+
+    // 2. Map salons to calculate their average rating
+    const salonsWithRating = salons.map(salon => {
+        let averageRating = salon.rating || 0.0;
+        if (salon.reviews.length > 0) {
+            const sum = salon.reviews.reduce((acc, curr) => acc + curr.rating, 0);
+            averageRating = sum / salon.reviews.length;
+        }
+
+        // Return flattened data format expected by Flutter
+        return {
+            id: salon.id,
+            name: salon.name,
+            address: salon.address || "Adresse non fournie",
+            coverImageUrl: salon.coverImageUrl,
+            image: salon.coverImageUrl || 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=500&q=80',
+            price: "À partir de 15 DT", // Static for now until services link is utilized properly for a minimum price
+            rating: averageRating > 0 ? averageRating.toFixed(1) : "0.0"
+        };
+    });
+
+    // 3. Sort by rating descending
+    salonsWithRating.sort((a, b) => parseFloat(b.rating) - parseFloat(a.rating));
+
+    // 4. Take the top 10
+    return salonsWithRating.slice(0, 10);
+};
+
+export const getSalonById = async (id: number) => {
+    const salon = await prisma.salon.findUnique({
+        where: { id: id },
+        include: {
+            services: true,
+            workingHours: true,
+            portfolio: true,
+            reviews: { select: { rating: true } },
+            employees: {
+                include: {
+                    profile: true
+                }
+            }
+        }
+    });
+
+    if (!salon) {
+        throw new Error("Salon introuvable");
+    }
+
+    // Format employees
+    const formattedEmployees = salon.employees.map(emp => ({
+        id: emp.id,
+        userId: emp.id,
+        salonId: salon.id,
+        name: emp.fullName,
+        role: emp.profile?.specialityTitle || 'Spécialiste',
+        bio: emp.profile?.bio || null,
+        description: emp.profile?.description || null,
+        imageUrl: emp.profile?.avatarUrl || null,
+        createdAt: emp.createdAt
+    }));
+
+    // Format rating
+    let averageRating = salon.rating || 0.0;
+    if (salon.reviews.length > 0) {
+        const sum = salon.reviews.reduce((acc, curr) => acc + curr.rating, 0);
+        averageRating = sum / salon.reviews.length;
+    }
+
+    return {
+        ...salon,
+        employees: formattedEmployees,
+        rating: averageRating > 0 ? averageRating.toFixed(1) : "0.0",
+        image: salon.coverImageUrl || 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=500&q=80',
+    };
 };

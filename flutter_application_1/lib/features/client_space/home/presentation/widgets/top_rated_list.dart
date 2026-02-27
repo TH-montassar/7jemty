@@ -4,168 +4,224 @@ import '../../../../../core/constants/app_colors.dart';
 // 🚀 1. هوني زادة أعمل Import لصفحة الصالون باش كي يكليكي تهزو ليها
 // import '../../salon_profile/presentation/pages/salon_profile_page.dart';
 
-class TopRatedList extends StatelessWidget {
+import '../../../../../services/salon_service.dart';
+
+class TopRatedList extends StatefulWidget {
   const TopRatedList({super.key});
 
   @override
+  State<TopRatedList> createState() => _TopRatedListState();
+}
+
+class _TopRatedListState extends State<TopRatedList> {
+  late Future<List<dynamic>> _topSalonsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _topSalonsFuture = SalonService.getTopRatedSalons();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // 💡 Mock Data: ليستة أحسن الصالونات
-    final List<Map<String, dynamic>> topSalons = [
-      {
-        'name': 'Barber King 👑',
-        'address': 'Avenue Habib Bourguiba, Ariana',
-        'price': 'ibda min 15 DT',
-        'image':
-            'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=500&q=80',
-      },
-      {
-        'name': 'The Classic Barber',
-        'address': 'Ennasr 2, Tunis',
-        'price': 'ibda min 20 DT',
-        'image':
-            'https://images.unsplash.com/photo-1503342394128-c104d54dba01?auto=format&fit=crop&w=500&q=80',
-      },
-      {
-        'name': 'Salon El Baze',
-        'address': 'Menzah 5, Ariana',
-        'price': 'ibda min 12 DT',
-        'image':
-            'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=500&q=80',
-      },
-    ];
-
-    return ListView.builder(
-      shrinkWrap: true, // 🚀 مهمة برشا باش تخدم في وسط SingleChildScrollView
-      physics:
-          const NeverScrollableScrollPhysics(), // باش السكرول يتبع الصفحة كاملة موش الليستة بركا
-      padding: EdgeInsets.zero, // باش نحيو الفراغ الزايد من الفوق
-      itemCount: topSalons.length,
-      itemBuilder: (context, index) {
-        final salon = topSalons[index];
-
-        return GestureDetector(
-          onTap: () {
-            // 🚀 2. كي يكليكي على الكارطة يهزو لبروفيل الصالون
-
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const SalonProfilePage()),
-            );
-          },
-          child: Container(
-            margin: const EdgeInsets.only(bottom: 15),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
-                ),
-              ],
+    return FutureBuilder<List<dynamic>>(
+      future: _topSalonsFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(20.0),
+              child: CircularProgressIndicator(color: AppColors.primaryBlue),
             ),
-            child: Row(
-              children: [
-                // --- 1. التصويرة اللّي على اليسار ---
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(15),
-                  child: Image.network(
-                    salon['image'],
-                    width: 80,
-                    height: 80,
-                    fit: BoxFit.cover,
-                    // 🚀 3. نحيو الـ X الحمراء كان التصويرة ما تخدمش
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
+          );
+        }
+
+        if (snapshot.hasError) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Text(
+                "Mochkla fil connexion: \n${snapshot.error}",
+                style: const TextStyle(color: AppColors.actionRed),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          );
+        }
+
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(20.0),
+              child: Text(
+                "Mawasalnech 7ata salon m9ayem tawa.",
+                style: TextStyle(color: Colors.grey),
+              ),
+            ),
+          );
+        }
+
+        final topSalons = snapshot.data!;
+
+        return ListView.builder(
+          shrinkWrap:
+              true, // 🚀 مهمة برشا باش تخدم في وسط SingleChildScrollView
+          physics:
+              const NeverScrollableScrollPhysics(), // باش السكرول يتبع الصفحة كاملة موش الليستة بركا
+          padding: EdgeInsets.zero, // باش نحيو الفراغ الزايد من الفوق
+          itemCount: topSalons.length,
+          itemBuilder: (context, index) {
+            final salon = topSalons[index];
+
+            return GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        SalonProfilePage(salonId: salon['id']),
+                  ),
+                );
+              },
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 15),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.03),
+                      blurRadius: 10,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    // --- 1. التصويرة اللّي على اليسار ---
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(15),
+                      child: Image.network(
+                        salon['image'] ??
+                            'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=500&q=80',
                         width: 80,
                         height: 80,
-                        color: Colors.grey.shade100,
-                        child: const Icon(
-                          Icons.storefront,
-                          color: Colors.grey,
-                          size: 30,
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(width: 15),
-
-                // --- 2. المعلومات (الاسم، العنوان، السوم) ---
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        salon['name'],
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                          color: AppColors.textDark,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        salon['address'],
-                        style: const TextStyle(
-                          color: Colors.grey,
-                          fontSize: 12,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        salon['price'],
-                        style: const TextStyle(
-                          color: Colors.grey,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 10),
-
-                // --- 3. فلسة Réserver ---
-                SizedBox(
-                  height: 35,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      // 🚀 هوني تنجم تهزو ديركت لصفحة الحجز زادة كان تحب
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SalonProfilePage(),
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          AppColors.actionRed, // اللون الوردي/الأحمر
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(horizontal: 15),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            width: 80,
+                            height: 80,
+                            color: Colors.grey.shade100,
+                            child: const Icon(
+                              Icons.storefront,
+                              color: Colors.grey,
+                              size: 30,
+                            ),
+                          );
+                        },
                       ),
                     ),
-                    child: const Text(
-                      "Resservi",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                        color: Colors.white,
+                    const SizedBox(width: 15),
+
+                    // --- 2. المعلومات (الاسم، العنوان، السوم، w l'Rating jdida) ---
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  salon['name'] ?? 'Salon',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                    color: AppColors.textDark,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.star,
+                                    color: Colors.amber,
+                                    size: 14,
+                                  ),
+                                  const SizedBox(width: 2),
+                                  Text(
+                                    salon['rating']?.toString() ?? '0.0',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            salon['address'] ?? 'Adresse non fournie',
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 12,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            salon['price'] ?? 'A partir de...',
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
+                    const SizedBox(width: 10),
+
+                    // --- 3. فلسة Réserver ---
+                    SizedBox(
+                      height: 35,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  SalonProfilePage(salonId: salon['id']),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.actionRed,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(horizontal: 15),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: const Text(
+                          "Resservi",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         );
       },
     );

@@ -203,4 +203,49 @@ class SalonService {
       throw Exception('Erreur de connexion: $e');
     }
   }
+
+  // 📝 Fonction bech njibou e-salons ta7it Top Rating (A7sen salonat)
+  static Future<List<dynamic>> getTopRatedSalons() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/top-rated'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        return data['data'];
+      } else {
+        throw Exception(
+          data['message'] ??
+              'Erreur lors de la récupération des salons bien notés',
+        );
+      }
+    } catch (e) {
+      throw Exception('Erreur de connexion: $e');
+    }
+  }
+
+  // 📝 Fonction bech njibou détail mta3 salon wa7ed b id mta3o
+  static Future<Map<String, dynamic>> getSalonById(int id) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/$id'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        return data['data'];
+      } else {
+        throw Exception(
+          data['message'] ?? 'Erreur lors de la récupération du salon',
+        );
+      }
+    } catch (e) {
+      throw Exception('Erreur de connexion: $e');
+    }
+  }
 }

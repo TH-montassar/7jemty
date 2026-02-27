@@ -169,7 +169,9 @@ class _SignInScreenState extends State<SignInScreen> {
 
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text(tr(context, 'logged_in_successfully')),
+                                      content: Text(
+                                        tr(context, 'logged_in_successfully'),
+                                      ),
                                       backgroundColor: Colors.green,
                                     ),
                                   );
