@@ -301,45 +301,6 @@ export const getSalonById = async (id: number) => {
     };
 };
 
-export const createService = async (patronId: number, data: any) => {
-    const salon = await prisma.salon.findFirst({
-        where: { patronId: patronId },
-    });
-
-    if (!salon) {
-        throw new Error("Lazem ykoun 3andek salon bech tzid service");
-    }
-
-    const newService = await prisma.service.create({
-        data: {
-            salonId: salon.id,
-            name: data.name,
-            description: data.description || null,
-            price: data.price,
-            durationMinutes: data.durationMinutes,
-            imageUrl: data.imageUrl || null,
-        },
-    });
-
-    return newService;
-};
-
-export const getServices = async (patronId: number) => {
-    const salon = await prisma.salon.findFirst({
-        where: { patronId: patronId },
-    });
-
-    if (!salon) {
-        throw new Error("Salon introuvable");
-    }
-
-    const services = await prisma.service.findMany({
-        where: { salonId: salon.id },
-    });
-
-    return services;
-};
-
 export const getTopRatedSalons = async (limit: number = 10) => {
     const salons = await prisma.salon.findMany({
         orderBy: { rating: 'desc' } as any,
