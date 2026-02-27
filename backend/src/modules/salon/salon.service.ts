@@ -21,6 +21,8 @@ export const createSalon = async (patronId: number, data: any) => {
             address: data.address,
             latitude: data.latitude, // <-- Save latitude
             longitude: data.longitude, // <-- Save longitude
+            googleMapsUrl: data.googleMapsUrl, // <-- Save fields from new onboarding
+            speciality: data.speciality,
             rating: randomRating,
             patronId: patronId, // 👈 Narbtou l'salon bel Patron mta3ou
         },
@@ -30,7 +32,6 @@ export const createSalon = async (patronId: number, data: any) => {
 };
 
 export const updateSalon = async (patronId: number, data: any) => {
-    // Nthabtou ken l'Patron 3andou salon 9bal ma nbadlou fih
     const existingSalon = await prisma.salon.findFirst({
         where: { patronId: patronId },
     });
@@ -39,20 +40,42 @@ export const updateSalon = async (patronId: number, data: any) => {
         throw new Error("Ma 3andekch salon bech tbadlou");
     }
 
-    // Nbadlou l'données eli jew fel request
+    const salonId = existingSalon.id;
+
+    // Update main salon fields
     const updatedSalon = await prisma.salon.update({
-        where: { id: existingSalon.id },
+        where: { id: salonId },
         data: {
-            description: data.description !== undefined ? data.description : existingSalon.description,
-            contactPhone: data.contactPhone !== undefined ? data.contactPhone : existingSalon.contactPhone,
-            address: data.address !== undefined ? data.address : existingSalon.address,
-            latitude: data.latitude !== undefined ? data.latitude : existingSalon.latitude,
-            longitude: data.longitude !== undefined ? data.longitude : existingSalon.longitude,
+            ...(data.name !== undefined && { name: data.name }),
+            ...(data.description !== undefined && { description: data.description }),
+            ...(data.contactPhone !== undefined && { contactPhone: data.contactPhone }),
+            ...(data.address !== undefined && { address: data.address }),
+            ...(data.latitude !== undefined && { latitude: data.latitude }),
+            ...(data.longitude !== undefined && { longitude: data.longitude }),
+            ...(data.googleMapsUrl !== undefined && { googleMapsUrl: data.googleMapsUrl }),
+            ...(data.websiteUrl !== undefined && { websiteUrl: data.websiteUrl }),
+            ...(data.coverImageUrl !== undefined && { coverImageUrl: data.coverImageUrl }),
+            ...(data.speciality !== undefined && { speciality: data.speciality }),
         },
     });
 
+    // Handle social links: delete all then re-insert
+    if (data.socialLinks !== undefined) {
+        await prisma.salonSocialLink.deleteMany({ where: { salonId } });
+        if (data.socialLinks.length > 0) {
+            await prisma.salonSocialLink.createMany({
+                data: data.socialLinks.map((link: { platform: string; url: string }) => ({
+                    salonId,
+                    platform: link.platform,
+                    url: link.url,
+                })),
+            });
+        }
+    }
+
     return updatedSalon;
 };
+
 
 export const getSalonByPatronId = async (patronId: number) => {
     const salon = await prisma.salon.findFirst({
@@ -60,9 +83,11 @@ export const getSalonByPatronId = async (patronId: number) => {
         include: {
             employees: {
                 include: {
-                    profile: true // Nraj3ou profile bech njibou bio, description wel tsawer
+                    profile: true
                 }
-            }
+            },
+            socialLinks: true,
+            services: true,
         }
     });
 
@@ -181,7 +206,7 @@ export const getAllSalons = async (lat?: number, lng?: number) => {
             // l'app yesta3mel 'image' ltaw fi mocked data, nejmou nraj3ou coverImageUrl 
             image: salon.coverImageUrl || 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=500&q=80',
             // Default rating for now, or you can calculate if reviews relation is added
-            rating: salon.rating ? salon.rating.toFixed(1) : "4.5"
+            rating: (salon as any).rating ? ((salon as any).rating as number).toFixed(1) : "4.5"
         };
     });
 
@@ -198,63 +223,64 @@ export const getAllSalons = async (lat?: number, lng?: number) => {
     return salonsWithDistance;
 };
 
-export const getTopRatedSalons = async () => {
-    // 1. Fetch approved salons along with their reviews
-    const salons = await prisma.salon.findMany({
-        //   where: { approvalStatus: 'APPROVED' },
-        include: {
-            reviews: { select: { rating: true } }
-        }
+export const createService = async (patronId: number, data: any) => {
+    const salon = await prisma.salon.findFirst({
+        where: { patronId: patronId },
     });
 
-    // 2. Map salons to calculate their average rating
-    const salonsWithRating = salons.map(salon => {
-        let averageRating = salon.rating || 0.0;
-        if (salon.reviews.length > 0) {
-            const sum = salon.reviews.reduce((acc, curr) => acc + curr.rating, 0);
-            averageRating = sum / salon.reviews.length;
-        }
+    if (!salon) {
+        throw new Error("Lazem ykoun 3andek salon bech tzid service");
+    }
 
-        // Return flattened data format expected by Flutter
-        return {
-            id: salon.id,
-            name: salon.name,
-            address: salon.address || "Adresse non fournie",
-            coverImageUrl: salon.coverImageUrl,
-            image: salon.coverImageUrl || 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=500&q=80',
-            price: "À partir de 15 DT", // Static for now until services link is utilized properly for a minimum price
-            rating: averageRating > 0 ? averageRating.toFixed(1) : "0.0"
-        };
+    const newService = await prisma.service.create({
+        data: {
+            salonId: salon.id,
+            name: data.name,
+            description: data.description || null,
+            price: data.price,
+            durationMinutes: data.durationMinutes,
+            imageUrl: data.imageUrl || null,
+        },
     });
 
-    // 3. Sort by rating descending
-    salonsWithRating.sort((a, b) => parseFloat(b.rating) - parseFloat(a.rating));
-
-    // 4. Take the top 10
-    return salonsWithRating.slice(0, 10);
+    return newService;
 };
 
-export const getSalonById = async (id: number) => {
-    const salon = await prisma.salon.findUnique({
-        where: { id: id },
-        include: {
-            services: true,
-            workingHours: true,
-            portfolio: true,
-            reviews: { select: { rating: true } },
-            employees: {
-                include: {
-                    profile: true
-                }
-            }
-        }
+export const getServices = async (patronId: number) => {
+    const salon = await prisma.salon.findFirst({
+        where: { patronId: patronId },
     });
 
     if (!salon) {
         throw new Error("Salon introuvable");
     }
 
-    // Format employees
+    const services = await prisma.service.findMany({
+        where: { salonId: salon.id },
+    });
+
+    return services;
+};
+
+export const getSalonById = async (id: number) => {
+    const salon = await prisma.salon.findUnique({
+        where: { id },
+        include: {
+            services: true,
+            employees: {
+                include: {
+                    profile: true,
+                }
+            },
+            socialLinks: true,
+            workingHours: true,
+        },
+    });
+
+    if (!salon) {
+        throw new Error(`Salon avec l'ID ${id} introuvable`);
+    }
+
     const formattedEmployees = salon.employees.map(emp => ({
         id: emp.id,
         userId: emp.id,
@@ -264,21 +290,14 @@ export const getSalonById = async (id: number) => {
         bio: emp.profile?.bio || null,
         description: emp.profile?.description || null,
         imageUrl: emp.profile?.avatarUrl || null,
-        createdAt: emp.createdAt
+        createdAt: emp.createdAt,
     }));
-
-    // Format rating
-    let averageRating = salon.rating || 0.0;
-    if (salon.reviews.length > 0) {
-        const sum = salon.reviews.reduce((acc, curr) => acc + curr.rating, 0);
-        averageRating = sum / salon.reviews.length;
-    }
 
     return {
         ...salon,
         employees: formattedEmployees,
-        rating: averageRating > 0 ? averageRating.toFixed(1) : "0.0",
         image: salon.coverImageUrl || 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=500&q=80',
+        rating: (salon as any).rating ? ((salon as any).rating as number).toFixed(1) : "4.5",
     };
 };
 
@@ -319,4 +338,20 @@ export const getServices = async (patronId: number) => {
     });
 
     return services;
+};
+
+export const getTopRatedSalons = async (limit: number = 10) => {
+    const salons = await prisma.salon.findMany({
+        orderBy: { rating: 'desc' } as any,
+        take: limit,
+        include: {
+            services: true,
+        },
+    });
+
+    return salons.map(salon => ({
+        ...salon,
+        image: salon.coverImageUrl || 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=500&q=80',
+        rating: (salon as any).rating ? ((salon as any).rating as number).toFixed(1) : "4.5",
+    }));
 };
