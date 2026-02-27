@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:hjamty/features/client_space/salon_profile/presentation/pages/salon_profile_page.dart';
+import '../../../salon_profile/presentation/pages/salon_screen_unifiee.dart';
 import '../../../../../core/constants/app_colors.dart';
 // 🚀 1. هوني زادة أعمل Import لصفحة الصالون باش كي يكليكي تهزو ليها
-// import '../../salon_profile/presentation/pages/salon_profile_page.dart';
+// import '../../../salon_profile/presentation/pages/salon_screen_unifiee.dart';
 
 class TopRatedList extends StatelessWidget {
   const TopRatedList({super.key});
@@ -49,7 +49,9 @@ class TopRatedList extends StatelessWidget {
 
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const SalonProfilePage()),
+              MaterialPageRoute(
+                builder: (context) => const SalonScreenUnifiee(isPatron: false),
+              ),
             );
           },
           child: Container(
@@ -140,7 +142,8 @@ class TopRatedList extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const SalonProfilePage(),
+                          builder: (context) =>
+                              const SalonScreenUnifiee(isPatron: false),
                         ),
                       );
                     },

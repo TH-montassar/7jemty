@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hjamty/features/client_space/salon_profile/presentation/pages/salon_profile_page.dart';
+import '../../../salon_profile/presentation/pages/salon_screen_unifiee.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../services/salon_service.dart';
 
@@ -60,7 +60,8 @@ class _NearYouListState extends State<NearYouList> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const SalonProfilePage(),
+                      builder: (context) =>
+                          const SalonScreenUnifiee(isPatron: false),
                     ),
                   );
                 },

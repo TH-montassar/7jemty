@@ -19,6 +19,8 @@ export const createSalon = async (patronId: number, data: any) => {
             address: data.address,
             latitude: data.latitude, // <-- Save latitude
             longitude: data.longitude, // <-- Save longitude
+            googleMapsUrl: data.googleMapsUrl, // <-- Save fields from new onboarding
+            speciality: data.speciality,
             patronId: patronId, // 👈 Narbtou l'salon bel Patron mta3ou
         },
     });
@@ -27,7 +29,6 @@ export const createSalon = async (patronId: number, data: any) => {
 };
 
 export const updateSalon = async (patronId: number, data: any) => {
-    // Nthabtou ken l'Patron 3andou salon 9bal ma nbadlou fih
     const existingSalon = await prisma.salon.findFirst({
         where: { patronId: patronId },
     });
@@ -36,20 +37,42 @@ export const updateSalon = async (patronId: number, data: any) => {
         throw new Error("Ma 3andekch salon bech tbadlou");
     }
 
-    // Nbadlou l'données eli jew fel request
+    const salonId = existingSalon.id;
+
+    // Update main salon fields
     const updatedSalon = await prisma.salon.update({
-        where: { id: existingSalon.id },
+        where: { id: salonId },
         data: {
-            description: data.description !== undefined ? data.description : existingSalon.description,
-            contactPhone: data.contactPhone !== undefined ? data.contactPhone : existingSalon.contactPhone,
-            address: data.address !== undefined ? data.address : existingSalon.address,
-            latitude: data.latitude !== undefined ? data.latitude : existingSalon.latitude,
-            longitude: data.longitude !== undefined ? data.longitude : existingSalon.longitude,
+            ...(data.name !== undefined && { name: data.name }),
+            ...(data.description !== undefined && { description: data.description }),
+            ...(data.contactPhone !== undefined && { contactPhone: data.contactPhone }),
+            ...(data.address !== undefined && { address: data.address }),
+            ...(data.latitude !== undefined && { latitude: data.latitude }),
+            ...(data.longitude !== undefined && { longitude: data.longitude }),
+            ...(data.googleMapsUrl !== undefined && { googleMapsUrl: data.googleMapsUrl }),
+            ...(data.websiteUrl !== undefined && { websiteUrl: data.websiteUrl }),
+            ...(data.coverImageUrl !== undefined && { coverImageUrl: data.coverImageUrl }),
+            ...(data.speciality !== undefined && { speciality: data.speciality }),
         },
     });
 
+    // Handle social links: delete all then re-insert
+    if (data.socialLinks !== undefined) {
+        await prisma.salonSocialLink.deleteMany({ where: { salonId } });
+        if (data.socialLinks.length > 0) {
+            await prisma.salonSocialLink.createMany({
+                data: data.socialLinks.map((link: { platform: string; url: string }) => ({
+                    salonId,
+                    platform: link.platform,
+                    url: link.url,
+                })),
+            });
+        }
+    }
+
     return updatedSalon;
 };
+
 
 export const getSalonByPatronId = async (patronId: number) => {
     const salon = await prisma.salon.findFirst({
@@ -57,9 +80,11 @@ export const getSalonByPatronId = async (patronId: number) => {
         include: {
             employees: {
                 include: {
-                    profile: true // Nraj3ou profile bech njibou bio, description wel tsawer
+                    profile: true
                 }
-            }
+            },
+            socialLinks: true,
+            services: true,
         }
     });
 
@@ -193,4 +218,46 @@ export const getAllSalons = async (lat?: number, lng?: number) => {
     }
 
     return salonsWithDistance;
+};
+
+export const createService = async (patronId: number, data: any) => {
+    // 1. Nthabtou l'patron 3andou salon bech nzidoulou service
+    const salon = await prisma.salon.findFirst({
+        where: { patronId: patronId },
+    });
+
+    if (!salon) {
+        throw new Error("Lazem ykoun 3andek salon bech tzid service");
+    }
+
+    // 2. Nasn3ou l'service
+    const newService = await prisma.service.create({
+        data: {
+            salonId: salon.id,
+            name: data.name,
+            description: data.description || null,
+            price: data.price,
+            durationMinutes: data.durationMinutes,
+            imageUrl: data.imageUrl || null,
+        },
+    });
+
+    return newService;
+};
+
+export const getServices = async (patronId: number) => {
+    const salon = await prisma.salon.findFirst({
+        where: { patronId: patronId },
+    });
+
+    if (!salon) {
+        throw new Error("Salon introuvable");
+    }
+
+    const services = await prisma.service.findMany({
+        where: { salonId: salon.id },
+        orderBy: { id: 'asc' },
+    });
+
+    return services;
 };

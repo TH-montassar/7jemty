@@ -2,8 +2,9 @@ import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 import '../../services/salon_service.dart';
-import 'salon_screen.dart'; // Pour importer SalonSettingsScreen
-import 'create_salon_screen.dart'; // Pour importer CreateSalonScreen
+
+import '../client_space/salon_profile/presentation/pages/salon_screen_unifiee.dart';
+import 'create_salon_screen.dart';
 import '../client_space/salon_profile/presentation/widgets/sticky_tab_bar_delegate.dart';
 import 'package:toastification/toastification.dart';
 
@@ -38,7 +39,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
       setState(() => _isLoading = false);
 
       if (e.toString().contains('Salon introuvable')) {
-        return; // SetState(isLoading=false) will show the empty state
+        return;
       }
 
       toastification.show(
@@ -136,13 +137,13 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
     }
 
     return DefaultTabController(
-      length: 4,
+      length: 5,
       child: Scaffold(
         backgroundColor: AppColors.bgColor,
         body: NestedScrollView(
           headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
             return <Widget>[
-              // 1. Header Image & AppBar (avec les 3 points pour les paramètres)
+              // 1. Header Image & AppBar
               SliverAppBar(
                 expandedHeight: 220.0,
                 floating: false,
@@ -152,19 +153,15 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                 iconTheme: const IconThemeData(color: Colors.white),
                 actions: [
                   IconButton(
-                    icon: const Icon(
-                      Icons.settings,
-                      color: Colors.white,
-                    ), // Ou more_vert
+                    icon: const Icon(Icons.settings, color: Colors.white),
                     onPressed: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const SalonSettingsScreen(),
+                          builder: (context) =>
+                              const SalonScreenUnifiee(isPatron: true),
                         ),
-                      ).then(
-                        (value) => _fetchSalonData(),
-                      ); // Refresh after returning
+                      ).then((value) => _fetchSalonData());
                     },
                   ),
                 ],
@@ -173,12 +170,39 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                   background: Stack(
                     fit: StackFit.expand,
                     children: [
-                      Image.network(
-                        _salonData?['coverImageUrl'] ??
-                            'https://images.unsplash.com/photo-1503951914875-452162b7f30a?auto=format&fit=crop&w=800&q=80',
-                        fit: BoxFit.cover,
-                      ),
-                      // Overlay gradient pour la lisibilité
+                      if (_salonData?['coverImageUrl'] != null &&
+                          (_salonData!['coverImageUrl'] as String).isNotEmpty)
+                        Image.network(
+                          _salonData!['coverImageUrl'] as String,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                          height: double.infinity,
+                          errorBuilder: (_, __, ___) => Container(
+                            decoration: const BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  AppColors.primaryBlue,
+                                  Color(0xFF1565C0),
+                                ],
+                              ),
+                            ),
+                          ),
+                        )
+                      else
+                        Container(
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                AppColors.primaryBlue,
+                                Color(0xFF1565C0),
+                              ],
+                            ),
+                          ),
+                        ),
                       Container(
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
@@ -197,7 +221,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                 ),
               ),
 
-              // 2. Infos Salon (Nom, Adresse, Rating, Status)
+              // 2. Infos Salon
               SliverToBoxAdapter(
                 child: Container(
                   color: Colors.white,
@@ -288,7 +312,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                 ),
               ),
 
-              // 3. Sticky Tabs
+              // 3. Sticky Tabs (5 tabs)
               SliverPersistentHeader(
                 pinned: true,
                 delegate: StickyTabBarDelegate(
@@ -301,8 +325,9 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                     labelStyle: const TextStyle(fontWeight: FontWeight.bold),
                     tabs: const [
                       Tab(text: "Tafasil"),
-                      Tab(text: "Rendez-vous"),
                       Tab(text: "Services"),
+                      Tab(text: "Spécialiste"),
+                      Tab(text: "Rendez-vous"),
                       Tab(text: "Avis"),
                     ],
                   ),
@@ -311,12 +336,13 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
             ];
           },
 
-          // 4. Contenu des Tabs
+          // 4. Tab content
           body: TabBarView(
             children: [
               _buildApercuTab(),
-              _buildReservationsTab(),
               _buildServicesTab(),
+              _buildSpecialistesTab(),
+              _buildReservationsTab(),
               _buildAvisTab(),
             ],
           ),
@@ -324,6 +350,10 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
       ),
     );
   }
+
+  // ============================================
+  // TABS BUILDERS
+  // ============================================
 
   Widget _buildApercuTab() {
     return SingleChildScrollView(
@@ -378,11 +408,213 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
   }
 
   Widget _buildServicesTab() {
-    return const Center(
-      child: Text(
-        "Les services mte3ek bech yodh'hrou houni",
-        style: TextStyle(color: Colors.grey),
-      ),
+    final services = (_salonData?['services'] as List<dynamic>?) ?? [];
+
+    return Column(
+      children: [
+        // ── Header ──
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "${services.length} service${services.length != 1 ? 's' : ''}",
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textDark,
+                ),
+              ),
+              ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SalonScreenUnifiee(
+                        isPatron: true,
+                        initialTabIndex: 1,
+                        openAddForm: true,
+                      ),
+                    ),
+                  ).then((_) => _fetchSalonData());
+                },
+                icon: const Icon(Icons.add, size: 16, color: Colors.white),
+                label: const Text(
+                  "+ Zid Service",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryBlue,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        // ── Content ──
+        Expanded(
+          child: services.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.cut_outlined,
+                        size: 60,
+                        color: Colors.grey.shade300,
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        "Ma famma 7atta service ltawa.",
+                        style: TextStyle(color: Colors.grey, fontSize: 15),
+                      ),
+                    ],
+                  ),
+                )
+              : ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 80),
+                  itemCount: services.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final srv = services[index] as Map<String, dynamic>;
+                    final name = srv['name']?.toString() ?? '';
+                    final price = srv['price'];
+                    final duration = srv['durationMinutes'];
+                    final imageUrl = srv['imageUrl'] as String?;
+                    final description = srv['description'] as String?;
+
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          // Image
+                          ClipRRect(
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(16),
+                              bottomLeft: Radius.circular(16),
+                            ),
+                            child: (imageUrl != null && imageUrl.isNotEmpty)
+                                ? Image.network(
+                                    imageUrl,
+                                    width: 90,
+                                    height: 90,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) =>
+                                        _servicePlaceholder(),
+                                  )
+                                : _servicePlaceholder(),
+                          ),
+                          // Info
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 12,
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    name,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 15,
+                                      color: AppColors.textDark,
+                                    ),
+                                  ),
+                                  if (description != null &&
+                                      description.isNotEmpty) ...[
+                                    const SizedBox(height: 3),
+                                    Text(
+                                      description,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.timer_outlined,
+                                        size: 14,
+                                        color: Colors.grey,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        "$duration min",
+                                        style: const TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          // Price
+                          Padding(
+                            padding: const EdgeInsets.only(right: 14),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.primaryBlue.withOpacity(0.08),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                "$price TND",
+                                style: const TextStyle(
+                                  color: AppColors.primaryBlue,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+        ),
+      ],
+    );
+  }
+
+  Widget _servicePlaceholder() {
+    return Container(
+      width: 90,
+      height: 90,
+      color: Colors.grey.shade100,
+      child: const Icon(Icons.cut_outlined, color: Colors.grey, size: 30),
     );
   }
 
@@ -403,6 +635,163 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildSpecialistesTab() {
+    final employees = (_salonData?['employees'] as List<dynamic>?) ?? [];
+
+    return Column(
+      children: [
+        // Add button at top
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+          child: SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SalonScreenUnifiee(
+                      isPatron: true,
+                      initialTabIndex: 2, // 2 is Equipe tab for Patron
+                      openAddForm: true,
+                    ),
+                  ),
+                ).then((_) => _fetchSalonData());
+              },
+              icon: const Icon(
+                Icons.person_add_alt_1,
+                size: 18,
+                color: Colors.white,
+              ),
+              label: const Text(
+                "+ Zid Spécialiste",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryBlue,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+            ),
+          ),
+        ),
+        if (employees.isEmpty)
+          const Expanded(
+            child: Center(
+              child: Text(
+                "Ma zadet hatta specialiste.",
+                style: TextStyle(color: Colors.grey, fontSize: 15),
+              ),
+            ),
+          )
+        else
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(20),
+              itemCount: employees.length,
+              itemBuilder: (context, index) {
+                final emp = employees[index] as Map<String, dynamic>;
+                final name = (emp['name'] ?? 'Specialiste') as String;
+                final role = (emp['role'] ?? 'Spécialiste') as String;
+                final bio = emp['bio'] as String?;
+                final imageUrl = emp['imageUrl'] as String?;
+
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 15),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.04),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 28,
+                        backgroundColor: AppColors.primaryBlue.withOpacity(0.1),
+                        backgroundImage: imageUrl != null
+                            ? NetworkImage(imageUrl)
+                            : null,
+                        child: imageUrl == null
+                            ? Text(
+                                name.isNotEmpty
+                                    ? name.substring(0, 1).toUpperCase()
+                                    : '?',
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primaryBlue,
+                                ),
+                              )
+                            : null,
+                      ),
+                      const SizedBox(width: 15),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              name,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                                color: AppColors.textDark,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.primaryBlue.withOpacity(0.08),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                role,
+                                style: const TextStyle(
+                                  color: AppColors.primaryBlue,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            if (bio != null) ...[
+                              const SizedBox(height: 6),
+                              Text(
+                                bio,
+                                style: const TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 13,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+      ],
     );
   }
 
