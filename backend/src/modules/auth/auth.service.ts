@@ -80,3 +80,44 @@ export const loginUser = async (data: any) => {
 
     return { user: { ...userWithoutPassword, hasSalon }, token };
 };
+
+export const getMe = async (userId: number) => {
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+        include: {
+            profile: true
+        }
+    });
+
+    if (!user) {
+        throw new Error('User not found');
+    }
+
+    const { passwordHash: _, ...userWithoutPassword } = user;
+    return userWithoutPassword;
+};
+
+export const updateProfile = async (userId: number, data: { fullName?: string; phoneNumber?: string; email?: string; avatarUrl?: string; bio?: string }) => {
+    return await prisma.$transaction(async (tx) => {
+        if (data.fullName !== undefined || data.phoneNumber !== undefined) {
+            await tx.user.update({
+                where: { id: userId },
+                data: {
+                    ...(data.fullName !== undefined && { fullName: data.fullName }),
+                    ...(data.phoneNumber !== undefined && { phoneNumber: data.phoneNumber })
+                }
+            });
+        }
+
+        const updatedProfile = await tx.profile.update({
+            where: { userId },
+            data: {
+                ...(data.avatarUrl !== undefined && { avatarUrl: data.avatarUrl }),
+                ...(data.bio !== undefined && { bio: data.bio }),
+                ...(data.email !== undefined && { email: data.email })
+            }
+        });
+
+        return updatedProfile;
+    });
+};

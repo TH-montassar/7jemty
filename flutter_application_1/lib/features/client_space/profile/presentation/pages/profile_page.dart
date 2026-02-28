@@ -5,6 +5,7 @@ import '../widgets/loyalty_cards_section.dart';
 import '../widgets/profile_menus.dart';
 
 import 'package:hjamty/core/localization/translation_service.dart';
+import 'package:hjamty/services/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -18,6 +19,7 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _isLoading = true;
   bool _isLoggedIn = false;
   String? _userRole;
+  Map<String, dynamic>? _userData;
 
   @override
   void initState() {
@@ -26,21 +28,34 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _checkLoginStatus() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('jwt_token');
-    final role = prefs.getString('user_role');
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token');
 
-    if (mounted) {
       if (token == null || token.isEmpty) {
-        setState(() {
-          _isLoggedIn = false;
-          _userRole = null;
-          _isLoading = false;
-        });
-      } else {
+        if (mounted) {
+          setState(() {
+            _isLoggedIn = false;
+            _userRole = null;
+            _isLoading = false;
+          });
+        }
+        return;
+      }
+
+      // Fetch real data from DB
+      final result = await AuthService.getMe();
+      if (mounted) {
         setState(() {
           _isLoggedIn = true;
-          _userRole = role;
+          _userData = result['data'];
+          _userRole = _userData?['role'];
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
           _isLoading = false;
         });
       }
@@ -65,7 +80,7 @@ class _ProfilePageState extends State<ProfilePage> {
       );
     }
 
-    final isEmployee = _userRole == 'EMPLOYEE';
+    final isClient = _userRole == 'CLIENT';
 
     return Scaffold(
       backgroundColor: AppColors.bgColor,
@@ -88,11 +103,11 @@ class _ProfilePageState extends State<ProfilePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // 1. Header: Photo, Nom, Email
-            const ProfileHeader(),
+            ProfileHeader(userData: _userData, onUpdate: _checkLoginStatus),
             const SizedBox(height: 30),
 
             // 2. Cartes Salons (Tampons) - Only for Clients
-            if (!isEmployee) ...[
+            if (isClient) ...[
               Text(
                 tr(context, 'loyalty_cards'),
                 style: const TextStyle(

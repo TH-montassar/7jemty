@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import '../../pages/home_page.dart';
 import '../../pages/calendar_page.dart';
 import 'salon_dashboard_screen.dart';
-import '../../pages/profile_page.dart';
+import '../client_space/profile/presentation/pages/profile_page.dart';
+import '../../services/auth_service.dart';
 
 class MainPage extends StatefulWidget {
   final int initialIndex;
@@ -15,11 +16,26 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
   late int _selectedIndex;
+  Map<String, dynamic>? _userData;
 
   @override
   void initState() {
     super.initState();
     _selectedIndex = widget.initialIndex;
+    _fetchUserData();
+  }
+
+  Future<void> _fetchUserData() async {
+    try {
+      final result = await AuthService.getMe();
+      if (mounted) {
+        setState(() {
+          _userData = result['data'];
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching user data: $e');
+    }
   }
 
   // هذي القايمة متاع الصفحات اللي بش يظهرو في الوسط
@@ -40,58 +56,63 @@ class _MainPageState extends State<MainPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       // 1. الـ AppBar حطيناه هنا بش يقعد ديما ظاهر
-      appBar: AppBar(
-        title: Row(
-          children: [
-            Image.asset(
-              'assets/images/logo.png',
-              height: 24,
-              errorBuilder: (context, error, stackTrace) =>
-                  const Icon(Icons.cut, color: Colors.blue),
-            ),
-            const SizedBox(width: 8),
-            Text(tr(context, 'app_name_7jemty')),
-          ],
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 15,
-                  backgroundColor: Colors.grey[300],
-                  child: ClipOval(
-                    child: Image.asset(
-                      'assets/images/img1.jpg',
-                      fit: BoxFit.cover,
-                      width: 30,
-                      height: 30,
-                      errorBuilder: (context, error, stackTrace) =>
-                          const Icon(Icons.person, color: Colors.grey),
-                    ),
+      // Hide global AppBar for Salon Dashboard and Profile since they have their own
+      appBar: (_selectedIndex == 2 || _selectedIndex == 3)
+          ? null
+          : AppBar(
+              title: Row(
+                children: [
+                  Image.asset(
+                    'assets/images/logo.png',
+                    height: 24,
+                    errorBuilder: (context, error, stackTrace) =>
+                        const Icon(Icons.cut, color: Colors.blue),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  tr(context, 'salon_name_label'),
-                  style: TextStyle(color: Colors.black),
-                ),
-                const SizedBox(width: 16),
-                CircleAvatar(
-                  backgroundColor: Colors.blue,
-                  radius: 15,
-                  child: IconButton(
-                    padding: EdgeInsets.zero,
-                    onPressed: () {},
-                    icon: const Icon(Icons.add, color: Colors.white, size: 20),
+                  const SizedBox(width: 8),
+                  Text(tr(context, 'app_name_7jemty')),
+                ],
+              ),
+              actions: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 15,
+                        backgroundColor: Colors.grey[300],
+                        backgroundImage:
+                            (_userData?['profile']?['avatarUrl'] != null &&
+                                _userData!['profile']['avatarUrl'].isNotEmpty)
+                            ? NetworkImage(_userData!['profile']['avatarUrl'])
+                            : const NetworkImage(
+                                'https://cdn-icons-png.flaticon.com/512/149/149071.png',
+                              ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        _userData?['fullName'] ??
+                            tr(context, 'salon_name_label'),
+                        style: const TextStyle(color: Colors.black),
+                      ),
+                      const SizedBox(width: 16),
+                      CircleAvatar(
+                        backgroundColor: Colors.blue,
+                        radius: 15,
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          onPressed: () {},
+                          icon: const Icon(
+                            Icons.add,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-          ),
-        ],
-      ),
 
       // 2. الـ Body هو اللي يتبدل حسب الـ Index
       body: _pages[_selectedIndex],
