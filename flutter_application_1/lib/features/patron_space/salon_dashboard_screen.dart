@@ -4,7 +4,7 @@ import '../../core/utils/cloudinary_utils.dart';
 import '../../core/constants/app_colors.dart';
 import '../../services/salon_service.dart';
 
-import '../client_space/salon_profile/presentation/pages/salon_screen_unifiee.dart';
+import '../client_space/salon_profile/presentation/pages/salon_setting_screen.dart';
 import 'create_salon_screen.dart';
 import '../client_space/salon_profile/presentation/widgets/sticky_tab_bar_delegate.dart';
 import 'package:toastification/toastification.dart';
