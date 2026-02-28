@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../patron_space/salon_dashboard_screen.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../services/salon_service.dart';
+import '../../../../../core/utils/cloudinary_utils.dart';
 
 class NearYouList extends StatefulWidget {
   const NearYouList({super.key});
@@ -91,7 +92,10 @@ class _NearYouListState extends State<NearYouList> {
                             top: Radius.circular(15),
                           ),
                           child: Image.network(
-                            salon['image'] ??
+                            CloudinaryUtils.getOptimizedUrl(
+                                  salon['image'],
+                                  width: 300,
+                                ) ??
                                 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=500&q=80',
                             width: double.infinity,
                             fit: BoxFit.cover,

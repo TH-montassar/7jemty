@@ -200,7 +200,9 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
-                                  'Envoi en cours: ${(_uploadProgress * 100).toStringAsFixed(0)}%',
+                                  _uploadProgress >= 1.0
+                                      ? 'Traitement en cours...'
+                                      : 'Envoi en cours: ${(_uploadProgress * 100).toStringAsFixed(0)}%',
                                   style: const TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,

@@ -1,5 +1,6 @@
 import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:flutter/material.dart';
+import '../../core/utils/cloudinary_utils.dart';
 import '../../core/constants/app_colors.dart';
 import '../../services/salon_service.dart';
 
@@ -193,7 +194,11 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                       if (_salonData?['coverImageUrl'] != null &&
                           (_salonData!['coverImageUrl'] as String).isNotEmpty)
                         Image.network(
-                          _salonData!['coverImageUrl'] as String,
+                          CloudinaryUtils.getOptimizedUrl(
+                                _salonData!['coverImageUrl'] as String,
+                                width: 1000,
+                              ) ??
+                              '',
                           fit: BoxFit.cover,
                           width: double.infinity,
                           height: double.infinity,
@@ -365,7 +370,6 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
     );
   }
 
-  // ============================================
   // TABS BUILDERS
   // ============================================
 
@@ -631,7 +635,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                 return ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: Image.network(
-                    imageUrl,
+                    CloudinaryUtils.getOptimizedUrl(imageUrl, width: 400) ?? '',
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => Container(
                       color: Colors.grey.shade200,
@@ -730,7 +734,8 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                 ),
                 child: imageUrl != null && imageUrl.isNotEmpty
                     ? Image.network(
-                        imageUrl,
+                        CloudinaryUtils.getOptimizedUrl(imageUrl, width: 300) ??
+                            '',
                         width: 90,
                         height: 90,
                         fit: BoxFit.cover,
@@ -930,7 +935,13 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                         radius: 28,
                         backgroundColor: AppColors.primaryBlue.withOpacity(0.1),
                         backgroundImage: imageUrl != null
-                            ? NetworkImage(imageUrl)
+                            ? NetworkImage(
+                                CloudinaryUtils.getOptimizedUrl(
+                                      imageUrl,
+                                      width: 200,
+                                    ) ??
+                                    '',
+                              )
                             : null,
                         child: imageUrl == null
                             ? Text(

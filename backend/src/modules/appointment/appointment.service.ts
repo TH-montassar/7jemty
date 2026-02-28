@@ -50,3 +50,150 @@ const getEmployeeSalonId = async (userId: number) => {
     });
     return user?.workplaceSalonId;
 };
+
+export const getBarberAvailability = async (salonId: number, dateString: string, requestedBarberId?: number) => {
+    const date = new Date(dateString);
+    const dayOfWeek = date.getDay();
+
+    // 1. Get Salon Working Hours for this day
+    const workingHours = await prisma.workingHours.findFirst({
+        where: { salonId, dayOfWeek }
+    });
+
+    let openTime = "08:00";
+    let closeTime = "17:00";
+    let isDayOff = false;
+
+    if (workingHours) {
+        if (workingHours.isDayOff) isDayOff = true;
+        if (workingHours.openTime) openTime = workingHours.openTime;
+        if (workingHours.closeTime) closeTime = workingHours.closeTime;
+    }
+
+    if (isDayOff) {
+        return [];
+    }
+
+    // Generate 30 mins slots between openTime and closeTime
+    const slots: string[] = [];
+    let current = parseTime(openTime, date);
+    const end = parseTime(closeTime, date);
+
+    while (current < end) {
+        slots.push(formatTime(current));
+        current.setMinutes(current.getMinutes() + 30);
+    }
+
+    // Find conflicting appointments
+    const dateStart = new Date(date);
+    dateStart.setHours(0, 0, 0, 0);
+    const dateEnd = new Date(dateStart);
+    dateEnd.setDate(dateEnd.getDate() + 1);
+
+    const appointmentsMap = await prisma.appointment.findMany({
+        where: {
+            salonId,
+            ...(requestedBarberId ? { barberId: requestedBarberId } : {}),
+            appointmentDate: {
+                gte: dateStart,
+                lt: dateEnd
+            },
+            status: { in: ['PENDING', 'CONFIRMED', 'ARRIVED'] }
+        }
+    });
+
+    // Filter slots that overlap with existing appointments
+    return slots.filter(slot => {
+        const slotStart = parseTime(slot, date);
+        const slotEnd = new Date(slotStart);
+        slotEnd.setMinutes(slotEnd.getMinutes() + 30); // minimum 30 min duration overlap check
+
+        for (const appt of appointmentsMap) {
+            if (slotStart < appt.estimatedEndTime && slotEnd > appt.appointmentDate) {
+                return false; // overlap
+            }
+        }
+        return true;
+    });
+};
+
+export const createClientAppointment = async (
+    clientId: number,
+    salonId: number,
+    barberId: number,
+    dateString: string,
+    timeString: string,
+    serviceIds: number[]
+) => {
+    const services = await prisma.service.findMany({
+        where: { id: { in: serviceIds } }
+    });
+
+    if (services.length !== serviceIds.length) {
+        throw new Error("Un ou plusieurs services sont invalides.");
+    }
+
+    let totalPrice = 0;
+    let totalDurationMinutes = 0;
+
+    for (const service of services) {
+        totalPrice += service.price;
+        // if durationMinutes is empty, assume 30 minutes
+        totalDurationMinutes += service.durationMinutes || 30;
+    }
+
+    const appointmentDate = parseTime(timeString, new Date(dateString));
+    const estimatedEndTime = new Date(appointmentDate);
+    estimatedEndTime.setMinutes(estimatedEndTime.getMinutes() + totalDurationMinutes);
+
+    // Verify availability first
+    const conflicting = await prisma.appointment.findFirst({
+        where: {
+            salonId,
+            barberId,
+            status: { in: ['PENDING', 'CONFIRMED', 'ARRIVED'] },
+            OR: [
+                {
+                    appointmentDate: { lt: estimatedEndTime },
+                    estimatedEndTime: { gt: appointmentDate }
+                }
+            ]
+        }
+    });
+
+    if (conflicting) {
+        throw new Error("Le coiffeur n'est plus disponible pour cet horaire.");
+    }
+
+    const appointment = await prisma.appointment.create({
+        data: {
+            clientId,
+            salonId,
+            barberId,
+            appointmentDate,
+            estimatedEndTime,
+            totalPrice,
+            totalDurationMinutes,
+            status: 'PENDING',
+            services: {
+                create: serviceIds.map(serviceId => ({
+                    service: { connect: { id: serviceId } }
+                }))
+            }
+        }
+    });
+
+    return appointment;
+};
+
+// Utils
+function parseTime(time: string, date: Date): Date {
+    const [h, m = 0] = time.split(':').map(Number);
+    const d = new Date(date);
+    d.setHours(h, m, 0, 0);
+    return d;
+}
+
+function formatTime(d: Date): string {
+    return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+}

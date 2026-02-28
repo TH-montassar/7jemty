@@ -10,7 +10,7 @@
     "dev": "nodemon -L --exec tsx server.ts",
     "prisma:mig": "prisma migrate dev",
     "prisma:gen": "prisma generate",
-    "prisma:reset": "prisma migrate reset",
+    "prisma:res": "prisma migrate reset",
     "prisma:studio": "prisma studio"
   },
   "dependencies": {

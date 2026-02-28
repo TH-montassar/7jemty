@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../patron_space/salon_dashboard_screen.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../services/salon_service.dart';
+import '../../../../../core/utils/cloudinary_utils.dart';
 
 class TopRatedList extends StatefulWidget {
   const TopRatedList({super.key});
@@ -100,7 +101,10 @@ class _TopRatedListState extends State<TopRatedList> {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(15),
                       child: Image.network(
-                        salon['image'] ??
+                        CloudinaryUtils.getOptimizedUrl(
+                              salon['image'],
+                              width: 200,
+                            ) ??
                             'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=500&q=80',
                         width: 80,
                         height: 80,

@@ -197,8 +197,27 @@ class AuthService {
       );
 
       request.headers['Authorization'] = 'Bearer $token';
+
+      // Create a chunked stream from bytes (e.g., 32KB per chunk)
+      const int chunkSize = 32 * 1024;
+      Stream<List<int>> chunkedStream() async* {
+        for (int i = 0; i < bytes.length; i += chunkSize) {
+          final end = (i + chunkSize < bytes.length)
+              ? i + chunkSize
+              : bytes.length;
+          yield bytes.sublist(i, end);
+          // Small delay to allow progress UI to breathe if needed, though usually not necessary
+          await Future.delayed(Duration.zero);
+        }
+      }
+
       request.files.add(
-        http.MultipartFile.fromBytes('file', bytes, filename: filename),
+        http.MultipartFile(
+          'file',
+          chunkedStream(),
+          bytes.length,
+          filename: filename,
+        ),
       );
 
       final streamedResponse = await request.send();

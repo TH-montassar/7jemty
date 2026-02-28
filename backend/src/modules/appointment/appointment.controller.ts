@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
-import { updateAppointmentStatus } from './appointment.service.js';
-import { updateAppointmentStatusSchema } from './appointment.schema.js';
+import { updateAppointmentStatus, getBarberAvailability, createClientAppointment } from './appointment.service.js';
+import { updateAppointmentStatusSchema, checkAvailabilitySchema, createAppointmentSchema } from './appointment.schema.js';
 
 interface AuthRequest extends Request {
     user?: {

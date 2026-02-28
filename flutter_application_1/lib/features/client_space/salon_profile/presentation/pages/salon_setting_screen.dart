@@ -1,12 +1,12 @@
-import 'dart:convert';
+import 'package:hjamty/core/utils/cloudinary_utils.dart';
 import 'package:flutter/material.dart';
-import 'dart:typed_data';
 import 'package:toastification/toastification.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../../../core/constants/app_colors.dart';
-import '../../../../../../services/salon_service.dart';
-import '../../../../patron_space/create_salon_screen.dart';
+import 'package:hjamty/services/auth_service.dart';
+import 'package:hjamty/services/salon_service.dart';
+import 'package:hjamty/features/patron_space/create_salon_screen.dart';
 import '../widgets/sticky_tab_bar_delegate.dart';
 
 class SalonScreenUnifiee extends StatefulWidget {
@@ -42,7 +42,6 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
 
   // Image cover
   final TextEditingController _coverImageController = TextEditingController();
-  Uint8List? _coverImageBytes;
   List<Map<String, String>> _socialLinks = [];
 
   // ---------------------------------------------------------------------------
@@ -55,7 +54,6 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
   final TextEditingController _srvUrlController = TextEditingController();
   bool _isAddingService = false;
   bool _isSrvUrlMode = true;
-  Uint8List? _srvSelectedImageBytes;
 
   // ---------------------------------------------------------------------------
   // PATRON CONTROLLERS (For Equipe Tab)
@@ -68,8 +66,16 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
   final TextEditingController _empImageUrlController = TextEditingController();
   bool _isAddingSpecialist = false;
   bool _empPasswordVisible = false;
-  Uint8List? _empSelectedImageBytes;
   bool _isEmpUrlMode = true;
+
+  // Upload Progress States
+  double _coverUploadProgress = 0.0;
+  bool _isCoverUploading = false;
+  double _srvUploadProgress = 0.0;
+  bool _isSrvUploading = false;
+  double _empUploadProgress = 0.0;
+  bool _isEmpUploading = false;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -168,12 +174,6 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
   Future<void> _handleSaveAll() async {
     setState(() => _isLoading = true);
     try {
-      String? finalCoverUrl = _coverImageController.text;
-      if (_coverImageBytes != null) {
-        final base64String = base64Encode(_coverImageBytes!);
-        finalCoverUrl = 'data:image/jpeg;base64,$base64String';
-      }
-
       await SalonService.updateSalonInfo(
         name: _nameController.text.trim(),
         description: _descController.text.trim(),
@@ -181,7 +181,9 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
         address: _addressController.text.trim(),
         googleMapsUrl: _googleMapsController.text.trim(),
         websiteUrl: _websiteController.text.trim(),
-        coverImageUrl: finalCoverUrl,
+        coverImageUrl: _coverImageController.text.trim().isEmpty
+            ? null
+            : _coverImageController.text.trim(),
         speciality: _specialityController.text.trim(),
         socialLinks: _socialLinks.isNotEmpty ? _socialLinks : null,
       );
@@ -231,40 +233,135 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
   }
 
   Future<void> _pickCoverImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    final pickedFile = await _picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1920,
+      maxHeight: 1080,
+      imageQuality: 85,
+    );
     if (pickedFile != null) {
-      final bytes = await pickedFile.readAsBytes();
       setState(() {
-        _coverImageBytes = bytes;
-        _coverImageController.clear();
+        _isCoverUploading = true;
+        _coverUploadProgress = 0.0;
       });
+
+      try {
+        final bytes = await pickedFile.readAsBytes();
+        final String uploadedUrl = await AuthService.uploadImage(
+          bytes: bytes,
+          filename: pickedFile.name,
+          onProgress: (p) {
+            setState(() {
+              _coverUploadProgress = p;
+            });
+          },
+        );
+
+        setState(() {
+          _coverImageController.text = uploadedUrl;
+          _isCoverUploading = false;
+        });
+
+        toastification.show(
+          context: context,
+          type: ToastificationType.success,
+          title: const Text('Tsawra tplodet!'),
+          description: const Text('Tawa a3mel "Sajjel el cambiamenti"'),
+          autoCloseDuration: const Duration(seconds: 3),
+        );
+      } catch (e) {
+        setState(() => _isCoverUploading = false);
+        toastification.show(
+          context: context,
+          type: ToastificationType.error,
+          title: const Text('Erreur upload'),
+          description: Text(e.toString()),
+        );
+      }
     }
   }
 
   Future<void> _pickSrvImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    final pickedFile = await _picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1024,
+      maxHeight: 1024,
+      imageQuality: 85,
+    );
     if (pickedFile != null) {
-      final bytes = await pickedFile.readAsBytes();
       setState(() {
-        _srvSelectedImageBytes = bytes;
-        _isSrvUrlMode = false;
-        _srvUrlController.clear();
+        _isSrvUploading = true;
+        _srvUploadProgress = 0.0;
       });
+
+      try {
+        final bytes = await pickedFile.readAsBytes();
+        final String uploadedUrl = await AuthService.uploadImage(
+          bytes: bytes,
+          filename: pickedFile.name,
+          onProgress: (p) {
+            setState(() {
+              _srvUploadProgress = p;
+            });
+          },
+        );
+
+        setState(() {
+          _srvUrlController.text = uploadedUrl;
+          _isSrvUrlMode = true;
+          _isSrvUploading = false;
+        });
+      } catch (e) {
+        setState(() => _isSrvUploading = false);
+        toastification.show(
+          context: context,
+          type: ToastificationType.error,
+          title: const Text('Erreur upload service'),
+          description: Text(e.toString()),
+        );
+      }
     }
   }
 
   Future<void> _pickEmpImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    final pickedFile = await _picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1024,
+      maxHeight: 1024,
+      imageQuality: 85,
+    );
     if (pickedFile != null) {
-      final bytes = await pickedFile.readAsBytes();
       setState(() {
-        _empSelectedImageBytes = bytes;
-        _isEmpUrlMode = false;
-        _empImageUrlController.clear();
+        _isEmpUploading = true;
+        _empUploadProgress = 0.0;
       });
+
+      try {
+        final bytes = await pickedFile.readAsBytes();
+        final String uploadedUrl = await AuthService.uploadImage(
+          bytes: bytes,
+          filename: pickedFile.name,
+          onProgress: (p) {
+            setState(() {
+              _empUploadProgress = p;
+            });
+          },
+        );
+
+        setState(() {
+          _empImageUrlController.text = uploadedUrl;
+          _isEmpUrlMode = true;
+          _isEmpUploading = false;
+        });
+      } catch (e) {
+        setState(() => _isEmpUploading = false);
+        toastification.show(
+          context: context,
+          type: ToastificationType.error,
+          title: const Text('Erreur upload employé'),
+          description: Text(e.toString()),
+        );
+      }
     }
   }
 
@@ -286,14 +383,8 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
       FocusScope.of(context).unfocus();
       setState(() => _isLoading = true);
 
-      String? finalImageUrl;
-      if (_isSrvUrlMode) {
-        finalImageUrl = _srvUrlController.text.trim();
-        if (finalImageUrl.isEmpty) finalImageUrl = null;
-      } else if (_srvSelectedImageBytes != null) {
-        final base64Image = base64Encode(_srvSelectedImageBytes!);
-        finalImageUrl = "data:image/jpeg;base64,$base64Image";
-      }
+      String? finalImageUrl = _srvUrlController.text.trim();
+      if (finalImageUrl.isEmpty) finalImageUrl = null;
 
       await SalonService.createService(
         name: _srvNameController.text.trim(),
@@ -317,7 +408,6 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
       _srvDescController.clear();
       _srvUrlController.clear();
       setState(() {
-        _srvSelectedImageBytes = null;
         _isAddingService = false;
       });
 
@@ -334,27 +424,6 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
-  }
-
-  // Helper UI for images
-  Widget _imagePlaceholder() {
-    return Container(
-      width: 80,
-      height: 80,
-      decoration: BoxDecoration(
-        color: Colors.blue.shade50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.primaryBlue.withOpacity(0.3),
-          width: 1.5,
-        ),
-      ),
-      child: const Icon(
-        Icons.image_outlined,
-        color: AppColors.primaryBlue,
-        size: 30,
-      ),
-    );
   }
 
   @override
@@ -505,7 +574,10 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                   fit: StackFit.expand,
                   children: [
                     Image.network(
-                      _salonData?['coverImageUrl'] ??
+                      CloudinaryUtils.getOptimizedUrl(
+                            _salonData?['coverImageUrl'],
+                            width: 1000,
+                          ) ??
                           'https://images.unsplash.com/photo-1503951914875-452162b7f30a?auto=format&fit=crop&w=800&q=80',
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) =>
@@ -561,46 +633,88 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              GestureDetector(
-                onTap: _pickCoverImage,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: _coverImageBytes != null
-                      ? Image.memory(
-                          _coverImageBytes!,
-                          width: 80,
-                          height: 80,
-                          fit: BoxFit.cover,
-                        )
-                      : (_coverImageController.text.isNotEmpty &&
-                            !_coverImageController.text.startsWith('data:'))
-                      ? Image.network(
-                          _coverImageController.text,
-                          width: 80,
-                          height: 80,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => _imagePlaceholder(),
-                        )
-                      : Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            _imagePlaceholder(),
-                            Container(
-                              width: 80,
-                              height: 80,
-                              decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.08),
-                                borderRadius: BorderRadius.circular(12),
+              Stack(
+                children: [
+                  GestureDetector(
+                    onTap: _pickCoverImage,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: SizedBox(
+                        width: 80,
+                        height: 80,
+                        child: _coverImageController.text.isNotEmpty
+                            ? Image.network(
+                                _coverImageController.text,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const Center(
+                                      child: Icon(Icons.error_outline),
+                                    ),
+                              )
+                            : Container(
+                                color: Colors.grey.shade100,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.add_photo_alternate_outlined,
+                                      color: Colors.grey.shade400,
+                                      size: 40,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      "Zid taswira mta3 el salon",
+                                      style: TextStyle(
+                                        color: Colors.grey.shade500,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                            const Icon(
-                              Icons.add_a_photo,
-                              color: AppColors.primaryBlue,
-                              size: 22,
-                            ),
-                          ],
+                      ),
+                    ),
+                  ),
+                  if (_isCoverUploading)
+                    Positioned.fill(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.5),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                ),
+                        child: Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  value: _coverUploadProgress,
+                                  strokeWidth: 2,
+                                  valueColor:
+                                      const AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
+                                      ),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _coverUploadProgress >= 1.0
+                                    ? "Sajjel..."
+                                    : "${(_coverUploadProgress * 100).toInt()}%",
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -874,7 +988,33 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                         color: Colors.black87,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    if (_isCoverUploading) ...[
+                      const SizedBox(height: 12),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        child: Column(
+                          children: [
+                            LinearProgressIndicator(
+                              value: _coverUploadProgress,
+                              backgroundColor: Colors.grey.shade200,
+                              valueColor: const AlwaysStoppedAnimation<Color>(
+                                AppColors.primaryBlue,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              "${(_coverUploadProgress * 100).toInt()}% uploaded...",
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: AppColors.primaryBlue,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 24),
                     Text(
                       link['url']!,
                       style: TextStyle(
@@ -1031,7 +1171,6 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                         onPressed: () {
                           setState(() {
                             _isSrvUrlMode = true;
-                            _srvSelectedImageBytes = null;
                           });
                         },
                         style: ElevatedButton.styleFrom(
@@ -1095,41 +1234,33 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                     ],
                   ),
                   const SizedBox(height: 16),
+                  if (_isSrvUploading) ...[
+                    LinearProgressIndicator(
+                      value: _srvUploadProgress,
+                      backgroundColor: Colors.grey.shade200,
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                        AppColors.primaryBlue,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _srvUploadProgress >= 1.0
+                          ? "Sajjel..."
+                          : "${(_srvUploadProgress * 100).toInt()}% uploaded...",
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.primaryBlue,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                   if (_isSrvUrlMode)
                     _buildInputField(
                       _srvUrlController,
                       "Hott lien mtaa taswira...",
                       Icons.link,
-                    )
-                  else if (_srvSelectedImageBytes != null)
-                    Center(
-                      child: Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Image.memory(
-                              _srvSelectedImageBytes!,
-                              height: 100,
-                              width: 100,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                          Positioned(
-                            top: -10,
-                            right: -10,
-                            child: IconButton(
-                              icon: const Icon(Icons.cancel, color: Colors.red),
-                              onPressed: () {
-                                setState(() {
-                                  _srvSelectedImageBytes = null;
-                                  _isSrvUrlMode = true;
-                                });
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
                     ),
                   const SizedBox(height: 12),
                   _buildLabelInput("Esm el service"),
@@ -1218,7 +1349,11 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                       ClipRRect(
                         borderRadius: BorderRadius.circular(8),
                         child: Image.network(
-                          srv['imageUrl'] ?? 'https://via.placeholder.com/60',
+                          CloudinaryUtils.getOptimizedUrl(
+                                srv['imageUrl'],
+                                width: 200,
+                              ) ??
+                              'https://via.placeholder.com/60',
                           width: 60,
                           height: 60,
                           fit: BoxFit.cover,
@@ -1296,14 +1431,8 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
       FocusScope.of(context).unfocus();
       setState(() => _isLoading = true);
 
-      String? finalImageUrl;
-      if (_isEmpUrlMode) {
-        finalImageUrl = _empImageUrlController.text.trim();
-        if (finalImageUrl.isEmpty) finalImageUrl = null;
-      } else if (_empSelectedImageBytes != null) {
-        final base64Image = base64Encode(_empSelectedImageBytes!);
-        finalImageUrl = "data:image/jpeg;base64,$base64Image";
-      }
+      String? finalImageUrl = _empImageUrlController.text.trim();
+      if (finalImageUrl.isEmpty) finalImageUrl = null;
 
       await SalonService.createEmployeeAccount(
         name: _empNameController.text.trim(),
@@ -1332,7 +1461,6 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
       _empImageUrlController.clear();
       setState(() {
         _isAddingSpecialist = false;
-        _empSelectedImageBytes = null;
       });
       await _fetchSalonData();
     } catch (e) {
@@ -1563,42 +1691,36 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                     ],
                   ),
                   const SizedBox(height: 16),
+                  if (_isEmpUploading) ...[
+                    LinearProgressIndicator(
+                      value: _empUploadProgress,
+                      backgroundColor: Colors.grey.shade200,
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                        AppColors.primaryBlue,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _empUploadProgress >= 1.0
+                          ? "Sajjel..."
+                          : "${(_empUploadProgress * 100).toInt()}% uploaded...",
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.primaryBlue,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                   if (_isEmpUrlMode)
                     _buildInputField(
                       _empImageUrlController,
                       "https://... lien mte3 taswira",
                       Icons.image_outlined,
                     )
-                  else if (_empSelectedImageBytes != null)
-                    Center(
-                      child: Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Image.memory(
-                              _empSelectedImageBytes!,
-                              height: 100,
-                              width: 100,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                          Positioned(
-                            top: -10,
-                            right: -10,
-                            child: IconButton(
-                              icon: const Icon(Icons.cancel, color: Colors.red),
-                              onPressed: () {
-                                setState(() {
-                                  _empSelectedImageBytes = null;
-                                  _isEmpUrlMode = true;
-                                });
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                  else
+                    const SizedBox.shrink(),
                   const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: _handleAddSpecialist,
@@ -1674,7 +1796,13 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                         radius: 28,
                         backgroundColor: AppColors.primaryBlue.withOpacity(0.1),
                         backgroundImage: imageUrl != null
-                            ? NetworkImage(imageUrl)
+                            ? NetworkImage(
+                                CloudinaryUtils.getOptimizedUrl(
+                                      imageUrl,
+                                      width: 200,
+                                    ) ??
+                                    '',
+                              )
                             : null,
                         child: imageUrl == null
                             ? Text(

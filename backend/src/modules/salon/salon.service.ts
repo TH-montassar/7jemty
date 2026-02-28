@@ -88,6 +88,8 @@ export const getSalonByPatronId = async (patronId: number) => {
             },
             socialLinks: true,
             services: true,
+            workingHours: true,
+            portfolio: true,
         }
     });
 
@@ -269,6 +271,7 @@ export const getSalonById = async (id: number) => {
             },
             socialLinks: true,
             workingHours: true,
+            portfolio: true,
         },
     });
 
