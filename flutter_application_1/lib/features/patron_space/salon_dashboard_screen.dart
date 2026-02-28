@@ -7,9 +7,14 @@ import '../client_space/salon_profile/presentation/pages/salon_screen_unifiee.da
 import 'create_salon_screen.dart';
 import '../client_space/salon_profile/presentation/widgets/sticky_tab_bar_delegate.dart';
 import 'package:toastification/toastification.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SalonDashboardScreen extends StatefulWidget {
-  const SalonDashboardScreen({super.key});
+  final bool isPatron;
+  final int?
+  salonId; // Optional: Only provided if a client views a specific salon
+
+  const SalonDashboardScreen({super.key, this.isPatron = false, this.salonId});
 
   @override
   State<SalonDashboardScreen> createState() => _SalonDashboardScreenState();
@@ -27,11 +32,13 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
 
   Future<void> _fetchSalonData() async {
     try {
-      final response = await SalonService.getMySalon();
+      final response = widget.isPatron
+          ? await SalonService.getMySalon()
+          : await SalonService.getSalonById(widget.salonId!);
       if (!mounted) return;
 
       setState(() {
-        _salonData = response['data'];
+        _salonData = response;
         _isLoading = false;
       });
     } catch (e) {
@@ -42,25 +49,28 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
         return;
       }
 
-      toastification.show(
-        context: context,
-        type: ToastificationType.error,
-        style: ToastificationStyle.fillColored,
-        alignment: Alignment.topCenter,
-        autoCloseDuration: const Duration(seconds: 4),
-        title: const Text(
-          'Mochkla',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-        ),
-        description: Text(
-          e.toString().replaceAll('Exception: ', ''),
-          style: const TextStyle(color: Colors.white),
-        ),
-        primaryColor: AppColors.actionRed,
-        backgroundColor: AppColors.actionRed,
-        icon: const Icon(Icons.error_outline, color: Colors.white),
-        showProgressBar: false,
-      );
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        toastification.show(
+          context: context,
+          type: ToastificationType.error,
+          style: ToastificationStyle.fillColored,
+          alignment: Alignment.topCenter,
+          autoCloseDuration: const Duration(seconds: 6),
+          title: const Text(
+            'Mochkla',
+            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+          ),
+          description: Text(
+            e.toString().replaceAll('Exception: ', ''),
+            style: const TextStyle(color: Colors.white),
+          ),
+          primaryColor: AppColors.actionRed,
+          backgroundColor: AppColors.actionRed,
+          icon: const Icon(Icons.error_outline, color: Colors.white),
+          showProgressBar: false,
+        );
+      });
     }
   }
 
@@ -136,8 +146,18 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
       );
     }
 
+    final tabs = <Tab>[
+      const Tab(text: "Tafasil"),
+      const Tab(text: "Services"),
+      const Tab(text: "Spécialiste"),
+    ];
+    if (widget.isPatron) {
+      tabs.add(const Tab(text: "Rendez-vous"));
+    }
+    tabs.add(const Tab(text: "Avis"));
+
     return DefaultTabController(
-      length: 5,
+      length: tabs.length,
       child: Scaffold(
         backgroundColor: AppColors.bgColor,
         body: NestedScrollView(
@@ -152,18 +172,18 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                 elevation: 0,
                 iconTheme: const IconThemeData(color: Colors.white),
                 actions: [
-                  IconButton(
-                    icon: const Icon(Icons.settings, color: Colors.white),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              const SalonScreenUnifiee(isPatron: true),
-                        ),
-                      ).then((value) => _fetchSalonData());
-                    },
-                  ),
+                  if (widget.isPatron)
+                    IconButton(
+                      icon: const Icon(Icons.settings, color: Colors.white),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SalonScreenUnifiee(),
+                          ),
+                        ).then((value) => _fetchSalonData());
+                      },
+                    ),
                 ],
                 flexibleSpace: FlexibleSpaceBar(
                   titlePadding: const EdgeInsets.only(left: 20, bottom: 16),
@@ -323,13 +343,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                     indicatorColor: AppColors.primaryBlue,
                     indicatorWeight: 3,
                     labelStyle: const TextStyle(fontWeight: FontWeight.bold),
-                    tabs: const [
-                      Tab(text: "Tafasil"),
-                      Tab(text: "Services"),
-                      Tab(text: "Spécialiste"),
-                      Tab(text: "Rendez-vous"),
-                      Tab(text: "Avis"),
-                    ],
+                    tabs: tabs,
                   ),
                 ),
               ),
@@ -342,7 +356,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
               _buildApercuTab(),
               _buildServicesTab(),
               _buildSpecialistesTab(),
-              _buildReservationsTab(),
+              if (widget.isPatron) _buildReservationsTab(),
               _buildAvisTab(),
             ],
           ),
@@ -355,7 +369,63 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
   // TABS BUILDERS
   // ============================================
 
+  Future<void> _launchUrlStr(String? urlString) async {
+    if (urlString == null || urlString.isEmpty) return;
+
+    // Check if it's just coordinates (used for Apple/Google Maps scheme fallback)
+    Uri uri = Uri.parse(urlString);
+
+    // If it's a generic link instead of a scheme
+    if (!urlString.startsWith('http') && !urlString.startsWith('tel:')) {
+      uri = Uri.parse('https://$urlString');
+    }
+
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      debugPrint("Could not launch $urlString");
+    }
+  }
+
+  void _openMap() {
+    final googleMapsUrl = _salonData?['googleMapsUrl'] as String?;
+    if (googleMapsUrl != null && googleMapsUrl.isNotEmpty) {
+      _launchUrlStr(googleMapsUrl);
+      return;
+    }
+
+    // Fallback if we only have address and lat/long
+    final lat = _salonData?['latitude'];
+    final lng = _salonData?['longitude'];
+    if (lat != null && lng != null) {
+      final String googleUrl =
+          'https://www.google.com/maps/search/?api=1&query=$lat,$lng';
+      _launchUrlStr(googleUrl);
+    }
+  }
+
   Widget _buildApercuTab() {
+    final socialLinks = (_salonData?['socialLinks'] as List?) ?? [];
+    final workingHours = (_salonData?['workingHours'] as List?) ?? [];
+    final portfolio = (_salonData?['portfolio'] as List?) ?? [];
+
+    // Sort working hours by dayOfWeek (1 = Monday, 7 = Sunday)
+    workingHours.sort(
+      (a, b) => (a['dayOfWeek'] as int? ?? 0).compareTo(
+        (b['dayOfWeek'] as int? ?? 0),
+      ),
+    );
+
+    final daysMap = {
+      1: 'Lundi',
+      2: 'Mardi',
+      3: 'Mercredi',
+      4: 'Jeudi',
+      5: 'Vendredi',
+      6: 'Samedi',
+      7: 'Dimanche',
+    };
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -380,7 +450,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
           ),
           const SizedBox(height: 24),
           const Text(
-            "Contact",
+            "Contact & Adresse",
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -392,221 +462,355 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
             children: [
               const Icon(Icons.phone, size: 20, color: AppColors.primaryBlue),
               const SizedBox(width: 12),
-              Text(
-                _salonData?['contactPhone'] ?? 'Mouch m9ayed',
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: AppColors.textDark,
-                  fontWeight: FontWeight.w500,
+              GestureDetector(
+                onTap: () {
+                  final phone = _salonData?['contactPhone'];
+                  if (phone != null && phone.isNotEmpty) {
+                    _launchUrlStr('tel:$phone');
+                  }
+                },
+                child: Text(
+                  _salonData?['contactPhone'] ?? 'Mouch m9ayed',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppColors.primaryBlue,
+                    fontWeight: FontWeight.w500,
+                    decoration: TextDecoration.underline,
+                  ),
                 ),
               ),
             ],
           ),
+          const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(
+                Icons.location_on,
+                size: 20,
+                color: AppColors.primaryBlue,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: GestureDetector(
+                  onTap: _openMap,
+                  child: Text(
+                    _salonData?['address'] ?? 'Adresse mouch m9ayda',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: AppColors.primaryBlue,
+                      fontWeight: FontWeight.w500,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          if (socialLinks.isNotEmpty) ...[
+            const SizedBox(height: 24),
+            const Text(
+              "Reseaux Sociaux",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textDark,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: socialLinks.map<Widget>((link) {
+                IconData iconData = Icons.link;
+                String platform = (link['platform'] ?? '')
+                    .toString()
+                    .toLowerCase();
+                if (platform == 'facebook') iconData = Icons.facebook;
+                if (platform == 'instagram') iconData = Icons.camera_alt;
+                if (platform == 'tiktok') iconData = Icons.music_note;
+
+                return InkWell(
+                  onTap: () => _launchUrlStr(link['url']),
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryBlue.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      iconData,
+                      color: AppColors.primaryBlue,
+                      size: 20,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+
+          if (workingHours.isNotEmpty) ...[
+            const SizedBox(height: 24),
+            const Text(
+              "Aw9at el 5edma",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textDark,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Column(
+                children: workingHours.map<Widget>((wh) {
+                  final dayName =
+                      daysMap[wh['dayOfWeek']] ?? 'Jour ${wh['dayOfWeek']}';
+                  final isOff = wh['isDayOff'] == true;
+                  final open = wh['openTime'] ?? '--:--';
+                  final close = wh['closeTime'] ?? '--:--';
+
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          dayName,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.textDark,
+                          ),
+                        ),
+                        Text(
+                          isOff ? "Mesaker" : "$open - $close",
+                          style: TextStyle(
+                            color: isOff ? Colors.red : Colors.grey.shade700,
+                            fontWeight: isOff
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ],
+
+          if (portfolio.isNotEmpty) ...[
+            const SizedBox(height: 24),
+            const Text(
+              "Portfolio",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textDark,
+              ),
+            ),
+            const SizedBox(height: 12),
+            GridView.builder(
+              shrinkWrap: true,
+              physics:
+                  const NeverScrollableScrollPhysics(), // we are in a SingleChildScrollView
+              itemCount: portfolio.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                crossAxisSpacing: 8,
+                mainAxisSpacing: 8,
+              ),
+              itemBuilder: (context, index) {
+                final imageUrl = portfolio[index]['imageUrl'];
+                return ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    imageUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      color: Colors.grey.shade200,
+                      child: const Icon(Icons.broken_image, color: Colors.grey),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
         ],
       ),
     );
   }
 
   Widget _buildServicesTab() {
-    return FutureBuilder<List<dynamic>>(
-      future: SalonService.getMyServices(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(color: AppColors.primaryBlue),
-          );
-        }
+    final services = (_salonData?['services'] as List<dynamic>?) ?? [];
 
-        if (snapshot.hasError) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 60,
-                    color: Colors.red.shade300,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    snapshot.error.toString().replaceAll('Exception: ', ''),
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.grey),
-                  ),
-                ],
-              ),
+    if (services.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.cut_outlined, size: 70, color: Colors.grey.shade300),
+            const SizedBox(height: 16),
+            const Text(
+              "Ma famma hatta service tawa.",
+              style: TextStyle(color: Colors.grey, fontSize: 15),
             ),
-          );
-        }
-
-        final services = snapshot.data ?? [];
-
-        if (services.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.cut_outlined, size: 70, color: Colors.grey.shade300),
-                const SizedBox(height: 16),
-                const Text(
-                  "Ma famma hatta service tawa.",
-                  style: TextStyle(color: Colors.grey, fontSize: 15),
+            if (widget.isPatron) ...[
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: () {
+                  // Navigate to Settings and select the active tab automatically
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SalonScreenUnifiee(
+                        initialTabIndex: 1, // Services tab
+                        openAddForm: true,
+                      ),
+                    ),
+                  ).then((_) => _fetchSalonData());
+                },
+                icon: const Icon(Icons.add, size: 16, color: Colors.white),
+                label: const Text(
+                  "Zid service jdid",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                const SizedBox(height: 16),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    // Navigate to Settings and select the active tab automatically
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const SalonScreenUnifiee(
-                          isPatron: true,
-                          initialTabIndex: 1, // Services tab
-                          openAddForm: true,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryBlue,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: services.length,
+      itemBuilder: (context, index) {
+        final service = services[index];
+        final String name = service['name'] ?? 'Service';
+        final double price = (service['price'] as num?)?.toDouble() ?? 0.0;
+        final int duration = (service['durationMinutes'] as num?)?.toInt() ?? 0;
+        final String? description = service['description'];
+        final String? imageUrl = service['imageUrl'];
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              // Image or icon
+              ClipRRect(
+                borderRadius: const BorderRadius.horizontal(
+                  left: Radius.circular(16),
+                ),
+                child: imageUrl != null && imageUrl.isNotEmpty
+                    ? Image.network(
+                        imageUrl,
+                        width: 90,
+                        height: 90,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => _servicePlaceholder(),
+                      )
+                    : _servicePlaceholder(),
+              ),
+              // Info
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                          color: AppColors.textDark,
                         ),
                       ),
-                    ).then((_) => _fetchSalonData());
-                  },
-                  icon: const Icon(Icons.add, size: 16, color: Colors.white),
-                  label: const Text(
-                    "Zid service jdid",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryBlue,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: services.length,
-          itemBuilder: (context, index) {
-            final service = services[index];
-            final String name = service['name'] ?? 'Service';
-            final double price = (service['price'] as num?)?.toDouble() ?? 0.0;
-            final int duration =
-                (service['durationMinutes'] as num?)?.toInt() ?? 0;
-            final String? description = service['description'];
-            final String? imageUrl = service['imageUrl'];
-
-            return Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  // Image or icon
-                  ClipRRect(
-                    borderRadius: const BorderRadius.horizontal(
-                      left: Radius.circular(16),
-                    ),
-                    child: imageUrl != null && imageUrl.isNotEmpty
-                        ? Image.network(
-                            imageUrl,
-                            width: 90,
-                            height: 90,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => _servicePlaceholder(),
-                          )
-                        : _servicePlaceholder(),
-                  ),
-                  // Info
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 12,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      if (description != null && description.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 8),
+                      Row(
                         children: [
-                          Text(
-                            name,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
-                              color: AppColors.textDark,
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryBlue.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              "${price.toStringAsFixed(0)} DT",
+                              style: const TextStyle(
+                                color: AppColors.primaryBlue,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
                             ),
                           ),
-                          if (description != null &&
-                              description.isNotEmpty) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              description,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: Colors.grey,
-                                fontSize: 12,
-                              ),
+                          const SizedBox(width: 8),
+                          Icon(
+                            Icons.access_time,
+                            size: 14,
+                            color: Colors.grey.shade500,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            "$duration min",
+                            style: TextStyle(
+                              color: Colors.grey.shade500,
+                              fontSize: 12,
                             ),
-                          ],
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.primaryBlue.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(
-                                  "${price.toStringAsFixed(0)} DT",
-                                  style: const TextStyle(
-                                    color: AppColors.primaryBlue,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Icon(
-                                Icons.access_time,
-                                size: 14,
-                                color: Colors.grey.shade500,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                "$duration min",
-                                style: TextStyle(
-                                  color: Colors.grey.shade500,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
                           ),
                         ],
                       ),
-                    ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            );
-          },
+            ],
+          ),
         );
       },
     );
@@ -645,51 +849,51 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
 
     return Column(
       children: [
-        // Add button at top
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-          child: SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const SalonScreenUnifiee(
-                      isPatron: true,
-                      initialTabIndex: 2, // 2 is Equipe tab for Patron
-                      openAddForm: true,
+        if (widget.isPatron)
+          // Add button at top
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SalonScreenUnifiee(
+                        initialTabIndex: 2, // 2 is Equipe tab for Patron
+                        openAddForm: true,
+                      ),
                     ),
-                  ),
-                ).then((_) => _fetchSalonData());
-              },
-              icon: const Icon(
-                Icons.person_add_alt_1,
-                size: 18,
-                color: Colors.white,
-              ),
-              label: const Text(
-                "+ Zid Spécialiste",
-                style: TextStyle(
+                  ).then((_) => _fetchSalonData());
+                },
+                icon: const Icon(
+                  Icons.person_add_alt_1,
+                  size: 18,
                   color: Colors.white,
-                  fontWeight: FontWeight.bold,
                 ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryBlue,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+                label: const Text(
+                  "+ Zid Specialiste fereger",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryBlue,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
               ),
             ),
           ),
-        ),
         if (employees.isEmpty)
           const Expanded(
             child: Center(
               child: Text(
-                "Ma zadet hatta specialiste.",
+                "Ma famma hatta specialiste tawa.",
                 style: TextStyle(color: Colors.grey, fontSize: 15),
               ),
             ),

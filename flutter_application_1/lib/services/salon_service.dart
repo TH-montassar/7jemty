@@ -142,8 +142,8 @@ class SalonService {
 
       final data = jsonDecode(response.body);
 
-      if (response.statusCode == 200) {
-        return data;
+      if (response.statusCode == 200 && data['success'] == true) {
+        return data['data'];
       } else {
         throw Exception(
           data['message'] ?? 'Erreur lors de la récupération du salon',

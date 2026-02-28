@@ -134,30 +134,25 @@ export const createEmployeeAccount = async (patronId: number, data: any) => {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(data.password, salt);
 
-    // 4. Nasn3ou l'User wel Profile f nafs l wa9t (Transaction)
-    const newUser = await prisma.$transaction(async (tx) => {
-        // A. Nasn3ou l'User b role EMPLOYEE we nrabtouh b salon
-        const user = await tx.user.create({
-            data: {
-                phoneNumber: data.phoneNumber,
-                passwordHash: passwordHash,
-                fullName: data.name,
-                role: Role.EMPLOYEE,
-                workplaceSalonId: salon.id, // Nrabtouha direct b salon l patron
+    // 4. Nasn3ou l'User wel Profile f nafs l wa9t (Nested Write - Atomic by default)
+    const newUser = await prisma.user.create({
+        data: {
+            phoneNumber: data.phoneNumber,
+            passwordHash: passwordHash,
+            fullName: data.name,
+            role: Role.EMPLOYEE,
+            workplaceSalonId: salon.id, // Nrabtouha direct b salon l patron
 
-                // B. Nasn3ou l'Profile f wist l'User (Nested Writes)
-                profile: {
-                    create: {
-                        specialityTitle: data.role || 'Spécialiste',
-                        bio: data.bio || null,
-                        description: data.description || null,
-                        avatarUrl: data.imageUrl || null
-                    }
+            // B. Nasn3ou l'Profile f wist l'User (Nested Writes)
+            profile: {
+                create: {
+                    specialityTitle: data.role || 'Spécialiste',
+                    bio: data.bio || null,
+                    description: data.description || null,
+                    avatarUrl: data.imageUrl || null
                 }
             }
-        });
-
-        return user;
+        }
     });
 
     // Nraj3ouha f nafs l format eli yestanna fih l frontend

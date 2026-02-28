@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../salon_profile/presentation/pages/salon_screen_unifiee.dart';
+import '../../../../patron_space/salon_dashboard_screen.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../services/salon_service.dart';
 
@@ -73,8 +73,10 @@ class _TopRatedListState extends State<TopRatedList> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) =>
-                        const SalonScreenUnifiee(isPatron: false),
+                    builder: (context) => SalonDashboardScreen(
+                      isPatron: false,
+                      salonId: salon['id'],
+                    ),
                   ),
                 );
               },
@@ -189,8 +191,10 @@ class _TopRatedListState extends State<TopRatedList> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) =>
-                                  const SalonScreenUnifiee(isPatron: false),
+                              builder: (context) => SalonDashboardScreen(
+                                isPatron: false,
+                                salonId: salon['id'],
+                              ),
                             ),
                           );
                         },

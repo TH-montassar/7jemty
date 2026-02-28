@@ -1,8 +1,5 @@
 -- CreateEnum
-CREATE TYPE "Role" AS ENUM ('CLIENT', 'PATRON', 'SANA3', 'ADMIN');
-
--- CreateEnum
-CREATE TYPE "Tier" AS ENUM ('SOLO', 'TEAM', 'PRO');
+CREATE TYPE "Role" AS ENUM ('CLIENT', 'PATRON', 'EMPLOYEE', 'ADMIN');
 
 -- CreateEnum
 CREATE TYPE "ApprovalStatus" AS ENUM ('PENDING', 'APPROVED', 'SUSPENDED');
@@ -31,10 +28,14 @@ CREATE TABLE "Profile" (
     "email" TEXT,
     "avatarUrl" TEXT,
     "bio" TEXT,
+    "description" TEXT,
     "specialityTitle" TEXT,
     "fcmToken" TEXT,
     "pushNotificationsEnabled" BOOLEAN NOT NULL DEFAULT true,
     "darkModeEnabled" BOOLEAN NOT NULL DEFAULT false,
+    "address" TEXT,
+    "latitude" DOUBLE PRECISION,
+    "longitude" DOUBLE PRECISION,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Profile_pkey" PRIMARY KEY ("id")
@@ -64,21 +65,13 @@ CREATE TABLE "Salon" (
     "googleMapsUrl" TEXT,
     "websiteUrl" TEXT,
     "coverImageUrl" TEXT,
-    "tier" "Tier" NOT NULL DEFAULT 'SOLO',
+    "speciality" TEXT,
+    "rating" DOUBLE PRECISION,
     "approvalStatus" "ApprovalStatus" NOT NULL DEFAULT 'PENDING',
     "isForceClosed" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Salon_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "SalonSpeciality" (
-    "id" SERIAL NOT NULL,
-    "salonId" INTEGER NOT NULL,
-    "specialityName" TEXT NOT NULL,
-
-    CONSTRAINT "SalonSpeciality_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -222,13 +215,13 @@ CREATE UNIQUE INDEX "Profile_userId_key" ON "Profile"("userId");
 CREATE UNIQUE INDEX "Review_appointmentId_key" ON "Review"("appointmentId");
 
 -- AddForeignKey
+ALTER TABLE "User" ADD CONSTRAINT "User_workplaceSalonId_fkey" FOREIGN KEY ("workplaceSalonId") REFERENCES "Salon"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "Profile" ADD CONSTRAINT "Profile_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Salon" ADD CONSTRAINT "Salon_patronId_fkey" FOREIGN KEY ("patronId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "SalonSpeciality" ADD CONSTRAINT "SalonSpeciality_salonId_fkey" FOREIGN KEY ("salonId") REFERENCES "Salon"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "WorkingHours" ADD CONSTRAINT "WorkingHours_salonId_fkey" FOREIGN KEY ("salonId") REFERENCES "Salon"("id") ON DELETE CASCADE ON UPDATE CASCADE;

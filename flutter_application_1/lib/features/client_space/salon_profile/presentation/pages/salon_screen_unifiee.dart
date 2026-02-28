@@ -7,24 +7,14 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../../../core/constants/app_colors.dart';
 import '../../../../../../services/salon_service.dart';
 import '../../../../patron_space/create_salon_screen.dart';
-import '../widgets/salon_info_section.dart';
 import '../widgets/sticky_tab_bar_delegate.dart';
-import '../widgets/tafasil_tab.dart';
-import '../widgets/services_tab.dart';
-import '../widgets/specialist_tab.dart';
-import '../widgets/rendezvous_tab.dart';
-import '../widgets/reviews_tab.dart';
-import '../../../../../core/localization/translation_service.dart';
-// Needed for tr() if any string is localized
 
 class SalonScreenUnifiee extends StatefulWidget {
-  final bool isPatron;
   final int initialTabIndex;
   final bool openAddForm;
 
   const SalonScreenUnifiee({
     super.key,
-    required this.isPatron,
     this.initialTabIndex = 0,
     this.openAddForm = false,
   });
@@ -78,11 +68,13 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
   final TextEditingController _empImageUrlController = TextEditingController();
   bool _isAddingSpecialist = false;
   bool _empPasswordVisible = false;
+  Uint8List? _empSelectedImageBytes;
+  bool _isEmpUrlMode = true;
 
   @override
   void initState() {
     super.initState();
-    final tabLength = widget.isPatron ? 6 : 4;
+    final tabLength = 6;
     final safeIndex = widget.initialTabIndex < tabLength
         ? widget.initialTabIndex
         : 0;
@@ -133,7 +125,7 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
     setState(() => _isLoading = true);
     try {
       final response = await SalonService.getMySalon();
-      final data = response['data'] as Map<String, dynamic>?;
+      final data = response;
 
       if (!mounted) return;
 
@@ -141,7 +133,7 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
         _salonData = data;
         _isLoading = false;
 
-        if (widget.isPatron && data != null && data.isNotEmpty) {
+        if (data.isNotEmpty) {
           _nameController.text = data['name']?.toString() ?? '';
           _descController.text = data['description']?.toString() ?? '';
           _phoneController.text = data['contactPhone']?.toString() ?? '';
@@ -263,6 +255,19 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
     }
   }
 
+  Future<void> _pickEmpImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      final bytes = await pickedFile.readAsBytes();
+      setState(() {
+        _empSelectedImageBytes = bytes;
+        _isEmpUrlMode = false;
+        _empImageUrlController.clear();
+      });
+    }
+  }
+
   Future<void> _handleAddService() async {
     if (_srvNameController.text.isEmpty ||
         _srvPriceController.text.isEmpty ||
@@ -363,8 +368,7 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
       );
     }
 
-    // If patron and no salon found
-    if (widget.isPatron && _salonData == null) {
+    if (_salonData == null) {
       return Scaffold(
         backgroundColor: AppColors.bgColor,
         body: Center(
@@ -425,41 +429,23 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
       );
     }
 
-    // Determine the tabs based on role
-    final List<Widget> tabs = [];
-    final List<Widget> tabViews = [];
+    final List<Widget> tabs = [
+      const Tab(text: "Paramètres"),
+      const Tab(text: "Services"),
+      const Tab(text: "Equipe"),
+      const Tab(text: "Horaires"),
+      const Tab(text: "Galerie"),
+      const Tab(text: "Rendez-vous"),
+    ];
 
-    if (widget.isPatron) {
-      tabs.addAll([
-        const Tab(text: "Paramètres"),
-        const Tab(text: "Services"),
-        const Tab(text: "Equipe"),
-        const Tab(text: "Horaires"),
-        const Tab(text: "Galerie"),
-        const Tab(text: "Rendez-vous"),
-      ]);
-      tabViews.addAll([
-        _buildInfoTabEditable(),
-        _buildServicesTabEditable(),
-        _buildEquipeTabEditable(),
-        const Center(child: Text("Horaires Editables (Coming soon)")),
-        const Center(child: Text("Galerie Editables (Coming soon)")),
-        const RendezvousTab(), // The patron sees this
-      ]);
-    } else {
-      tabs.addAll([
-        const Tab(text: "Tafasil"),
-        const Tab(text: "Services"),
-        const Tab(text: "Spécialiste"),
-        const Tab(text: "Avis"),
-      ]);
-      tabViews.addAll([
-        const TafasilTab(),
-        const ServicesTab(),
-        const SpecialistTab(),
-        const ReviewsTab(),
-      ]);
-    }
+    final List<Widget> tabViews = [
+      _buildInfoTabEditable(),
+      _buildServicesTabEditable(),
+      _buildEquipeTabEditable(),
+      const Center(child: Text("Horaires Editables (Coming soon)")),
+      const Center(child: Text("Galerie Editables (Coming soon)")),
+      const Center(child: Text("Rendez-vous List (Coming soon)")),
+    ];
 
     return Scaffold(
       backgroundColor: AppColors.bgColor,
@@ -478,48 +464,43 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                 onPressed: () => Navigator.pop(context),
               ),
               actions: [
-                if (widget.isPatron)
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      right: 16.0,
-                      top: 8,
-                      bottom: 8,
-                    ),
-                    child: ElevatedButton.icon(
-                      onPressed: _handleSaveAll,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primaryBlue,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          side: const BorderSide(color: Colors.white),
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                Padding(
+                  padding: const EdgeInsets.only(
+                    right: 16.0,
+                    top: 8,
+                    bottom: 8,
+                  ),
+                  child: ElevatedButton.icon(
+                    onPressed: _handleSaveAll,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryBlue,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        side: const BorderSide(color: Colors.white),
                       ),
-                      icon: const Icon(Icons.save_outlined, size: 18),
-                      label: const Text(
-                        "Sajjel kol chay",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                    ),
+                    icon: const Icon(Icons.save_outlined, size: 18),
+                    label: const Text(
+                      "Sajjel kol chay",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
                       ),
                     ),
                   ),
+                ),
               ],
               flexibleSpace: FlexibleSpaceBar(
-                title: widget.isPatron
-                    ? Text(
-                        _salonData?['name']?.toString() ?? "Mon Salon",
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          shadows: [
-                            Shadow(color: Colors.black45, blurRadius: 4),
-                          ],
-                        ),
-                      )
-                    : null,
+                title: Text(
+                  _salonData?['name']?.toString() ?? "Mon Salon",
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    shadows: [Shadow(color: Colors.black45, blurRadius: 4)],
+                  ),
+                ),
                 background: Stack(
                   fit: StackFit.expand,
                   children: [
@@ -535,12 +516,6 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                 ),
               ),
             ),
-
-            // 2. Infos Salon (Nom, Adresse, Rating, Status)
-            if (!widget.isPatron)
-              SliverToBoxAdapter(
-                child: SalonInfoSection(salonData: _salonData ?? {}),
-              ),
 
             // 3. Sticky Tabs
             SliverPersistentHeader(
@@ -1320,6 +1295,16 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
     try {
       FocusScope.of(context).unfocus();
       setState(() => _isLoading = true);
+
+      String? finalImageUrl;
+      if (_isEmpUrlMode) {
+        finalImageUrl = _empImageUrlController.text.trim();
+        if (finalImageUrl.isEmpty) finalImageUrl = null;
+      } else if (_empSelectedImageBytes != null) {
+        final base64Image = base64Encode(_empSelectedImageBytes!);
+        finalImageUrl = "data:image/jpeg;base64,$base64Image";
+      }
+
       await SalonService.createEmployeeAccount(
         name: _empNameController.text.trim(),
         phoneNumber: _empPhoneController.text.trim(),
@@ -1330,9 +1315,7 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
         bio: _empBioController.text.trim().isEmpty
             ? null
             : _empBioController.text.trim(),
-        imageUrl: _empImageUrlController.text.trim().isEmpty
-            ? null
-            : _empImageUrlController.text.trim(),
+        imageUrl: finalImageUrl,
       );
       if (!mounted) return;
       toastification.show(
@@ -1347,7 +1330,10 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
       _empRoleController.clear();
       _empBioController.clear();
       _empImageUrlController.clear();
-      setState(() => _isAddingSpecialist = false);
+      setState(() {
+        _isAddingSpecialist = false;
+        _empSelectedImageBytes = null;
+      });
       await _fetchSalonData();
     } catch (e) {
       if (!mounted) return;
@@ -1511,12 +1497,108 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                     maxLines: 2,
                   ),
                   const SizedBox(height: 12),
-                  _buildLabelInput("Photo URL (optionnel)"),
-                  _buildInputField(
-                    _empImageUrlController,
-                    "https://... lien mte3 taswira",
-                    Icons.image_outlined,
+                  _buildLabelInput("Taswira (optionnel)"),
+                  Row(
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: () => setState(() => _isEmpUrlMode = true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _isEmpUrlMode
+                              ? AppColors.primaryBlue
+                              : Colors.white,
+                          foregroundColor: _isEmpUrlMode
+                              ? Colors.white
+                              : AppColors.textDark,
+                          elevation: 0,
+                          side: BorderSide(
+                            color: _isEmpUrlMode
+                                ? AppColors.primaryBlue
+                                : Colors.grey.shade300,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                        icon: Icon(
+                          Icons.link,
+                          size: 16,
+                          color: _isEmpUrlMode
+                              ? Colors.white
+                              : AppColors.textDark,
+                        ),
+                        label: const Text("URL"),
+                      ),
+                      const SizedBox(width: 8),
+                      ElevatedButton.icon(
+                        onPressed: _pickEmpImage,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: !_isEmpUrlMode
+                              ? AppColors.primaryBlue
+                              : Colors.white,
+                          foregroundColor: !_isEmpUrlMode
+                              ? Colors.white
+                              : AppColors.textDark,
+                          elevation: 0,
+                          side: BorderSide(
+                            color: !_isEmpUrlMode
+                                ? AppColors.primaryBlue
+                                : Colors.grey.shade300,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                        icon: Icon(
+                          Icons.upload,
+                          size: 16,
+                          color: !_isEmpUrlMode ? Colors.white : Colors.grey,
+                        ),
+                        label: Text(
+                          "Plodi mel galerie",
+                          style: TextStyle(
+                            color: !_isEmpUrlMode ? Colors.white : Colors.grey,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
+                  const SizedBox(height: 16),
+                  if (_isEmpUrlMode)
+                    _buildInputField(
+                      _empImageUrlController,
+                      "https://... lien mte3 taswira",
+                      Icons.image_outlined,
+                    )
+                  else if (_empSelectedImageBytes != null)
+                    Center(
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.memory(
+                              _empSelectedImageBytes!,
+                              height: 100,
+                              width: 100,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          Positioned(
+                            top: -10,
+                            right: -10,
+                            child: IconButton(
+                              icon: const Icon(Icons.cancel, color: Colors.red),
+                              onPressed: () {
+                                setState(() {
+                                  _empSelectedImageBytes = null;
+                                  _isEmpUrlMode = true;
+                                });
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: _handleAddSpecialist,

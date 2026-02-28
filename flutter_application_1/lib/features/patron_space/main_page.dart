@@ -26,7 +26,7 @@ class _MainPageState extends State<MainPage> {
   final List<Widget> _pages = [
     const HomePage(), // Index 0
     const CalendarPage(), // Index 1
-    const SalonDashboardScreen(), // Index 2
+    const SalonDashboardScreen(isPatron: true), // Index 2
     const ProfilePage(), // Index 3
   ];
 
@@ -73,7 +73,10 @@ class _MainPageState extends State<MainPage> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Text(tr(context, 'salon_name_label'), style: TextStyle(color: Colors.black)),
+                Text(
+                  tr(context, 'salon_name_label'),
+                  style: TextStyle(color: Colors.black),
+                ),
                 const SizedBox(width: 16),
                 CircleAvatar(
                   backgroundColor: Colors.blue,
