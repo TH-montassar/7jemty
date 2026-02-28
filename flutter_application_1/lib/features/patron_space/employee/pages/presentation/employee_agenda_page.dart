@@ -3,17 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:toastification/toastification.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../services/appointment_service.dart';
-import '../../../../../features/auth/signIn.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-class EmployeeHomePage extends StatefulWidget {
-  const EmployeeHomePage({super.key});
+class EmployeeAgendaPage extends StatefulWidget {
+  const EmployeeAgendaPage({super.key});
 
   @override
-  State<EmployeeHomePage> createState() => _EmployeeHomePageState();
+  State<EmployeeAgendaPage> createState() => _EmployeeAgendaPageState();
 }
 
-class _EmployeeHomePageState extends State<EmployeeHomePage> {
+class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
   // Mock data for appointments
   final List<Map<String, dynamic>> _appointments = [
     {
@@ -93,27 +91,16 @@ class _EmployeeHomePageState extends State<EmployeeHomePage> {
         style: ToastificationStyle.fillColored,
         alignment: Alignment.topCenter,
         autoCloseDuration: const Duration(seconds: 4),
-        title: Text(tr(context, 'error_issue'), style: TextStyle(color: Colors.white)),
+        title: Text(
+          tr(context, 'error_issue'),
+          style: TextStyle(color: Colors.white),
+        ),
         description: Text(
           e.toString(),
           style: const TextStyle(color: Colors.white),
         ),
         primaryColor: AppColors.actionRed,
         backgroundColor: AppColors.actionRed,
-      );
-    }
-  }
-
-  Future<void> _logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('jwt_token');
-    await prefs.remove('user_role');
-
-    if (mounted) {
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const SignInScreen()),
-        (route) => false,
       );
     }
   }
@@ -133,12 +120,6 @@ class _EmployeeHomePageState extends State<EmployeeHomePage> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout, color: AppColors.actionRed),
-            onPressed: _logout,
-          ),
-        ],
       ),
       body: _appointments.isEmpty
           ? const Center(

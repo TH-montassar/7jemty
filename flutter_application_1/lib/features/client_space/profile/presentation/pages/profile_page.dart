@@ -17,6 +17,7 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   bool _isLoading = true;
   bool _isLoggedIn = false;
+  String? _userRole;
 
   @override
   void initState() {
@@ -27,18 +28,19 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _checkLoginStatus() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('jwt_token');
+    final role = prefs.getString('user_role');
 
     if (mounted) {
       if (token == null || token.isEmpty) {
-        // Ma na3mlouch redirection houni 5ater IndexedStack tchargi l'ProfilePage automatiquement
-        // L'redirection 3malneha deja fi client_main_layout.dart kif yenzil 3al onglet
         setState(() {
           _isLoggedIn = false;
+          _userRole = null;
           _isLoading = false;
         });
       } else {
         setState(() {
           _isLoggedIn = true;
+          _userRole = role;
           _isLoading = false;
         });
       }
@@ -57,13 +59,14 @@ class _ProfilePageState extends State<ProfilePage> {
     }
 
     if (!_isLoggedIn) {
-      // Retourni page fergha wela un message bech ma yatl3ouch des erreurs
-      // 5ater l'utilisateur mouch connecté w l'IndexedStack dima tchargi hedhi
       return const Scaffold(
         backgroundColor: AppColors.bgColor,
         body: SizedBox.shrink(),
       );
     }
+
+    final isEmployee = _userRole == 'EMPLOYEE';
+
     return Scaffold(
       backgroundColor: AppColors.bgColor,
       appBar: AppBar(
@@ -88,18 +91,20 @@ class _ProfilePageState extends State<ProfilePage> {
             const ProfileHeader(),
             const SizedBox(height: 30),
 
-            // 2. Cartes Salons (Tampons)
-            Text(
-              tr(context, 'loyalty_cards'),
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textDark,
+            // 2. Cartes Salons (Tampons) - Only for Clients
+            if (!isEmployee) ...[
+              Text(
+                tr(context, 'loyalty_cards'),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textDark,
+                ),
               ),
-            ),
-            SizedBox(height: 15),
-            const LoyaltyCardsSection(),
-            const SizedBox(height: 30),
+              const SizedBox(height: 15),
+              const LoyaltyCardsSection(),
+              const SizedBox(height: 30),
+            ],
 
             // 3. Mes Activités (Commandes & Favoris)
             Text(
@@ -110,7 +115,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 color: AppColors.textDark,
               ),
             ),
-            SizedBox(height: 15),
+            const SizedBox(height: 15),
             const ActivityMenu(),
             const SizedBox(height: 30),
 
@@ -123,7 +128,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 color: AppColors.textDark,
               ),
             ),
-            SizedBox(height: 15),
+            const SizedBox(height: 15),
             const SettingsMenu(),
             const SizedBox(height: 30),
 

@@ -244,6 +244,7 @@ Aide-moi à améliorer progressivement le projet (fiabilité, sécurité, cohér
 ## Backend
 ```bash
 cd backend
+nodebox
 npm run dev
 ```
 
