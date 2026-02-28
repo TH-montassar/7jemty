@@ -5,6 +5,9 @@ import '../../../../../core/constants/app_colors.dart';
 import '../widgets/booking_summary_card.dart';
 import '../widgets/checkout_bottom_bar.dart';
 import '../../../../../core/localization/translation_service.dart';
+import '../../../../../services/auth_service.dart';
+import '../../../../../services/appointment_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class BookingPage extends StatefulWidget {
   final String serviceName;
@@ -30,6 +33,8 @@ class _BookingPageState extends State<BookingPage> {
   int _selectedDateIndex = 0;
   int _selectedTimeIndex = -1;
   bool _isPhotoUploaded = false;
+  bool _isLoading = false;
+  Map<String, dynamic>? _currentUser;
 
   // Date variables
   late List<DateTime> _dates;
@@ -48,6 +53,18 @@ class _BookingPageState extends State<BookingPage> {
       (index) => _startDate.add(Duration(days: index)),
     );
     _dateScrollController = ScrollController();
+    _checkCurrentUser();
+  }
+
+  Future<void> _checkCurrentUser() async {
+    try {
+      final userData = await AuthService.getMe();
+      setState(() {
+        _currentUser = userData['data'];
+      });
+    } catch (e) {
+      // User not logged in, that's fine
+    }
   }
 
   @override
@@ -210,19 +227,189 @@ class _BookingPageState extends State<BookingPage> {
       bottomNavigationBar: CheckoutBottomBar(
         serviceName: widget.serviceName,
         servicePrice: widget.servicePrice,
-        canConfirm:
-            _selectedTimeIndex !=
-            -1, // Yet7al l'bouton ken wa9telli ye5tar wa9t
-        onConfirm: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text("${tr(context, 'appointment_confirmed')} ✅"),
-              backgroundColor: Colors.green,
-            ),
-          );
-        },
+        isLoading: _isLoading,
+        canConfirm: _selectedTimeIndex != -1 && !_isLoading,
+        onConfirm: _handleBooking,
       ),
     );
+  }
+
+  Future<void> _handleBooking() async {
+    if (_selectedTimeIndex == -1) return;
+
+    if (_currentUser == null) {
+      _showGuestAuthDialog();
+      return;
+    }
+
+    _createAppointment();
+  }
+
+  void _showGuestAuthDialog() {
+    final phoneController = TextEditingController();
+    final passwordController = TextEditingController();
+    bool isLogin = true;
+    bool dialogLoading = false;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Text(tr(context, 'login_to_book')),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: phoneController,
+                keyboardType: TextInputType.phone,
+                decoration: InputDecoration(
+                  labelText: tr(context, 'phone_number'),
+                  prefixIcon: const Icon(Icons.phone),
+                ),
+              ),
+              const SizedBox(height: 15),
+              TextField(
+                controller: passwordController,
+                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: tr(context, 'password'),
+                  helperText: !isLogin
+                      ? tr(context, 'guest_password_hint')
+                      : null,
+                  prefixIcon: const Icon(Icons.lock),
+                ),
+              ),
+              if (!isLogin) ...[
+                const SizedBox(height: 10),
+                Text(
+                  tr(context, 'auto_account_creation_info'),
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: dialogLoading ? null : () => Navigator.pop(context),
+              child: Text(tr(context, 'cancel')),
+            ),
+            ElevatedButton(
+              onPressed: dialogLoading
+                  ? null
+                  : () async {
+                      if (phoneController.text.isEmpty ||
+                          passwordController.text.isEmpty)
+                        return;
+
+                      setDialogState(() => dialogLoading = true);
+                      try {
+                        Map<String, dynamic> result;
+                        if (isLogin) {
+                          try {
+                            result = await AuthService.loginUser(
+                              phoneNumber: phoneController.text,
+                              password: passwordController.text,
+                            );
+                          } catch (e) {
+                            // If login fails, check if we should try register (guest flow)
+                            if (e.toString().contains('not found')) {
+                              setDialogState(() {
+                                isLogin = false;
+                                dialogLoading = false;
+                              });
+                              return;
+                            }
+                            rethrow;
+                          }
+                        } else {
+                          result = await AuthService.registerUser(
+                            fullName:
+                                "Client ${phoneController.text.substring(phoneController.text.length - 4)}",
+                            phoneNumber: phoneController.text,
+                            password: passwordController.text,
+                          );
+                          // Automatic login after register
+                          result = await AuthService.loginUser(
+                            phoneNumber: phoneController.text,
+                            password: passwordController.text,
+                          );
+                        }
+
+                        final prefs = await SharedPreferences.getInstance();
+                        await prefs.setString('jwt_token', result['token']);
+
+                        await _checkCurrentUser();
+                        if (mounted) {
+                          Navigator.pop(context);
+                          _createAppointment();
+                        }
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(e.toString()),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      } finally {
+                        setDialogState(() => dialogLoading = false);
+                      }
+                    },
+              child: dialogLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Text(
+                      isLogin
+                          ? tr(context, 'login')
+                          : tr(context, 'create_account'),
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _createAppointment() async {
+    setState(() => _isLoading = true);
+    try {
+      final selectedDate = _dates[_selectedDateIndex];
+      final dateStr = DateFormat('yyyy-MM-dd').format(selectedDate);
+      final timeStr = _timeSlots[_selectedTimeIndex]['time'];
+
+      await AppointmentService.createAppointment(
+        salonId: 1, // Need to pass actual salonId
+        barberId: _selectedBarberIndex, // Need actual barber ID
+        date: dateStr,
+        time: timeStr,
+        serviceIds: [1], // Need actual service IDs
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("${tr(context, 'appointment_confirmed')} ✅"),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   // ==========================================

@@ -15,10 +15,11 @@ class AppointmentService {
     }
   }
 
-  // Changer le statut (CONFIRMED, DECLINED, COMPLETED, CANCELLED)
+  // Changer le statut (CONFIRMED, DECLINED, COMPLETED, CANCELLED, IN_PROGRESS, STARTED)
   static Future<Map<String, dynamic>> updateStatus({
     required int appointmentId,
     required String status,
+    int? actualDuration, // Optionnel pour COMPLETED
   }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -28,13 +29,18 @@ class AppointmentService {
         throw Exception('Rak mouch connecté!');
       }
 
+      final body = {
+        'status': status,
+        if (actualDuration != null) 'actualDuration': actualDuration,
+      };
+
       final response = await http.patch(
         Uri.parse('$baseUrl/$appointmentId/status'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-        body: jsonEncode({'status': status}),
+        body: jsonEncode(body),
       );
 
       final data = jsonDecode(response.body);

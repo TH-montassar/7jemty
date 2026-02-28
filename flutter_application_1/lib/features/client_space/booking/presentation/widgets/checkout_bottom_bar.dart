@@ -6,6 +6,7 @@ class CheckoutBottomBar extends StatelessWidget {
   final String serviceName;
   final String servicePrice;
   final bool canConfirm;
+  final bool isLoading;
   final VoidCallback onConfirm;
 
   const CheckoutBottomBar({
@@ -13,6 +14,7 @@ class CheckoutBottomBar extends StatelessWidget {
     required this.serviceName,
     required this.servicePrice,
     required this.canConfirm,
+    this.isLoading = false,
     required this.onConfirm,
   });
 
@@ -86,7 +88,7 @@ class CheckoutBottomBar extends StatelessWidget {
               height: 50,
               child: ElevatedButton(
                 // 🚀 Houni yvériifyi ken tnajem tconfirmé (ya3ni e5tar wa9t) wala le
-                onPressed: canConfirm ? onConfirm : null,
+                onPressed: (canConfirm && !isLoading) ? onConfirm : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.actionRed,
                   disabledBackgroundColor: Colors.grey[300],
@@ -94,14 +96,23 @@ class CheckoutBottomBar extends StatelessWidget {
                     borderRadius: BorderRadius.circular(15),
                   ),
                 ),
-                child: Text(
-                  tr(context, 'confirm_appointment'),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
+                child: isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Text(
+                        tr(context, 'confirm_appointment'),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
               ),
             ),
           ],

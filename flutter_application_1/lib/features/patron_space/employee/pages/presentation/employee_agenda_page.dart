@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:toastification/toastification.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../services/appointment_service.dart';
+import '../../../../../services/auth_service.dart';
 
 class EmployeeAgendaPage extends StatefulWidget {
   const EmployeeAgendaPage({super.key});
@@ -12,31 +13,35 @@ class EmployeeAgendaPage extends StatefulWidget {
 }
 
 class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
-  // Mock data for appointments
-  final List<Map<String, dynamic>> _appointments = [
-    {
-      "id":
-          1, // We use small IDs to mock backend failure naturally if not exist
-      "clientName": "Ahmed",
-      "service": "Coupe + Barbe",
-      "time": "14:30",
-      "status": "PENDING",
-    },
-    {
-      "id": 2,
-      "clientName": "Yassine",
-      "service": "Dégradé Américain",
-      "time": "15:45",
-      "status": "CONFIRMED",
-    },
-    {
-      "id": 3,
-      "clientName": "Karim",
-      "service": "Coloration",
-      "time": "17:00",
-      "status": "COMPLETED",
-    },
-  ];
+  bool _isLoading = true;
+  List<dynamic> _appointments = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchAppointments();
+  }
+
+  Future<void> _fetchAppointments() async {
+    try {
+      final userResult = await AuthService.getMe();
+      final currentUserId = userResult['data']?['id'];
+
+      final data = await AppointmentService.getSalonAppointments();
+      if (!mounted) return;
+
+      setState(() {
+        // Filter appointments where barberId matches the current user's ID
+        _appointments = data
+            .where((apt) => apt['barberId'] == currentUserId)
+            .toList();
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+    }
+  }
 
   Future<void> _updateStatus(
     int appointmentId,
@@ -64,11 +69,8 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
         status: newStatus,
       );
 
-      // On Success, Update UI Local State
-      if (!mounted) return;
-      setState(() {
-        _appointments[index]['status'] = newStatus;
-      });
+      // Refresh list to get updated status from server
+      await _fetchAppointments();
 
       toastification.show(
         context: context,
@@ -121,32 +123,47 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
           ),
         ),
       ),
-      body: _appointments.isEmpty
+      body: _isLoading
           ? const Center(
-              child: Text(
-                "Ma famma hatta rendez-vous lyoum.",
-                style: TextStyle(color: Colors.grey),
-              ),
+              child: CircularProgressIndicator(color: AppColors.primaryBlue),
             )
-          : ListView.builder(
-              padding: const EdgeInsets.all(20),
-              itemCount: _appointments.length,
-              itemBuilder: (context, index) {
-                final apt = _appointments[index];
-                return _buildAppointmentCard(apt, index);
-              },
+          : RefreshIndicator(
+              onRefresh: _fetchAppointments,
+              color: AppColors.primaryBlue,
+              child: _appointments.isEmpty
+                  ? const Center(
+                      child: Text(
+                        "Ma famma hatta rendez-vous lyoum.",
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(20),
+                      itemCount: _appointments.length,
+                      itemBuilder: (context, index) {
+                        final apt = _appointments[index];
+                        return _buildAppointmentCard(apt, index);
+                      },
+                    ),
             ),
     );
   }
 
-  Widget _buildAppointmentCard(Map<String, dynamic> apt, int index) {
-    final isPending = apt['status'] == 'PENDING';
-    final isConfirmed = apt['status'] == 'CONFIRMED';
-    final isCompleted = apt['status'] == 'COMPLETED';
-    final isDeclined = apt['status'] == 'DECLINED';
+  Widget _buildAppointmentCard(dynamic apt, int index) {
+    final status = (apt['status'] as String).toUpperCase();
+    final isPending = status == 'PENDING';
+    final isConfirmed = status == 'CONFIRMED' || status == 'ACCEPTED';
+    final isCompleted = status == 'COMPLETED';
+    final isDeclined = status == 'DECLINED' || status == 'CANCELLED';
+
+    final clientName = apt['client']?['fullName'] ?? 'Client';
+    final serviceName = (apt['services'] as List?)?.isNotEmpty == true
+        ? apt['services'][0]['service']['name']
+        : 'Service';
+    final time = apt['startTime'] ?? '--:--';
 
     Color statusColor = Colors.grey;
-    String statusText = apt['status'];
+    String statusText = status;
 
     if (isPending) {
       statusColor = Colors.orange;
@@ -184,7 +201,7 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                apt['time'],
+                time,
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
@@ -213,12 +230,12 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
           ),
           const SizedBox(height: 12),
           Text(
-            apt['clientName'],
+            clientName,
             style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
           ),
           const SizedBox(height: 4),
           Text(
-            apt['service'],
+            serviceName,
             style: const TextStyle(color: Colors.grey, fontSize: 14),
           ),
 

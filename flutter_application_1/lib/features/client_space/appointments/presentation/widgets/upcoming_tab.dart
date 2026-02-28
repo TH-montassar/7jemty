@@ -100,11 +100,33 @@ class _UpcomingTabState extends State<UpcomingTab> {
             'fr_FR',
           ).format(date);
 
-          final status = apt['status'] as String;
+          final status = (apt['status'] as String).toUpperCase();
           Color statusColor = status == 'CONFIRMED'
               ? const Color(0xFF2ECA7F)
-              : AppColors.primaryBlue;
-          String statusText = status == 'CONFIRMED' ? 'M\'akd' : 'Pending';
+              : (status == 'IN_PROGRESS'
+                    ? AppColors.primaryBlue
+                    : Colors.orange);
+          String statusText = status == 'CONFIRMED'
+              ? 'M\'akd'
+              : (status == 'IN_PROGRESS' ? 'En cours' : 'En attente');
+
+          // Countdown logic
+          final now = DateTime.now();
+          final difference = date.difference(now);
+          final bool canCancel =
+              difference.inHours >= 1 && status != 'IN_PROGRESS';
+
+          String countdownText = "";
+          if (status == 'CONFIRMED' || status == 'PENDING') {
+            if (difference.isNegative) {
+              countdownText = "L'wa9t r7el";
+            } else if (difference.inHours > 0) {
+              countdownText =
+                  "Mazal ${difference.inHours}h ${difference.inMinutes % 60}min";
+            } else {
+              countdownText = "Mazal ${difference.inMinutes}min";
+            }
+          }
 
           // Extract services and total price
           final servicesList = apt['services'] as List<dynamic>? ?? [];
@@ -154,23 +176,40 @@ class _UpcomingTabState extends State<UpcomingTab> {
                         ),
                       ),
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: statusColor.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        statusText,
-                        style: TextStyle(
-                          color: statusColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: statusColor.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            statusText,
+                            style: TextStyle(
+                              color: statusColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
                         ),
-                      ),
+                        if (countdownText.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              countdownText,
+                              style: const TextStyle(
+                                color: AppColors.actionRed,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ],
                 ),
@@ -222,22 +261,29 @@ class _UpcomingTabState extends State<UpcomingTab> {
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () =>
-                            _showCancelWarningDialog(context, apt['id']),
-                        icon: const Icon(
+                        onPressed: canCancel
+                            ? () => _showCancelWarningDialog(context, apt['id'])
+                            : null,
+                        icon: Icon(
                           Icons.close,
                           size: 18,
-                          color: AppColors.actionRed,
+                          color: canCancel ? AppColors.actionRed : Colors.grey,
                         ),
                         label: Text(
                           tr(context, 'cancel') ?? "Batel",
-                          style: const TextStyle(
-                            color: AppColors.actionRed,
+                          style: TextStyle(
+                            color: canCancel
+                                ? AppColors.actionRed
+                                : Colors.grey,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: AppColors.actionRed),
+                          side: BorderSide(
+                            color: canCancel
+                                ? AppColors.actionRed
+                                : Colors.grey,
+                          ),
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
@@ -245,6 +291,15 @@ class _UpcomingTabState extends State<UpcomingTab> {
                         ),
                       ),
                     ),
+                    if (!canCancel && status != 'IN_PROGRESS')
+                      const Padding(
+                        padding: EdgeInsets.only(left: 8),
+                        child: Icon(
+                          Icons.info_outline,
+                          size: 16,
+                          color: Colors.grey,
+                        ),
+                      ),
                     const SizedBox(width: 15),
                     Expanded(
                       child: ElevatedButton.icon(

@@ -396,6 +396,25 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
     );
   }
 
+  Future<void> _updateAptStatus(int id, String status) async {
+    try {
+      await AppointmentService.updateStatus(appointmentId: id, status: status);
+      setState(() {}); // Refresh FutureBuilder
+      toastification.show(
+        context: context,
+        type: ToastificationType.success,
+        title: Text('Statut mis à jour: $status'),
+      );
+    } catch (e) {
+      toastification.show(
+        context: context,
+        type: ToastificationType.error,
+        title: const Text('Erreur lors de la mise à jour'),
+        description: Text(e.toString()),
+      );
+    }
+  }
+
   // TABS BUILDERS
   // ============================================
 
@@ -942,6 +961,10 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                                 ? Colors.orange.withOpacity(0.1)
                                 : status == 'CONFIRMED'
                                 ? Colors.green.withOpacity(0.1)
+                                : status == 'IN_PROGRESS'
+                                ? AppColors.primaryBlue.withOpacity(0.1)
+                                : status == 'COMPLETED'
+                                ? Colors.blueGrey.withOpacity(0.1)
                                 : Colors.grey.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -952,6 +975,10 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                                   ? Colors.orange
                                   : status == 'CONFIRMED'
                                   ? Colors.green
+                                  : status == 'IN_PROGRESS'
+                                  ? AppColors.primaryBlue
+                                  : status == 'COMPLETED'
+                                  ? Colors.blueGrey
                                   : Colors.grey,
                               fontWeight: FontWeight.bold,
                               fontSize: 12,
@@ -1002,21 +1029,8 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                         children: [
                           Expanded(
                             child: OutlinedButton(
-                              onPressed: () async {
-                                try {
-                                  await AppointmentService.updateStatus(
-                                    appointmentId: apt['id'],
-                                    status: 'DECLINED',
-                                  );
-                                  setState(() {}); // refresh FutureBuilder
-                                } catch (e) {
-                                  toastification.show(
-                                    context: context,
-                                    type: ToastificationType.error,
-                                    title: const Text('Erreur'),
-                                  );
-                                }
-                              },
+                              onPressed: () =>
+                                  _updateAptStatus(apt['id'], 'DECLINED'),
                               style: OutlinedButton.styleFrom(
                                 foregroundColor: Colors.red,
                                 side: const BorderSide(color: Colors.red),
@@ -1033,21 +1047,8 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: ElevatedButton(
-                              onPressed: () async {
-                                try {
-                                  await AppointmentService.updateStatus(
-                                    appointmentId: apt['id'],
-                                    status: 'CONFIRMED',
-                                  );
-                                  setState(() {}); // refresh FutureBuilder
-                                } catch (e) {
-                                  toastification.show(
-                                    context: context,
-                                    type: ToastificationType.error,
-                                    title: const Text('Erreur'),
-                                  );
-                                }
-                              },
+                              onPressed: () =>
+                                  _updateAptStatus(apt['id'], 'CONFIRMED'),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppColors.successGreen,
                                 shape: RoundedRectangleBorder(
@@ -1059,6 +1060,81 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ] else if (status == 'CONFIRMED') ...[
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () =>
+                              _updateAptStatus(apt['id'], 'IN_PROGRESS'),
+                          icon: const Icon(
+                            Icons.play_arrow,
+                            color: Colors.white,
+                          ),
+                          label: const Text(
+                            "Je l'client / Bda l'7jama",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryBlue,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ] else if (status == 'IN_PROGRESS') ...[
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () {
+                                // Logic for "Mezel 15 min" could be a separate status or just a local reminder
+                                toastification.show(
+                                  context: context,
+                                  type: ToastificationType.info,
+                                  title: const Text('Rappel dans 15 min acté'),
+                                );
+                              },
+                              icon: const Icon(Icons.timer, size: 18),
+                              label: const Text("Mezel 15 min"),
+                              style: OutlinedButton.styleFrom(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () =>
+                                  _updateAptStatus(apt['id'], 'COMPLETED'),
+                              icon: const Icon(
+                                Icons.check,
+                                color: Colors.white,
+                              ),
+                              label: const Text(
+                                "Kamalt",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.successGreen,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
                             ),

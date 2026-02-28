@@ -5,6 +5,7 @@ import '../../pages/calendar_page.dart';
 import 'salon_dashboard_screen.dart';
 import '../client_space/profile/presentation/pages/profile_page.dart';
 import '../../services/auth_service.dart';
+import '../../core/constants/app_colors.dart';
 
 class MainPage extends StatefulWidget {
   final int initialIndex;
@@ -95,15 +96,18 @@ class _MainPageState extends State<MainPage> {
                         style: const TextStyle(color: Colors.black),
                       ),
                       const SizedBox(width: 16),
+                      const SizedBox(width: 8),
                       CircleAvatar(
-                        backgroundColor: Colors.blue,
+                        backgroundColor: AppColors.primaryBlue.withOpacity(0.1),
                         radius: 15,
                         child: IconButton(
                           padding: EdgeInsets.zero,
-                          onPressed: () {},
+                          onPressed: () {
+                            // TODO: Implement notifications list
+                          },
                           icon: const Icon(
-                            Icons.add,
-                            color: Colors.white,
+                            Icons.notifications_outlined,
+                            color: AppColors.primaryBlue,
                             size: 20,
                           ),
                         ),

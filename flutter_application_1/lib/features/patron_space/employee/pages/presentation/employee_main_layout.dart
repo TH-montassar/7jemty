@@ -24,6 +24,48 @@ class _EmployeeMainLayoutState extends State<EmployeeMainLayout> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: Row(
+          children: [
+            Image.asset(
+              'assets/images/logo.png',
+              height: 24,
+              errorBuilder: (context, error, stackTrace) =>
+                  const Icon(Icons.cut, color: AppColors.primaryBlue),
+            ),
+            const SizedBox(width: 8),
+            const Text(
+              "7jemty",
+              style: TextStyle(
+                color: AppColors.textDark,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: CircleAvatar(
+              backgroundColor: AppColors.primaryBlue.withOpacity(0.1),
+              radius: 15,
+              child: IconButton(
+                padding: EdgeInsets.zero,
+                onPressed: () {
+                  // TODO: Implement notifications list
+                },
+                icon: const Icon(
+                  Icons.notifications_outlined,
+                  color: AppColors.primaryBlue,
+                  size: 20,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
       body: IndexedStack(index: _selectedIndex, children: _pages),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
