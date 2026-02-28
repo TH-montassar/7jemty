@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 import '../../core/utils/cloudinary_utils.dart';
 import '../../core/constants/app_colors.dart';
 import '../../services/salon_service.dart';
+import '../../services/appointment_service.dart';
+import 'package:intl/intl.dart';
 
 import '../client_space/salon_profile/presentation/pages/salon_setting_screen.dart';
+import '../client_space/appointments/presentation/pages/booking_flow_screen.dart';
 import 'create_salon_screen.dart';
 import '../client_space/salon_profile/presentation/widgets/sticky_tab_bar_delegate.dart';
 import 'package:toastification/toastification.dart';
@@ -161,6 +164,29 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
       length: tabs.length,
       child: Scaffold(
         backgroundColor: AppColors.bgColor,
+        floatingActionButton: !widget.isPatron && widget.salonId != null
+            ? FloatingActionButton.extended(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          BookingFlowScreen(salonId: widget.salonId!),
+                    ),
+                  );
+                },
+                backgroundColor: AppColors.primaryBlue,
+                icon: const Icon(Icons.calendar_month, color: Colors.white),
+                label: const Text(
+                  "Prendre Rendez-vous",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              )
+            : null,
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
         body: NestedScrollView(
           headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
             return <Widget>[
@@ -830,22 +856,223 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
   }
 
   Widget _buildReservationsTab() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.calendar_today_outlined,
-            size: 60,
-            color: Colors.grey.shade300,
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            "Ma famma hatta rendez-vous lyoum.",
-            style: TextStyle(color: Colors.grey),
-          ),
-        ],
-      ),
+    return FutureBuilder<List<dynamic>>(
+      future: AppointmentService.getSalonAppointments(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: CircularProgressIndicator(color: AppColors.primaryBlue),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return Center(
+            child: Text(
+              "Erreur: ${snapshot.error}",
+              style: const TextStyle(color: Colors.red),
+            ),
+          );
+        }
+
+        final appointments = snapshot.data ?? [];
+
+        if (appointments.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.calendar_today_outlined,
+                  size: 60,
+                  color: Colors.grey.shade300,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  "Ma famma hatta rendez-vous lyoum.",
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: appointments.length,
+          itemBuilder: (context, index) {
+            final apt = appointments[index];
+            final clientName = apt['client']['fullName'] ?? 'Client';
+            final clientPhone = apt['client']['phoneNumber'] ?? '';
+            final aptDate = apt['appointmentDate'];
+            final aptTime = apt['startTime'];
+            final status = apt['status'];
+
+            final dateFormatted = aptDate != null
+                ? DateFormat('dd/MM/yyyy').format(DateTime.parse(aptDate))
+                : '';
+
+            return Card(
+              margin: const EdgeInsets.only(bottom: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          clientName,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: AppColors.textDark,
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: status == 'PENDING'
+                                ? Colors.orange.withOpacity(0.1)
+                                : status == 'CONFIRMED'
+                                ? Colors.green.withOpacity(0.1)
+                                : Colors.grey.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            status,
+                            style: TextStyle(
+                              color: status == 'PENDING'
+                                  ? Colors.orange
+                                  : status == 'CONFIRMED'
+                                  ? Colors.green
+                                  : Colors.grey,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (clientPhone.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        "Tél: $clientPhone",
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.calendar_today,
+                          size: 16,
+                          color: AppColors.primaryBlue,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          dateFormatted,
+                          style: const TextStyle(fontWeight: FontWeight.w500),
+                        ),
+                        const SizedBox(width: 16),
+                        const Icon(
+                          Icons.access_time,
+                          size: 16,
+                          color: AppColors.primaryBlue,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          aptTime ?? '',
+                          style: const TextStyle(fontWeight: FontWeight.w500),
+                        ),
+                      ],
+                    ),
+                    if (status == 'PENDING') ...[
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () async {
+                                try {
+                                  await AppointmentService.updateStatus(
+                                    appointmentId: apt['id'],
+                                    status: 'DECLINED',
+                                  );
+                                  setState(() {}); // refresh FutureBuilder
+                                } catch (e) {
+                                  toastification.show(
+                                    context: context,
+                                    type: ToastificationType.error,
+                                    title: const Text('Erreur'),
+                                  );
+                                }
+                              },
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.red,
+                                side: const BorderSide(color: Colors.red),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: const Text(
+                                "Refuser",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: () async {
+                                try {
+                                  await AppointmentService.updateStatus(
+                                    appointmentId: apt['id'],
+                                    status: 'CONFIRMED',
+                                  );
+                                  setState(() {}); // refresh FutureBuilder
+                                } catch (e) {
+                                  toastification.show(
+                                    context: context,
+                                    type: ToastificationType.error,
+                                    title: const Text('Erreur'),
+                                  );
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.successGreen,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: const Text(
+                                "Accepter",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 

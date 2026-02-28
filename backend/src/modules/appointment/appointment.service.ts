@@ -186,9 +186,58 @@ export const createClientAppointment = async (
     return appointment;
 };
 
+export const getSalonAppointments = async (patronId: number) => {
+    const salon = await prisma.salon.findFirst({
+        where: { patronId }
+    });
+
+    if (!salon) {
+        throw new Error("Salon introuvable");
+    }
+
+    const appointments = await prisma.appointment.findMany({
+        where: { salonId: salon.id },
+        include: {
+            client: {
+                select: { fullName: true, phoneNumber: true, profile: { select: { avatarUrl: true } } }
+            },
+            services: {
+                include: { service: true }
+            }
+        },
+        orderBy: { appointmentDate: 'asc' }
+    });
+
+    return appointments;
+};
+
+export const getClientAppointments = async (clientId: number) => {
+    const appointments = await prisma.appointment.findMany({
+        where: { clientId },
+        include: {
+            salon: {
+                select: { name: true, address: true, coverImageUrl: true }
+            },
+            barber: {
+                select: { fullName: true, profile: { select: { avatarUrl: true } } }
+            },
+            services: {
+                include: { service: true }
+            }
+        },
+        orderBy: [
+            { appointmentDate: 'desc' },
+        ]
+    });
+
+    return appointments;
+};
+
 // Utils
 function parseTime(time: string, date: Date): Date {
-    const [h, m = 0] = time.split(':').map(Number);
+    const parts = time.split(':').map(Number);
+    const h = parts.length > 0 && parts[0] !== undefined ? parts[0] : 0;
+    const m = parts.length > 1 && parts[1] !== undefined ? parts[1] : 0;
     const d = new Date(date);
     d.setHours(h, m, 0, 0);
     return d;

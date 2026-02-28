@@ -7,6 +7,7 @@ import '../widgets/products_tab.dart';
 import '../widgets/portfolio_tab.dart';
 import '../widgets/reviews_tab.dart';
 import '../../../../../services/salon_service.dart';
+import '../../../appointments/presentation/pages/booking_flow_screen.dart';
 
 class SalonProfilePage extends StatefulWidget {
   final int salonId;
@@ -151,6 +152,23 @@ class _SalonProfilePageState extends State<SalonProfilePage> {
           );
         },
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => BookingFlowScreen(salonId: widget.salonId),
+            ),
+          );
+        },
+        backgroundColor: AppColors.primaryBlue,
+        icon: const Icon(Icons.calendar_month, color: Colors.white),
+        label: const Text(
+          "Prendre Rendez-vous",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 }

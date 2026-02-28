@@ -51,6 +51,130 @@ class AppointmentService {
     }
   }
 
-  // TODO: Add fetch employee appointments endpoint in backend if needed.
-  // We can mock it in front-end for the UI for now since getting all appointments is usually a separate route.
+  static Future<List<dynamic>> getSalonAppointments() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('jwt_token');
+
+    if (token == null) {
+      throw Exception('Rak mouch connecté!');
+    }
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/salon'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      return data['data'] ?? [];
+    } else {
+      throw Exception(
+        data['message'] ?? 'Erreur lors de la récupération des rendez-vous',
+      );
+    }
+  }
+
+  static Future<List<dynamic>> getClientAppointments() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('jwt_token');
+
+    if (token == null) {
+      throw Exception('Rak mouch connecté!');
+    }
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/client'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      return data['data'] ?? [];
+    } else {
+      throw Exception(
+        data['message'] ?? 'Erreur lors de la récupération des rendez-vous',
+      );
+    }
+  }
+
+  static Future<List<String>> getAvailability({
+    required int salonId,
+    required String date,
+    int? barberId,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('jwt_token');
+
+    if (token == null) {
+      throw Exception('Rak mouch connecté!');
+    }
+
+    final uri = Uri.parse('$baseUrl/availability').replace(
+      queryParameters: {
+        'salonId': salonId.toString(),
+        'date': date,
+        if (barberId != null) 'barberId': barberId.toString(),
+      },
+    );
+
+    final response = await http.get(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    final data = jsonDecode(response.body);
+    if (response.statusCode == 200) {
+      return List<String>.from(data['data'] ?? []);
+    } else {
+      throw Exception(data['message'] ?? 'Erreur availability');
+    }
+  }
+
+  static Future<Map<String, dynamic>> createAppointment({
+    required int salonId,
+    required int barberId,
+    required String date,
+    required String time,
+    required List<int> serviceIds,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('jwt_token');
+
+    if (token == null) {
+      throw Exception('Rak mouch connecté!');
+    }
+
+    final response = await http.post(
+      Uri.parse(baseUrl),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'salonId': salonId,
+        'barberId': barberId,
+        'date': date,
+        'time': time,
+        'serviceIds': serviceIds,
+      }),
+    );
+
+    final data = jsonDecode(response.body);
+    if (response.statusCode == 201) {
+      return data['data'];
+    } else {
+      throw Exception(data['message'] ?? 'Erreur création rdv');
+    }
+  }
 }
