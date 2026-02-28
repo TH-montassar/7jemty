@@ -28,7 +28,7 @@ export const updateStatus = async (req: AuthRequest, res: Response) => {
             return res.status(401).json({ success: false, message: "Non autorisé" });
         }
 
-        const updatedAppointment = await updateAppointmentStatus(appointmentId, parsedSchema.data.status as any, userId, role);
+        const updatedAppointment = await updateAppointmentStatus(appointmentId, parsedSchema.data.status as any, userId, role as any);
 
         res.status(200).json({
             success: true,
@@ -42,7 +42,7 @@ export const updateStatus = async (req: AuthRequest, res: Response) => {
 
 export const getAvailability = async (req: AuthRequest, res: Response) => {
     try {
-        const { salonId, barberId, date } = req.query;
+        const { salonId, barberId, date, serviceIds } = req.query;
 
         if (!salonId || !date) {
             return res.status(400).json({ success: false, message: "salonId w date homa nécessaires" });
@@ -50,8 +50,11 @@ export const getAvailability = async (req: AuthRequest, res: Response) => {
 
         const parsedSalonId = parseInt(salonId as string);
         const parsedBarberId = barberId ? parseInt(barberId as string) : undefined;
+        const parsedServiceIds = typeof serviceIds === 'string' && serviceIds.length > 0
+            ? serviceIds.split(',').map((id) => parseInt(id, 10)).filter((id) => !isNaN(id))
+            : [];
 
-        const availableSlots = await getBarberAvailability(parsedSalonId, date as string, parsedBarberId);
+        const availableSlots = await getBarberAvailability(parsedSalonId, date as string, parsedBarberId, parsedServiceIds);
 
         res.status(200).json({
             success: true,
@@ -76,7 +79,7 @@ export const createAppointment = async (req: AuthRequest, res: Response) => {
             return res.status(401).json({ success: false, message: "Seul les clients tnajem taamel rdv jdida" });
         }
 
-        const { salonId, barberId, date, time, serviceIds } = parsedSchema.data;
+        const { salonId, barberId, targetType, date, time, serviceIds } = parsedSchema.data;
 
         const newAppointment = await createClientAppointment(
             userId,
@@ -84,7 +87,8 @@ export const createAppointment = async (req: AuthRequest, res: Response) => {
             barberId,
             date,
             time,
-            serviceIds
+            serviceIds,
+            targetType
         );
 
         res.status(201).json({
