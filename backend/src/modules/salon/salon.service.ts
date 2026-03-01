@@ -314,3 +314,26 @@ export const getTopRatedSalons = async (limit: number = 10) => {
         rating: (salon as any).rating ? ((salon as any).rating as number).toFixed(1) : "4.5",
     }));
 };
+
+export const searchSalons = async (query: string) => {
+    const salons = await prisma.salon.findMany({
+        where: {
+            OR: [
+                { name: { contains: query, mode: 'insensitive' } },
+                { description: { contains: query, mode: 'insensitive' } },
+                { services: { some: { name: { contains: query, mode: 'insensitive' } } } }
+            ]
+        },
+        include: {
+            services: true,
+            workingHours: true,
+        },
+        take: 20, // Limit results for performance
+    });
+
+    return salons.map(salon => ({
+        ...salon,
+        image: salon.coverImageUrl || 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=500&q=80',
+        rating: (salon as any).rating ? ((salon as any).rating as number).toFixed(1) : "4.5",
+    }));
+};

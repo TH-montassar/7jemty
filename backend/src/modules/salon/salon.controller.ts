@@ -1,7 +1,11 @@
-import type { Response } from 'express';
+import type { Response, Request } from 'express';
 import type { AuthRequest } from '../../middlewares/auth.middleware.js';
 import { createSalonSchema, updateSalonSchema, createEmployeeAccountSchema, createServiceSchema } from './salon.schema.js';
-import * as salonService from './salon.service.js';
+import {
+    createSalon, updateSalon, getSalonByPatronId,
+    createEmployeeAccount, getAllSalons, createService,
+    getServices, getTopRatedSalons, getSalonById, searchSalons
+} from './salon.service.js';
 
 export const createSalonHandler = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
@@ -12,7 +16,7 @@ export const createSalonHandler = async (req: AuthRequest, res: Response): Promi
         const validatedData = createSalonSchema.parse(req.body);
 
         // 3. Nasn3ou e-salon
-        const salon = await salonService.createSalon(patronId, validatedData);
+        const salon = await createSalon(patronId, validatedData);
 
         res.status(201).json({ success: true, data: salon });
     } catch (error: any) {
@@ -26,7 +30,7 @@ export const updateSalonHandler = async (req: AuthRequest, res: Response): Promi
         const patronId = req.user!.userId;
         const validatedData = updateSalonSchema.parse(req.body);
 
-        const updatedSalon = await salonService.updateSalon(patronId, validatedData);
+        const updatedSalon = await updateSalon(patronId, validatedData);
 
         res.status(200).json({ success: true, data: updatedSalon });
     } catch (error: any) {
@@ -40,7 +44,7 @@ export const getMySalonHandler = async (req: AuthRequest, res: Response): Promis
         const patronId = req.user!.userId;
 
         // Njibou l'salon tebe3 e-patron hedha
-        const salon = await salonService.getSalonByPatronId(patronId);
+        const salon = await getSalonByPatronId(patronId);
 
         res.status(200).json({ success: true, data: salon });
     } catch (error: any) {
@@ -53,7 +57,7 @@ export const createEmployeeAccountHandler = async (req: AuthRequest, res: Respon
         const patronId = req.user!.userId;
         const validatedData = createEmployeeAccountSchema.parse(req.body);
 
-        const newEmployee = await salonService.createEmployeeAccount(patronId, validatedData);
+        const newEmployee = await createEmployeeAccount(patronId, validatedData);
 
         res.status(201).json({ success: true, data: newEmployee });
     } catch (error: any) {
@@ -67,7 +71,7 @@ export const getAllSalonsHandler = async (req: AuthRequest, res: Response): Prom
         const lat = req.query.lat ? parseFloat(req.query.lat as string) : undefined;
         const lng = req.query.lng ? parseFloat(req.query.lng as string) : undefined;
 
-        const salons = await salonService.getAllSalons(lat, lng);
+        const salons = await getAllSalons(lat, lng);
 
         res.status(200).json({ success: true, data: salons });
     } catch (error: any) {
@@ -80,7 +84,7 @@ export const createServiceHandler = async (req: AuthRequest, res: Response): Pro
         const patronId = req.user!.userId;
         const validatedData = createServiceSchema.parse(req.body);
 
-        const newService = await salonService.createService(patronId, validatedData);
+        const newService = await createService(patronId, validatedData);
 
         res.status(201).json({ success: true, data: newService });
     } catch (error: any) {
@@ -93,7 +97,7 @@ export const getServicesHandler = async (req: AuthRequest, res: Response): Promi
     try {
         const patronId = req.user!.userId;
 
-        const services = await salonService.getServices(patronId);
+        const services = await getServices(patronId);
 
         res.status(200).json({ success: true, data: services });
     } catch (error: any) {
@@ -103,7 +107,7 @@ export const getServicesHandler = async (req: AuthRequest, res: Response): Promi
 
 export const getTopRatedSalonsHandler = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const salons = await salonService.getTopRatedSalons();
+        const salons = await getTopRatedSalons();
         res.status(200).json({ success: true, data: salons });
     } catch (error: any) {
         res.status(500).json({ success: false, message: error.message });
@@ -118,10 +122,23 @@ export const getSalonByIdHandler = async (req: AuthRequest, res: Response): Prom
             return;
         }
 
-        const salon = await salonService.getSalonById(id);
+        const salon = await getSalonById(id);
         res.status(200).json({ success: true, data: salon });
     } catch (error: any) {
         res.status(404).json({ success: false, message: error.message });
     }
 };
 
+export const searchSalonHandler = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const query = req.query.q as string;
+        if (!query || query.trim() === '') {
+            res.json({ success: true, data: [] });
+            return;
+        }
+        const salons = await searchSalons(query.trim());
+        res.json({ success: true, data: salons });
+    } catch (error: any) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};

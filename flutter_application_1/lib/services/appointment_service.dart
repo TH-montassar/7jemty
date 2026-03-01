@@ -115,6 +115,7 @@ class AppointmentService {
     required int salonId,
     required String date,
     int? barberId,
+    List<int>? serviceIds,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('jwt_token');
@@ -123,13 +124,19 @@ class AppointmentService {
       throw Exception('Rak mouch connecté!');
     }
 
-    final uri = Uri.parse('$baseUrl/availability').replace(
-      queryParameters: {
-        'salonId': salonId.toString(),
-        'date': date,
-        if (barberId != null) 'barberId': barberId.toString(),
-      },
-    );
+    final queryParams = {'salonId': salonId.toString(), 'date': date};
+
+    if (barberId != null) {
+      queryParams['barberId'] = barberId.toString();
+    }
+
+    if (serviceIds != null && serviceIds.isNotEmpty) {
+      queryParams['serviceIds'] = serviceIds.join(',');
+    }
+
+    final uri = Uri.parse(
+      '$baseUrl/availability',
+    ).replace(queryParameters: queryParams);
 
     final response = await http.get(
       uri,

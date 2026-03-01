@@ -93,7 +93,7 @@ class _UpcomingTabState extends State<UpcomingTab> {
           // Format date
           final dateStr = apt['appointmentDate'];
           final DateTime date = dateStr != null
-              ? DateTime.parse(dateStr)
+              ? DateTime.parse(dateStr).toLocal()
               : DateTime.now();
           final formattedDate = DateFormat(
             'dd MMM - HH:mm',
@@ -332,10 +332,10 @@ class _UpcomingTabState extends State<UpcomingTab> {
     );
   }
 
-  void _showCancelWarningDialog(BuildContext context, int appointmentId) {
+  void _showCancelWarningDialog(BuildContext parentContext, int appointmentId) {
     showDialog(
-      context: context,
-      builder: (BuildContext context) {
+      context: parentContext,
+      builder: (BuildContext dialogContext) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
@@ -363,7 +363,7 @@ class _UpcomingTabState extends State<UpcomingTab> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => Navigator.of(dialogContext).pop(),
               child: const Text(
                 "Rjou3",
                 style: TextStyle(
@@ -374,13 +374,22 @@ class _UpcomingTabState extends State<UpcomingTab> {
             ),
             ElevatedButton(
               onPressed: () async {
-                Navigator.of(context).pop();
+                // Save the messenger AND navigator using the safe parent context *before* await
+                final scaffoldMessenger = ScaffoldMessenger.of(parentContext);
+                final navigator = Navigator.of(dialogContext);
+
+                // Pop the dialog first
+                navigator.pop();
+
+                // Wait for the backend API
                 await _cancelAppointment(appointmentId);
+
+                // Show the snackbar using the saved messenger
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  scaffoldMessenger.showSnackBar(
                     SnackBar(
                       content: Text(
-                        tr(context, 'appointment_cancelled') ??
+                        tr(parentContext, 'appointment_cancelled') ??
                             'Rendez-vous annulé',
                       ),
                       backgroundColor: AppColors.actionRed,

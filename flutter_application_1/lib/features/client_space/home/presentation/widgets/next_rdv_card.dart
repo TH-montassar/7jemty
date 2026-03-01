@@ -1,22 +1,59 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/localization/translation_service.dart';
+import 'package:intl/intl.dart';
 
 class NextRdvCard extends StatelessWidget {
-  final DateTime? appointmentDate;
+  final Map<String, dynamic>? appointmentData;
 
-  const NextRdvCard({super.key, this.appointmentDate});
+  const NextRdvCard({super.key, this.appointmentData});
 
   @override
   Widget build(BuildContext context) {
-    // If appointmentDate is null, fallback to current time for UI demo
-    final dateToDisplay = appointmentDate ?? DateTime.now();
+    // If appointmentData is null, we return nothing
+    if (appointmentData == null) {
+      return const SizedBox.shrink();
+    }
 
-    // Format the time as HH:mm
-    // Usually you'd use DateFormat('HH:mm').format(date) via the intl package,
-    // but a simple string padding works just as well without extra imports:
-    final timeStr =
-        "\${dateToDisplay.hour.toString().padLeft(2, '0')}:\${dateToDisplay.minute.toString().padLeft(2, '0')}";
+    final dateStr = appointmentData!['date'] as String?;
+    final timeStr = appointmentData!['time'] ?? '00:00';
+    final salonData = appointmentData!['salon'] as Map<String, dynamic>?;
+    final salonName = salonData?['name'] ?? 'Salon';
+
+    DateTime? parsedDate;
+    if (dateStr != null) {
+      try {
+        parsedDate = DateTime.parse(dateStr).toLocal();
+      } catch (_) {}
+    }
+    final dateToDisplay = parsedDate ?? DateTime.now();
+
+    // Determine the difference to show 'Mazel [time]'
+    final appointmentDateTime = DateTime(
+      dateToDisplay.year,
+      dateToDisplay.month,
+      dateToDisplay.day,
+      int.tryParse(timeStr.split(':').first) ?? 0,
+      int.tryParse(timeStr.split(':').last) ?? 0,
+    );
+    final now = DateTime.now();
+    final difference = appointmentDateTime.difference(now);
+
+    String timeLeft = '';
+    if (difference.isNegative) {
+      timeLeft = "L'wa9t r7el";
+    } else {
+      final hours = difference.inHours;
+      final minutes = difference.inMinutes % 60;
+      if (hours > 24) {
+        timeLeft = 'Mazal ${difference.inDays} jour(s)';
+      } else if (hours > 0) {
+        timeLeft = 'Mazal ${hours}h ${minutes}min';
+      } else {
+        timeLeft = 'Mazal ${minutes}min';
+      }
+    }
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -41,7 +78,7 @@ class NextRdvCard extends StatelessWidget {
             children: [
               Text(
                 tr(context, 'next_appointment'),
-                style: TextStyle(
+                style: const TextStyle(
                   color: AppColors.primaryBlue,
                   fontWeight: FontWeight.bold,
                   fontSize: 15,
@@ -77,13 +114,16 @@ class NextRdvCard extends StatelessWidget {
                 size: 20,
               ), // بدلت اللون باش يطابق التصويرة
               const SizedBox(width: 12),
-              Text(
-                // Example with string parameter insertion!
-                tr(context, 'dynamic_today_time', args: [timeStr]),
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  color: AppColors.textDark,
+              Expanded(
+                child: Text(
+                  "${DateFormat('dd/MM/yyyy').format(dateToDisplay)} à $timeStr",
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: AppColors.textDark,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
@@ -92,13 +132,13 @@ class NextRdvCard extends StatelessWidget {
 
           // 3. اسم الصالون والخدمة (Salon & Service)
           Row(
-            children: const [
-              Icon(Icons.storefront, color: Colors.grey, size: 20),
-              SizedBox(width: 12),
+            children: [
+              const Icon(Icons.storefront, color: Colors.grey, size: 20),
+              const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  "Barber King - Coupe Cheveux + Barbe",
-                  style: TextStyle(color: Colors.grey, fontSize: 13),
+                  salonName,
+                  style: const TextStyle(color: Colors.grey, fontSize: 13),
                   maxLines: 1,
                   overflow:
                       TextOverflow.ellipsis, // باش الكتيبة ما تخرجش على السطر
@@ -110,46 +150,51 @@ class NextRdvCard extends StatelessWidget {
 
           // 4. الوقت المتبقي وحالة الموعد (Statut)
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              Row(
-                children: const [
-                  Icon(
-                    Icons.access_time,
-                    color: AppColors.primaryBlue,
-                    size: 18,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  // Badge الأخضر متاع Confirmé
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(
+                        0xFF2ECA7F,
+                      ).withValues(alpha: 0.1), // أخضر شفاف
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.check, color: Color(0xFF2ECA7F), size: 14),
+                        SizedBox(width: 4),
+                        Text(
+                          "M'akd",
+                          style: TextStyle(
+                            color: Color(0xFF2ECA7F),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  SizedBox(width: 8),
-                  Text(
-                    "Mazel 2h 30min",
-                    style: TextStyle(color: Colors.grey, fontSize: 13),
-                  ),
-                ],
-              ),
-              // Badge الأخضر متاع Confirmé
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.green.withValues(alpha: 0.1), // أخضر شفاف
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.check, color: Colors.green, size: 14),
-                    SizedBox(width: 4),
-                    Text(
-                      "M'akd",
-                      style: TextStyle(
-                        color: Colors.green,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
+                  if (timeLeft.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Text(
+                        timeLeft,
+                        style: const TextStyle(
+                          color: AppColors.actionRed,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                  ],
-                ),
+                ],
               ),
             ],
           ),

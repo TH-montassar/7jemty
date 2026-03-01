@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/localization/translation_service.dart';
+import '../../../../client_space/search/presentation/pages/search_page.dart';
 
 class ClientHeaderSection extends StatelessWidget {
-  const ClientHeaderSection({super.key});
+  final String userName;
+
+  const ClientHeaderSection({super.key, required this.userName});
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +26,7 @@ class ClientHeaderSection extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "${tr(context, 'greeting')}, Sami",
+                "${tr(context, 'greeting')}, $userName",
                 style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -31,27 +34,36 @@ class ClientHeaderSection extends StatelessWidget {
                 ),
               ),
               // 🔔 أيقونة الإشعارات مع النقطة الحمراء (Badge)
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  const Icon(
-                    Icons.notifications_none,
-                    color: Colors.white,
-                    size: 28,
-                  ),
-                  Positioned(
-                    right: 2,
-                    top: 2,
-                    child: Container(
-                      width: 10,
-                      height: 10,
-                      decoration: const BoxDecoration(
-                        color: AppColors.actionRed, // لون النقطة أحمر
-                        shape: BoxShape.circle,
+              IconButton(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Ouverture des notifications... 🔔"),
+                    ),
+                  );
+                },
+                icon: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    const Icon(
+                      Icons.notifications_none,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                    Positioned(
+                      right: 2,
+                      top: 2,
+                      child: Container(
+                        width: 10,
+                        height: 10,
+                        decoration: const BoxDecoration(
+                          color: AppColors.actionRed, // لون النقطة أحمر
+                          shape: BoxShape.circle,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
@@ -90,8 +102,10 @@ class ClientHeaderSection extends StatelessWidget {
           // 3. شريط البحث (Search Bar) - رديناه GestureDetector
           GestureDetector(
             onTap: () {
-              // 🚀 هوني باش نزيدو الـ Navigation لصفحة البحث نهار آخر
-              // Navigator.push(context, MaterialPageRoute(builder: (context) => const SearchPage()));
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SearchPage()),
+              );
             },
             child: Container(
               height: 50,

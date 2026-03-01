@@ -115,6 +115,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
         salonId: widget.salonId,
         date: formattedDate,
         barberId: _selectedBarberId,
+        serviceIds: _selectedServiceIds,
       );
 
       setState(() {
@@ -279,6 +280,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                               _selectedServiceIds.remove(svc['id']);
                             }
                           });
+                          _fetchAvailability(); // Re-fetch to apply duration limits
                         },
                       ),
                     ),

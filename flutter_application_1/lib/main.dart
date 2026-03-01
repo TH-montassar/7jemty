@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:hjamty/pages/splash_screen.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 import 'package:hjamty/core/localization/translation_service.dart';
 
 // Service de traduction global
 final translationService = TranslationService();
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('fr_FR', null);
+
   runApp(
     TranslationProvider(notifier: translationService, child: const MyApp()),
   );

@@ -386,4 +386,24 @@ class SalonService {
       throw Exception('Erreur de connexion: $e');
     }
   }
+
+  // 📝 Fonction bech nlawjou 3la salonat (Recherche)
+  static Future<List<dynamic>> searchSalons(String query) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/search?q=$query'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        return data['data'];
+      } else {
+        throw Exception(data['message'] ?? 'Erreur lors de la recherche');
+      }
+    } catch (e) {
+      throw Exception('Erreur de connexion: $e');
+    }
+  }
 }

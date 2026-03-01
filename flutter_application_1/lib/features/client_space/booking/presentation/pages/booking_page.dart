@@ -36,6 +36,10 @@ class _BookingPageState extends State<BookingPage> {
   bool _isLoading = false;
   Map<String, dynamic>? _currentUser;
 
+  // Availability Slots State
+  bool _isLoadingSlots = false;
+  List<String> _availableSlotStrings = [];
+
   // Date variables
   late List<DateTime> _dates;
   late DateTime _startDate;
@@ -54,6 +58,43 @@ class _BookingPageState extends State<BookingPage> {
     );
     _dateScrollController = ScrollController();
     _checkCurrentUser();
+    _fetchAvailableSlots();
+  }
+
+  Future<void> _fetchAvailableSlots() async {
+    setState(() {
+      _isLoadingSlots = true;
+      _selectedTimeIndex = -1; // Reset selected time when slots change
+    });
+
+    try {
+      final selectedDate = _dates[_selectedDateIndex];
+      final dateStr = DateFormat('yyyy-MM-dd').format(selectedDate);
+
+      // Calculate barberId (0 means 'Any Barber', so we pass null)
+      final barberId = _selectedBarberIndex == 0 ? null : _selectedBarberIndex;
+
+      final slots = await AppointmentService.getAvailability(
+        salonId: 1, // Currently hardcoded to salon 1 based on previous logic
+        date: dateStr,
+        barberId: barberId,
+        serviceIds: [
+          1,
+        ], // Assume service ID 1 for now (should ideally be passed dynamically if possible)
+      );
+
+      if (mounted) {
+        setState(() {
+          _availableSlotStrings = slots;
+          _isLoadingSlots = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoadingSlots = false);
+        // Optional: Show error snackbar
+      }
+    }
   }
 
   Future<void> _checkCurrentUser() async {
@@ -90,19 +131,38 @@ class _BookingPageState extends State<BookingPage> {
     ];
   }
 
-  // Generate date numbers and days dynamically from _dates list
-  // No hardcoded array needed.
+  // Generate static daily intervals 08:00 - 17:00
+  List<Map<String, dynamic>> get _dailySlots {
+    const times = [
+      '08:00',
+      '08:30',
+      '09:00',
+      '09:30',
+      '10:00',
+      '10:30',
+      '11:00',
+      '11:30',
+      '12:00',
+      '12:30',
+      '13:00',
+      '13:30',
+      '14:00',
+      '14:30',
+      '15:00',
+      '15:30',
+      '16:00',
+      '16:30',
+    ];
 
-  final List<Map<String, dynamic>> _timeSlots = [
-    {'time': '09:00', 'available': false},
-    {'time': '09:30', 'available': true},
-    {'time': '10:00', 'available': true},
-    {'time': '10:30', 'available': true},
-    {'time': '11:00', 'available': false},
-    {'time': '11:30', 'available': true},
-    {'time': '14:00', 'available': true},
-    {'time': '14:30', 'available': true},
-  ];
+    return times
+        .map(
+          (timeStr) => {
+            'time': timeStr,
+            'available': _availableSlotStrings.contains(timeStr),
+          },
+        )
+        .toList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -204,6 +264,7 @@ class _BookingPageState extends State<BookingPage> {
                         }
                         _selectedTimeIndex = -1; // Reset time
                       });
+                      _fetchAvailableSlots();
                     }
                   },
                 ),
@@ -384,7 +445,8 @@ class _BookingPageState extends State<BookingPage> {
     try {
       final selectedDate = _dates[_selectedDateIndex];
       final dateStr = DateFormat('yyyy-MM-dd').format(selectedDate);
-      final timeStr = _timeSlots[_selectedTimeIndex]['time'];
+      final dynamicSlots = _dailySlots;
+      final timeStr = dynamicSlots[_selectedTimeIndex]['time'];
 
       await AppointmentService.createAppointment(
         salonId: 1, // Need to pass actual salonId
@@ -442,7 +504,10 @@ class _BookingPageState extends State<BookingPage> {
           final b = _barbers[index];
           final isSelected = _selectedBarberIndex == index;
           return GestureDetector(
-            onTap: () => setState(() => _selectedBarberIndex = index),
+            onTap: () {
+              setState(() => _selectedBarberIndex = index);
+              _fetchAvailableSlots();
+            },
             child: Container(
               margin: const EdgeInsets.only(right: 20),
               child: Column(
@@ -511,10 +576,13 @@ class _BookingPageState extends State<BookingPage> {
           String dayNumber = date.day.toString();
 
           return GestureDetector(
-            onTap: () => setState(() {
-              _selectedDateIndex = index;
-              _selectedTimeIndex = -1; // Reset time ki ybaddel n'har
-            }),
+            onTap: () {
+              setState(() {
+                _selectedDateIndex = index;
+                _selectedTimeIndex = -1; // Reset time ki ybaddel n'har
+              });
+              _fetchAvailableSlots();
+            },
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               width: 70,
@@ -568,11 +636,27 @@ class _BookingPageState extends State<BookingPage> {
   }
 
   Widget _buildTimeSlots() {
+    if (_isLoadingSlots) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(20.0),
+          child: CircularProgressIndicator(color: AppColors.primaryBlue),
+        ),
+      );
+    }
+
+    final slots = _dailySlots;
+    if (slots.isEmpty) {
+      return const Center(
+        child: Text("Aucun créneau disponible pour ce jour."),
+      );
+    }
+
     return Wrap(
       spacing: 12,
       runSpacing: 12,
-      children: List.generate(_timeSlots.length, (index) {
-        final t = _timeSlots[index];
+      children: List.generate(slots.length, (index) {
+        final t = slots[index];
         final isAvailable = t['available'];
         final isSelected = _selectedTimeIndex == index;
 
@@ -600,9 +684,7 @@ class _BookingPageState extends State<BookingPage> {
                     ? Colors.white
                     : (isAvailable ? AppColors.textDark : Colors.grey),
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                decoration: isAvailable
-                    ? TextDecoration.none
-                    : TextDecoration.lineThrough,
+                decoration: isAvailable ? null : TextDecoration.lineThrough,
               ),
             ),
           ),

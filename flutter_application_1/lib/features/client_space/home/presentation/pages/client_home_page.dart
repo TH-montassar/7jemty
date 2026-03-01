@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:hjamty/features/client_space/home/presentation/widgets/top_rated_list.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/localization/translation_service.dart'; // Added this import
+import '../../../../../services/auth_service.dart';
+import '../../../../../services/appointment_service.dart';
 import '../widgets/client_header_section.dart';
 import '../widgets/next_rdv_card.dart';
 import '../widgets/quick_categories.dart';
@@ -19,6 +21,8 @@ class ClientHomePage extends StatefulWidget {
 class _ClientHomePageState extends State<ClientHomePage> {
   bool _isLoggedIn = false;
   bool _isLoading = true;
+  String _clientName = "Client";
+  Map<String, dynamic>? _nextAppointment;
 
   @override
   void initState() {
@@ -30,9 +34,47 @@ class _ClientHomePageState extends State<ClientHomePage> {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('jwt_token');
 
+    if (token != null && token.isNotEmpty) {
+      try {
+        final userDataResp = await AuthService.getMe();
+        final appointments = await AppointmentService.getClientAppointments();
+
+        // Find nearest CONFIRMED appointment
+        Map<String, dynamic>? upcoming;
+        for (var appt in appointments) {
+          if (appt['status'] == 'CONFIRMED') {
+            // In a real scenario we'd sort by date here, but assuming API order or just taking first valid
+            upcoming = appt;
+            break;
+          }
+        }
+
+        if (mounted) {
+          setState(() {
+            _isLoggedIn = true;
+            _clientName = (userDataResp['data']?['fullName'] ?? 'Client')
+                .split(' ')
+                .first;
+            _nextAppointment = upcoming;
+          });
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _isLoggedIn = true;
+          });
+        }
+      }
+    } else {
+      if (mounted) {
+        setState(() {
+          _isLoggedIn = false;
+        });
+      }
+    }
+
     if (mounted) {
       setState(() {
-        _isLoggedIn = token != null && token.isNotEmpty;
         _isLoading = false;
       });
     }
@@ -55,7 +97,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
         child: Column(
           children: [
             // 1. الهيدر
-            const ClientHeaderSection(),
+            ClientHeaderSection(userName: _clientName),
 
             // 2. المحتوى
             Transform.translate(
@@ -71,8 +113,8 @@ class _ClientHomePageState extends State<ClientHomePage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 20),
-                      if (_isLoggedIn) ...[
-                        const NextRdvCard(),
+                      if (_isLoggedIn && _nextAppointment != null) ...[
+                        NextRdvCard(appointmentData: _nextAppointment),
                         const SizedBox(height: 25),
                       ],
 
