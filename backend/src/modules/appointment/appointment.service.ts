@@ -528,3 +528,14 @@ export const getClientAppointments = async (clientId: number) => {
         orderBy: [{ appointmentDate: 'desc' }]
     });
 };
+
+export const getEmployeeAppointments = async (employeeId: number) => {
+    return prisma.appointment.findMany({
+        where: { barberId: employeeId },
+        include: {
+            client: { select: { fullName: true, phoneNumber: true, profile: { select: { avatarUrl: true } } } },
+            services: { include: { service: true } }
+        },
+        orderBy: { appointmentDate: 'desc' }
+    });
+};

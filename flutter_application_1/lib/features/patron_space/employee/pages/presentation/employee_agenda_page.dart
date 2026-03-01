@@ -1,9 +1,9 @@
 import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:toastification/toastification.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../services/appointment_service.dart';
-import '../../../../../services/auth_service.dart';
 
 class EmployeeAgendaPage extends StatefulWidget {
   const EmployeeAgendaPage({super.key});
@@ -24,17 +24,11 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
 
   Future<void> _fetchAppointments() async {
     try {
-      final userResult = await AuthService.getMe();
-      final currentUserId = userResult['data']?['id'];
-
-      final data = await AppointmentService.getSalonAppointments();
+      final data = await AppointmentService.getEmployeeAppointments();
       if (!mounted) return;
 
       setState(() {
-        // Filter appointments where barberId matches the current user's ID
-        _appointments = data
-            .where((apt) => apt['barberId'] == currentUserId)
-            .toList();
+        _appointments = data;
         _isLoading = false;
       });
     } catch (e) {
@@ -160,7 +154,14 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
     final serviceName = (apt['services'] as List?)?.isNotEmpty == true
         ? apt['services'][0]['service']['name']
         : 'Service';
-    final time = apt['startTime'] ?? '--:--';
+
+    final dateStr = apt['appointmentDate'];
+    final time = dateStr != null
+        ? DateFormat(
+            'dd MMM - HH:mm',
+            'fr_FR',
+          ).format(DateTime.parse(dateStr).toLocal())
+        : '--:--';
 
     Color statusColor = Colors.grey;
     String statusText = status;

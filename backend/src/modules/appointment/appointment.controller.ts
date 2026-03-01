@@ -142,3 +142,24 @@ export const getClientAppointmentsController = async (req: AuthRequest, res: Res
         res.status(400).json({ success: false, message: error.message || "Erreur récupération des rdv client" });
     }
 };
+
+export const getEmployeeAppointmentsController = async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = req.user?.userId;
+        const role = req.user?.role;
+
+        if (!userId || role !== 'EMPLOYEE') {
+            return res.status(401).json({ success: false, message: "Non autorisé" });
+        }
+
+        const { getEmployeeAppointments } = await import('./appointment.service.js');
+        const appointments = await getEmployeeAppointments(userId);
+
+        res.status(200).json({
+            success: true,
+            data: appointments
+        });
+    } catch (error: any) {
+        res.status(400).json({ success: false, message: error.message || "Erreur récupération des rdv employé" });
+    }
+};

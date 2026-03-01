@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { updateStatus, getAvailability, createAppointment, getSalonAppointmentsController, getClientAppointmentsController } from './appointment.controller.js';
+import { updateStatus, getAvailability, createAppointment, getSalonAppointmentsController, getClientAppointmentsController, getEmployeeAppointmentsController } from './appointment.controller.js';
 import { protect } from '../../middlewares/auth.middleware.js';
 
 const router = Router();
@@ -18,5 +18,8 @@ router.get('/salon', protect, getSalonAppointmentsController);
 
 // Endpoint pour récupérer les rendez-vous du client
 router.get('/client', protect, getClientAppointmentsController);
+
+// Endpoint pour récupérer les rendez-vous de l'employé
+router.get('/employee', protect, getEmployeeAppointmentsController);
 
 export default router;

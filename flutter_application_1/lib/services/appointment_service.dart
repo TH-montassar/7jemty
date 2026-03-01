@@ -111,6 +111,33 @@ class AppointmentService {
     }
   }
 
+  static Future<List<dynamic>> getEmployeeAppointments() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('jwt_token');
+
+    if (token == null) {
+      throw Exception('Rak mouch connecté!');
+    }
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/employee'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      return data['data'] ?? [];
+    } else {
+      throw Exception(
+        data['message'] ?? 'Erreur lors de la récupération des rendez-vous',
+      );
+    }
+  }
+
   static Future<List<String>> getAvailability({
     required int salonId,
     required String date,
