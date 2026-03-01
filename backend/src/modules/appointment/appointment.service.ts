@@ -192,12 +192,13 @@ export const getBarberAvailability = async (
         }
     });
 
-    return slots.filter((slot) => {
+    return slots.map((slot) => {
         const slotStart = parseTime(slot, date);
         const slotEnd = new Date(slotStart);
         slotEnd.setMinutes(slotEnd.getMinutes() + totalDurationMinutes);
 
-        return !appointments.some((appt: any) => slotStart < appt.estimatedEndTime && slotEnd > appt.appointmentDate);
+        const isAvailable = !appointments.some((appt: any) => slotStart < appt.estimatedEndTime && slotEnd > appt.appointmentDate);
+        return { time: slot, available: isAvailable };
     });
 };
 
@@ -243,7 +244,7 @@ export const createClientAppointment = async (
     }
 
     const availability = await getBarberAvailability(salonId, dateString, barberId, serviceIds);
-    if (!availability.includes(timeString)) {
+    if (!availability.some((s: any) => s.time === timeString && s.available)) {
         throw new Error("Le coiffeur n'est plus disponible pour cet horaire.");
     }
 

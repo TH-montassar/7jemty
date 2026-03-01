@@ -24,7 +24,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
   // Data from API
   List<dynamic> _services = [];
   List<dynamic> _professionals = [];
-  List<String> _availableSlots = [];
+  List<Map<String, dynamic>> _availableSlots = [];
 
   // User Selections
   List<int> _selectedServiceIds = [];
@@ -67,7 +67,11 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
       // Extract services and employees if available, else empty lists
       setState(() {
         _services = salonData['services'] ?? [];
-        _professionals = salonData['employees'] ?? [];
+        _professionals =
+            (salonData['employees'] as List?)?.map((e) {
+              return {...e as Map<String, dynamic>, 'isPatron': false};
+            }).toList() ??
+            [];
 
         // Add Patron to professional list if present in data
         if (salonData['patron'] != null) {
@@ -75,6 +79,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
             'id': salonData['patron']['id'] ?? salonData['patronId'],
             'name': (salonData['patron']['name'] ?? 'Patron') + ' (Patron)',
             'imageUrl': salonData['patron']['imageUrl'] ?? '',
+            'isPatron': true,
           });
         }
         _isLoading = false;
@@ -162,12 +167,26 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
       final formattedDate = DateFormat(
         'yyyy-MM-dd',
       ).format(_dates[_selectedDateIndex]);
+
+      final matchingProfessionals = _professionals.where(
+        (p) => p['id'] == _selectedBarberId,
+      );
+      final selectedProfessional = matchingProfessionals.isNotEmpty
+          ? matchingProfessionals.first
+          : null;
+      final String targetType =
+          (selectedProfessional != null &&
+              selectedProfessional['isPatron'] == true)
+          ? 'PATRON'
+          : 'EMPLOYEE';
+
       await AppointmentService.createAppointment(
         salonId: widget.salonId,
         barberId: _selectedBarberId!,
         date: formattedDate,
         time: _selectedTime!,
         serviceIds: _selectedServiceIds,
+        targetType: targetType,
       );
 
       if (mounted) {
@@ -507,25 +526,39 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
       spacing: 12,
       runSpacing: 12,
       children: List.generate(_availableSlots.length, (index) {
-        final slot = _availableSlots[index];
+        final slotData = _availableSlots[index];
+        final String slot = slotData['time'];
+        final bool isAvailable = slotData['available'] ?? false;
         final isSelected = _selectedTime == slot;
 
         return GestureDetector(
-          onTap: () => setState(() => _selectedTime = slot),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            decoration: BoxDecoration(
-              color: isSelected ? AppColors.primaryBlue : Colors.white,
-              border: Border.all(
-                color: isSelected ? AppColors.primaryBlue : Colors.grey[300]!,
+          onTap: isAvailable
+              ? () => setState(() => _selectedTime = slot)
+              : null,
+          child: Opacity(
+            opacity: isAvailable ? 1.0 : 0.4,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? AppColors.primaryBlue
+                    : (isAvailable ? Colors.white : Colors.grey[200]),
+                border: Border.all(
+                  color: isSelected ? AppColors.primaryBlue : Colors.grey[300]!,
+                ),
+                borderRadius: BorderRadius.circular(10),
               ),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Text(
-              slot,
-              style: TextStyle(
-                color: isSelected ? Colors.white : AppColors.textDark,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              child: Text(
+                slot,
+                style: TextStyle(
+                  color: isSelected
+                      ? Colors.white
+                      : (isAvailable ? AppColors.textDark : Colors.grey[600]),
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  decoration: isAvailable
+                      ? TextDecoration.none
+                      : TextDecoration.lineThrough,
+                ),
               ),
             ),
           ),

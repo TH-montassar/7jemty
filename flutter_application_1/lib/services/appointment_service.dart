@@ -138,7 +138,7 @@ class AppointmentService {
     }
   }
 
-  static Future<List<String>> getAvailability({
+  static Future<List<Map<String, dynamic>>> getAvailability({
     required int salonId,
     required String date,
     int? barberId,
@@ -175,7 +175,7 @@ class AppointmentService {
 
     final data = jsonDecode(response.body);
     if (response.statusCode == 200) {
-      return List<String>.from(data['data'] ?? []);
+      return List<Map<String, dynamic>>.from(data['data'] ?? []);
     } else {
       throw Exception(data['message'] ?? 'Erreur availability');
     }
@@ -187,6 +187,7 @@ class AppointmentService {
     required String date,
     required String time,
     required List<int> serviceIds,
+    String targetType = 'EMPLOYEE',
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('jwt_token');
@@ -204,6 +205,7 @@ class AppointmentService {
       body: jsonEncode({
         'salonId': salonId,
         'barberId': barberId,
+        'targetType': targetType,
         'date': date,
         'time': time,
         'serviceIds': serviceIds,

@@ -31,14 +31,14 @@ class _BookingPageState extends State<BookingPage> {
   // --- State Variables ---
   int _selectedBarberIndex = 0;
   int _selectedDateIndex = 0;
-  int _selectedTimeIndex = -1;
+  String? _selectedTime; // New string-based selection for time slot
   bool _isPhotoUploaded = false;
-  bool _isLoading = false;
+  bool _isLoading = false; // For booking confirmation
   Map<String, dynamic>? _currentUser;
 
   // Availability Slots State
-  bool _isLoadingSlots = false;
-  List<String> _availableSlotStrings = [];
+  bool _isLoadingSlots = false; // For fetching slots
+  List<Map<String, dynamic>> _availableSlots = []; // Changed type
 
   // Date variables
   late List<DateTime> _dates;
@@ -64,7 +64,7 @@ class _BookingPageState extends State<BookingPage> {
   Future<void> _fetchAvailableSlots() async {
     setState(() {
       _isLoadingSlots = true;
-      _selectedTimeIndex = -1; // Reset selected time when slots change
+      _selectedTime = null; // Reset selected time when slots change
     });
 
     try {
@@ -74,7 +74,8 @@ class _BookingPageState extends State<BookingPage> {
       // Calculate barberId (0 means 'Any Barber', so we pass null)
       final barberId = _selectedBarberIndex == 0 ? null : _selectedBarberIndex;
 
-      final slots = await AppointmentService.getAvailability(
+      final List<Map<String, dynamic>>
+      slots = await AppointmentService.getAvailability(
         salonId: 1, // Currently hardcoded to salon 1 based on previous logic
         date: dateStr,
         barberId: barberId,
@@ -85,7 +86,7 @@ class _BookingPageState extends State<BookingPage> {
 
       if (mounted) {
         setState(() {
-          _availableSlotStrings = slots;
+          _availableSlots = slots;
           _isLoadingSlots = false;
         });
       }
@@ -129,39 +130,6 @@ class _BookingPageState extends State<BookingPage> {
             'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80',
       },
     ];
-  }
-
-  // Generate static daily intervals 08:00 - 17:00
-  List<Map<String, dynamic>> get _dailySlots {
-    const times = [
-      '08:00',
-      '08:30',
-      '09:00',
-      '09:30',
-      '10:00',
-      '10:30',
-      '11:00',
-      '11:30',
-      '12:00',
-      '12:30',
-      '13:00',
-      '13:30',
-      '14:00',
-      '14:30',
-      '15:00',
-      '15:30',
-      '16:00',
-      '16:30',
-    ];
-
-    return times
-        .map(
-          (timeStr) => {
-            'time': timeStr,
-            'available': _availableSlotStrings.contains(timeStr),
-          },
-        )
-        .toList();
   }
 
   @override
@@ -262,7 +230,7 @@ class _BookingPageState extends State<BookingPage> {
                           _selectedDateIndex = 0;
                           _dateScrollController.jumpTo(0);
                         }
-                        _selectedTimeIndex = -1; // Reset time
+                        _selectedTime = null; // Reset time
                       });
                       _fetchAvailableSlots();
                     }
@@ -289,14 +257,14 @@ class _BookingPageState extends State<BookingPage> {
         serviceName: widget.serviceName,
         servicePrice: widget.servicePrice,
         isLoading: _isLoading,
-        canConfirm: _selectedTimeIndex != -1 && !_isLoading,
+        canConfirm: _selectedTime != null && !_isLoading,
         onConfirm: _handleBooking,
       ),
     );
   }
 
   Future<void> _handleBooking() async {
-    if (_selectedTimeIndex == -1) return;
+    if (_selectedTime == null) return;
 
     if (_currentUser == null) {
       _showGuestAuthDialog();
@@ -445,8 +413,7 @@ class _BookingPageState extends State<BookingPage> {
     try {
       final selectedDate = _dates[_selectedDateIndex];
       final dateStr = DateFormat('yyyy-MM-dd').format(selectedDate);
-      final dynamicSlots = _dailySlots;
-      final timeStr = dynamicSlots[_selectedTimeIndex]['time'];
+      final timeStr = _selectedTime!; // Use the new _selectedTime
 
       await AppointmentService.createAppointment(
         salonId: 1, // Need to pass actual salonId
@@ -579,7 +546,7 @@ class _BookingPageState extends State<BookingPage> {
             onTap: () {
               setState(() {
                 _selectedDateIndex = index;
-                _selectedTimeIndex = -1; // Reset time ki ybaddel n'har
+                _selectedTime = null; // Reset time ki ybaddel n'har
               });
               _fetchAvailableSlots();
             },
@@ -599,7 +566,7 @@ class _BookingPageState extends State<BookingPage> {
                 boxShadow: isSelected
                     ? [
                         BoxShadow(
-                          color: AppColors.primaryBlue.withValues(alpha: 0.3),
+                          color: AppColors.primaryBlue.withOpacity(0.3),
                           blurRadius: 8,
                           offset: const Offset(0, 4),
                         ),
@@ -645,8 +612,7 @@ class _BookingPageState extends State<BookingPage> {
       );
     }
 
-    final slots = _dailySlots;
-    if (slots.isEmpty) {
+    if (_availableSlots.isEmpty) {
       return const Center(
         child: Text("Aucun créneau disponible pour ce jour."),
       );
@@ -655,36 +621,40 @@ class _BookingPageState extends State<BookingPage> {
     return Wrap(
       spacing: 12,
       runSpacing: 12,
-      children: List.generate(slots.length, (index) {
-        final t = slots[index];
-        final isAvailable = t['available'];
-        final isSelected = _selectedTimeIndex == index;
+      children: List.generate(_availableSlots.length, (index) {
+        final slotData = _availableSlots[index];
+        final String slot = slotData['time'];
+        final bool isAvailable = slotData['available'] ?? false;
+        final isSelected = _selectedTime == slot;
 
         return GestureDetector(
           onTap: isAvailable
-              ? () => setState(() => _selectedTimeIndex = index)
+              ? () => setState(() => _selectedTime = slot)
               : null,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            decoration: BoxDecoration(
-              color: isSelected
-                  ? AppColors.primaryBlue
-                  : (isAvailable ? Colors.white : Colors.grey[200]),
-              border: Border.all(
+          child: Opacity(
+            opacity: isAvailable ? 1.0 : 0.4,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              decoration: BoxDecoration(
                 color: isSelected
                     ? AppColors.primaryBlue
-                    : (isAvailable ? Colors.grey[300]! : Colors.transparent),
+                    : (isAvailable ? Colors.white : Colors.grey[200]),
+                border: Border.all(
+                  color: isSelected ? AppColors.primaryBlue : Colors.grey[300]!,
+                ),
+                borderRadius: BorderRadius.circular(10),
               ),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Text(
-              t['time'],
-              style: TextStyle(
-                color: isSelected
-                    ? Colors.white
-                    : (isAvailable ? AppColors.textDark : Colors.grey),
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                decoration: isAvailable ? null : TextDecoration.lineThrough,
+              child: Text(
+                slot,
+                style: TextStyle(
+                  color: isSelected
+                      ? Colors.white
+                      : (isAvailable ? AppColors.textDark : Colors.grey[600]),
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  decoration: isAvailable
+                      ? TextDecoration.none
+                      : TextDecoration.lineThrough,
+                ),
               ),
             ),
           ),

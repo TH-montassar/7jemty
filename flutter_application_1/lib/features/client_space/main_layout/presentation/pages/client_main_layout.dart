@@ -21,7 +21,7 @@ class ClientMainLayout extends StatefulWidget {
 class _ClientMainLayoutState extends State<ClientMainLayout> {
   int _selectedIndex = 0;
 
-  final List<Widget> _pages = [
+  List<Widget> _pages = [
     const ClientHomePage(),
     const AppointmentsPage(),
     const ProductsPage(),
@@ -52,6 +52,10 @@ class _ClientMainLayoutState extends State<ClientMainLayout> {
     // Ken mouch index 3, wala ken l'utilisateur connecté, nbaddlou l'onglet 3adi
     if (mounted) {
       setState(() {
+        if (index == 1) {
+          // Force Upcoming/History tabs to reload data from API upon explicit click
+          _pages[1] = AppointmentsPage(key: UniqueKey());
+        }
         _selectedIndex = index;
       });
     }

@@ -263,6 +263,9 @@ export const getSalonById = async (id: number) => {
     const salon = await prisma.salon.findUnique({
         where: { id },
         include: {
+            patron: {
+                include: { profile: true }
+            },
             services: true,
             employees: {
                 include: {
@@ -293,6 +296,11 @@ export const getSalonById = async (id: number) => {
 
     return {
         ...salon,
+        patron: {
+            id: salon.patron.id,
+            name: salon.patron.fullName,
+            imageUrl: salon.patron.profile?.avatarUrl || null,
+        },
         employees: formattedEmployees,
         image: salon.coverImageUrl || 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=500&q=80',
         rating: (salon as any).rating ? ((salon as any).rating as number).toFixed(1) : "4.5",
