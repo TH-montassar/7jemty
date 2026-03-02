@@ -47,4 +47,17 @@ cd flutter_application_1
 
 This auto-detects your LAN IP and runs Flutter with `API_BASE_URL=http://<LAN_IP>:3000`.
 
+3. **Run directly on a phone connected with wireless debugging**
+
+```bash
+cd flutter_application_1
+./scripts/run_phone.sh --wifi-device --port 3000
+```
+
+This tries to auto-pick an `adb` Wi-Fi device (`<ip>:<port>`). You can force a specific device:
+
+```bash
+./scripts/run_phone.sh --wifi-device --device-id 192.168.1.35:38899 --port 3000
+```
+
 # 7jemty

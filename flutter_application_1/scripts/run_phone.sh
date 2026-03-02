@@ -3,6 +3,21 @@ set -euo pipefail
 
 PORT=3000
 REAL_DEVICE=false
+WIFI_DEVICE=false
+DEVICE_ID=""
+
+show_help() {
+  cat <<'EOF'
+Usage: ./scripts/run_phone.sh [options] [-- flutter_run_args]
+
+Options:
+  --real-device      Run with REAL_DEVICE=true and try adb reverse.
+  --wifi-device      Prefer an Android device connected with wireless debugging (adb over Wi-Fi).
+  --device-id <id>   Explicit Flutter device id to run on.
+  --port <port>      Backend API port (default: 3000).
+  --help             Show this message.
+EOF
+}
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -10,9 +25,25 @@ while [[ $# -gt 0 ]]; do
       REAL_DEVICE=true
       shift
       ;;
+    --wifi-device)
+      WIFI_DEVICE=true
+      shift
+      ;;
+    --device-id)
+      DEVICE_ID="${2:-}"
+      if [[ -z "${DEVICE_ID}" ]]; then
+        echo "Error: --device-id requires a value." >&2
+        exit 1
+      fi
+      shift 2
+      ;;
     --port)
       PORT="${2:-3000}"
       shift 2
+      ;;
+    --help)
+      show_help
+      exit 0
       ;;
     *)
       break
@@ -38,6 +69,20 @@ if [[ "${REAL_DEVICE}" == "true" ]]; then
   exit 0
 fi
 
+if [[ "${WIFI_DEVICE}" == "true" && -z "${DEVICE_ID}" ]]; then
+  if command -v adb >/dev/null 2>&1; then
+    WIFI_ADB_DEVICE="$(adb devices | awk '/^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:[0-9]+[[:space:]]+device$/ {print $1; exit}')"
+    if [[ -n "${WIFI_ADB_DEVICE}" ]]; then
+      DEVICE_ID="${WIFI_ADB_DEVICE}"
+      echo "Using Wi-Fi device from adb: ${DEVICE_ID}"
+    else
+      echo "Warning: no adb Wi-Fi device found. Falling back to default Flutter device." >&2
+    fi
+  else
+    echo "Warning: adb not found; cannot auto-select Wi-Fi Android device." >&2
+  fi
+fi
+
 # Wi-Fi mode: auto-detect primary LAN IPv4 and pass API_BASE_URL.
 HOST_IP="$(hostname -I 2>/dev/null | awk '{print $1}')"
 if [[ -z "${HOST_IP}" ]]; then
@@ -52,4 +97,11 @@ fi
 
 API_BASE_URL="http://${HOST_IP}:${PORT}"
 echo "Using API_BASE_URL=${API_BASE_URL}"
-flutter run --dart-define="API_BASE_URL=${API_BASE_URL}" "$@"
+
+FLUTTER_CMD=(flutter run --dart-define="API_BASE_URL=${API_BASE_URL}")
+if [[ -n "${DEVICE_ID}" ]]; then
+  FLUTTER_CMD+=( -d "${DEVICE_ID}" )
+fi
+FLUTTER_CMD+=("$@")
+
+"${FLUTTER_CMD[@]}"
