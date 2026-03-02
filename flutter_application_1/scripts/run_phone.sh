@@ -20,6 +20,26 @@ check_local_backend() {
   return 0
 }
 
+detect_lan_ip() {
+  local ip=""
+
+  # Try Linux-style first
+  ip="$(ip route get 1.1.1.1 2>/dev/null | awk '/src/ {for (i=1; i<=NF; i++) if ($i=="src") {print $(i+1); exit}}')"
+  if [[ -n "${ip}" ]]; then echo "${ip}"; return; fi
+
+  ip="$(hostname -I 2>/dev/null | tr ' ' '\n' | awk '/^(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/ {print; exit}')"
+  if [[ -n "${ip}" ]]; then echo "${ip}"; return; fi
+
+  # Windows fallback (Git Bash / MSYS2): parse ipconfig output
+  # Pick the IPv4 address that shares the same /24 subnet as the ADB Wi-Fi device if known
+  if command -v ipconfig >/dev/null 2>&1; then
+    ip="$(ipconfig 2>/dev/null | awk '/IPv4/{gsub(/\r/,""); match($0,/([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)/,a); if (a[1] ~ /^(192\.168\.|10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/) {print a[1]; exit}}')"
+    if [[ -n "${ip}" ]]; then echo "${ip}"; return; fi
+  fi
+
+  echo ""
+}
+
 show_help() {
   cat <<'EOT'
 Usage: ./scripts/run_phone.sh [options] [-- flutter_run_args]
@@ -91,28 +111,37 @@ if ! command -v flutter >/dev/null 2>&1; then
 fi
 
 if [[ "${REAL_DEVICE}" == "true" ]]; then
-  USB_ADB_DEVICE=""
+  ADB_DEVICE=""
 
   if command -v adb >/dev/null 2>&1; then
-    USB_ADB_DEVICE="$(adb devices | awk '/^[^[:space:]]+[[:space:]]+device$/ && $1 !~ /:/ {print $1; exit}')"
+    # First try USB device
+    ADB_DEVICE="$(adb devices | awk '/^[^[:space:]]+[[:space:]]+device$/ && $1 !~ /:/ {print $1; exit}')"
+
+    # Fallback: try WiFi ADB device (ip:port format)
+    if [[ -z "${ADB_DEVICE}" ]]; then
+      ADB_DEVICE="$(adb devices | awk '/^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:[0-9]+[[:space:]]+device$/ {print $1; exit}')"
+      if [[ -n "${ADB_DEVICE}" ]]; then
+        echo "No USB device found, using Wi-Fi ADB device: ${ADB_DEVICE}"
+      fi
+    fi
   else
     echo "Warning: adb not found; install Android platform-tools for USB reverse." >&2
   fi
 
-  if [[ -n "${USB_ADB_DEVICE}" ]]; then
+  if [[ -n "${ADB_DEVICE}" ]]; then
     if [[ -z "${DEVICE_ID}" ]]; then
-      DEVICE_ID="${USB_ADB_DEVICE}"
+      DEVICE_ID="${ADB_DEVICE}"
     fi
 
-    echo "USB device detected (${DEVICE_ID}). Setting adb reverse tcp:${PORT} -> tcp:${PORT}"
-    if ! adb reverse "tcp:${PORT}" "tcp:${PORT}"; then
+    echo "Device detected (${DEVICE_ID}). Setting adb reverse tcp:${PORT} -> tcp:${PORT}"
+    if ! adb -s "${DEVICE_ID}" reverse "tcp:${PORT}" "tcp:${PORT}"; then
       echo "Error: failed to set adb reverse for port ${PORT}." >&2
       exit 1
     fi
 
     if [[ "${SKIP_BACKEND_CHECK}" != "true" ]]; then
       if ! check_local_backend; then
-        echo "Error: USB reverse mode needs a running local backend on port ${PORT}." >&2
+        echo "Error: REAL_DEVICE mode needs a running local backend on port ${PORT}." >&2
         echo "Hint: if your phone reaches backend over Wi-Fi/LAN, run without --real-device." >&2
         exit 1
       fi
@@ -129,7 +158,7 @@ if [[ "${REAL_DEVICE}" == "true" ]]; then
     exit 0
   fi
 
-  echo "Error: no USB adb device found. Connect your phone with USB debugging enabled, then retry." >&2
+  echo "Error: no ADB device found (USB or Wi-Fi). Make sure your phone is connected and debugging is enabled." >&2
   exit 1
 fi
 
@@ -167,15 +196,8 @@ if [[ "${WIFI_DEVICE}" == "true" && -z "${DEVICE_ID}" ]]; then
   fi
 fi
 
-# Wi-Fi mode: detect the best LAN IPv4 and pass API_BASE_URL.
-# Prefer IP from default route (usually the same subnet as phone), then fallback.
-HOST_IP="$(ip route get 1.1.1.1 2>/dev/null | awk '/src/ {for (i=1; i<=NF; i++) if ($i=="src") {print $(i+1); exit}}')"
-if [[ -z "${HOST_IP}" ]]; then
-  HOST_IP="$(hostname -I 2>/dev/null | tr ' ' '\n' | awk '/^(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/ {print; exit}')"
-fi
-if [[ -z "${HOST_IP}" ]]; then
-  HOST_IP="$(hostname -I 2>/dev/null | awk '{print $1}')"
-fi
+# Wi-Fi mode: detect the best LAN IPv4 (Linux + Windows compatible)
+HOST_IP="$(detect_lan_ip)"
 
 if [[ -z "${HOST_IP}" ]]; then
   echo "Error: could not auto-detect LAN IP. Run manually with:" >&2

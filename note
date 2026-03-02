@@ -1,1 +1,6 @@
 git reset --soft HEAD~1
+
+./scripts/run_phone.sh --wifi-connect 192.168.1.12
+# or
+
+./scripts/run_phone.sh --real-device #wifi
