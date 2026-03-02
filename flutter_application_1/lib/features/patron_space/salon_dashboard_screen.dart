@@ -927,8 +927,27 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
             final status = apt['status'];
 
             final dateFormatted = aptDate != null
-                ? DateFormat('dd/MM/yyyy').format(DateTime.parse(aptDate))
+                ? DateFormat(
+                    'dd/MM/yyyy - HH:mm',
+                  ).format(DateTime.parse(aptDate).toLocal())
                 : '';
+
+            String countdownText = "";
+            if (aptDate != null &&
+                (status == 'CONFIRMED' || status == 'PENDING')) {
+              final date = DateTime.parse(aptDate).toLocal();
+              final now = DateTime.now();
+              final difference = date.difference(now);
+
+              if (difference.isNegative) {
+                countdownText = "L'wa9t r7el";
+              } else if (difference.inHours > 0) {
+                countdownText =
+                    "Mazal ${difference.inHours}h ${difference.inMinutes % 60}min";
+              } else {
+                countdownText = "Mazal ${difference.inMinutes}min";
+              }
+            }
 
             return Card(
               margin: const EdgeInsets.only(bottom: 12),
@@ -951,39 +970,58 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                             color: AppColors.textDark,
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: status == 'PENDING'
-                                ? Colors.orange.withOpacity(0.1)
-                                : status == 'CONFIRMED'
-                                ? Colors.green.withOpacity(0.1)
-                                : status == 'IN_PROGRESS'
-                                ? AppColors.primaryBlue.withOpacity(0.1)
-                                : status == 'COMPLETED'
-                                ? Colors.blueGrey.withOpacity(0.1)
-                                : Colors.grey.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            status,
-                            style: TextStyle(
-                              color: status == 'PENDING'
-                                  ? Colors.orange
-                                  : status == 'CONFIRMED'
-                                  ? Colors.green
-                                  : status == 'IN_PROGRESS'
-                                  ? AppColors.primaryBlue
-                                  : status == 'COMPLETED'
-                                  ? Colors.blueGrey
-                                  : Colors.grey,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: status == 'PENDING'
+                                    ? Colors.orange.withValues(alpha: 0.1)
+                                    : status == 'CONFIRMED'
+                                    ? Colors.green.withValues(alpha: 0.1)
+                                    : status == 'IN_PROGRESS'
+                                    ? AppColors.primaryBlue.withValues(
+                                        alpha: 0.1,
+                                      )
+                                    : status == 'COMPLETED'
+                                    ? Colors.blueGrey.withValues(alpha: 0.1)
+                                    : Colors.grey.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                status,
+                                style: TextStyle(
+                                  color: status == 'PENDING'
+                                      ? Colors.orange
+                                      : status == 'CONFIRMED'
+                                      ? Colors.green
+                                      : status == 'IN_PROGRESS'
+                                      ? AppColors.primaryBlue
+                                      : status == 'COMPLETED'
+                                      ? Colors.blueGrey
+                                      : Colors.grey,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
                             ),
-                          ),
+                            if (countdownText.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Text(
+                                  countdownText,
+                                  style: const TextStyle(
+                                    color: AppColors.actionRed,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                       ],
                     ),

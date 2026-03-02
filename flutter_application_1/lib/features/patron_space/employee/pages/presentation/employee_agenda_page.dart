@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -15,11 +16,25 @@ class EmployeeAgendaPage extends StatefulWidget {
 class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
   bool _isLoading = true;
   List<dynamic> _appointments = [];
+  Timer? _pollingTimer;
 
   @override
   void initState() {
     super.initState();
     _fetchAppointments();
+
+    // Poll the API every 10 seconds for real-time updates without fully reloading the UI
+    _pollingTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+      if (mounted) {
+        _fetchAppointmentsSilent();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _pollingTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _fetchAppointments() async {
@@ -34,6 +49,19 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _fetchAppointmentsSilent() async {
+    try {
+      final data = await AppointmentService.getEmployeeAppointments();
+      if (!mounted) return;
+
+      setState(() {
+        _appointments = data;
+      });
+    } catch (e) {
+      // Ignore errors on silent poll to not interrupt the user's flow
     }
   }
 
@@ -180,6 +208,22 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
       statusText = "Morfodh";
     }
 
+    String countdownText = "";
+    if (dateStr != null && (isConfirmed || isPending)) {
+      final date = DateTime.parse(dateStr).toLocal();
+      final now = DateTime.now();
+      final difference = date.difference(now);
+
+      if (difference.isNegative) {
+        countdownText = "L'wa9t r7el";
+      } else if (difference.inHours > 0) {
+        countdownText =
+            "Mazal ${difference.inHours}h ${difference.inMinutes % 60}min";
+      } else {
+        countdownText = "Mazal ${difference.inMinutes}min";
+      }
+    }
+
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
       padding: const EdgeInsets.all(16),
@@ -209,23 +253,40 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
                   color: AppColors.textDark,
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  statusText,
-                  style: TextStyle(
-                    color: statusColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: statusColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      statusText,
+                      style: TextStyle(
+                        color: statusColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
                   ),
-                ),
+                  if (countdownText.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        countdownText,
+                        style: const TextStyle(
+                          color: AppColors.actionRed,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ],
           ),
