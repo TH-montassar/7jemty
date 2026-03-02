@@ -299,7 +299,11 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                           const SizedBox(height: 32),
 
                           // Footer Actions
-                          Row(
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            alignment: WrapAlignment.spaceBetween,
+                            crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
                               TextButton.icon(
                                 onPressed: () {
@@ -315,69 +319,80 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                                 icon: const Icon(
                                   Icons.delete_outline,
                                   color: Colors.red,
+                                  size: 20,
                                 ),
                                 label: const Text(
                                   'Supprimer',
                                   style: TextStyle(color: Colors.red),
                                 ),
                               ),
-                              const Spacer(),
-                              TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                child: const Text('Annuler'),
-                              ),
-                              const SizedBox(width: 8),
-                              ElevatedButton(
-                                onPressed: _isUploading
-                                    ? null
-                                    : () async {
-                                        try {
-                                          final String newFullName =
-                                              '${firstNameController.text.trim()} ${lastNameController.text.trim()}'
-                                                  .trim();
-                                          await AuthService.updateProfile(
-                                            fullName: newFullName,
-                                            phoneNumber: phoneController.text
-                                                .trim(),
-                                            email: emailController.text.trim(),
-                                            avatarUrl: urlController.text
-                                                .trim(),
-                                          );
-                                          if (context.mounted) {
-                                            Navigator.pop(context);
-                                            widget.onUpdate?.call();
-                                            toastification.show(
-                                              context: context,
-                                              type: ToastificationType.success,
-                                              title: const Text('Succès'),
-                                              description: const Text(
-                                                'Profil mis à jour !',
-                                              ),
-                                            );
-                                          }
-                                        } catch (e) {
-                                          if (context.mounted) {
-                                            toastification.show(
-                                              context: context,
-                                              type: ToastificationType.error,
-                                              title: const Text('Erreur'),
-                                              description: Text(e.toString()),
-                                            );
-                                          }
-                                        }
-                                      },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.primaryBlue,
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 24,
-                                    vertical: 12,
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text('Annuler'),
                                   ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
+                                  const SizedBox(width: 8),
+                                  ElevatedButton(
+                                    onPressed: _isUploading
+                                        ? null
+                                        : () async {
+                                            try {
+                                              final String newFullName =
+                                                  '${firstNameController.text.trim()} ${lastNameController.text.trim()}'
+                                                      .trim();
+                                              await AuthService.updateProfile(
+                                                fullName: newFullName,
+                                                phoneNumber: phoneController
+                                                    .text
+                                                    .trim(),
+                                                email: emailController.text
+                                                    .trim(),
+                                                avatarUrl: urlController.text
+                                                    .trim(),
+                                              );
+                                              if (context.mounted) {
+                                                Navigator.pop(context);
+                                                widget.onUpdate?.call();
+                                                toastification.show(
+                                                  context: context,
+                                                  type: ToastificationType
+                                                      .success,
+                                                  title: const Text('Succès'),
+                                                  description: const Text(
+                                                    'Profil mis à jour !',
+                                                  ),
+                                                );
+                                              }
+                                            } catch (e) {
+                                              if (context.mounted) {
+                                                toastification.show(
+                                                  context: context,
+                                                  type:
+                                                      ToastificationType.error,
+                                                  title: const Text('Erreur'),
+                                                  description: Text(
+                                                    e.toString(),
+                                                  ),
+                                                );
+                                              }
+                                            }
+                                          },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.primaryBlue,
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 12,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    child: const Text('Enregistrer'),
                                   ),
-                                ),
-                                child: const Text('Enregistrer'),
+                                ],
                               ),
                             ],
                           ),
