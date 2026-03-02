@@ -148,6 +148,28 @@ class AuthService {
     }
   }
 
+  static Future<bool> checkPhone(String phoneNumber) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/check-phone'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'phoneNumber': phoneNumber}),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return data['exists'] ?? false;
+      } else {
+        throw Exception(
+          data['message'] ?? 'Erreur lors de la vérification du numéro',
+        );
+      }
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+
   static Future<Map<String, dynamic>> loginUser({
     required String phoneNumber,
     required String password,

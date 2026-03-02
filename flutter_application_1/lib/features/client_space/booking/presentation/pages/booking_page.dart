@@ -330,14 +330,45 @@ class _BookingPageState extends State<BookingPage> {
               onPressed: dialogLoading
                   ? null
                   : () async {
-                      if (phoneController.text.isEmpty ||
-                          passwordController.text.isEmpty)
+                      if (phoneController.text.trim().length != 8) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              "Le numéro doit comporter 8 chiffres",
+                            ),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
                         return;
+                      }
+                      if (passwordController.text.length < 6) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              "Le mot de passe doit comporter au moins 6 caractères",
+                            ),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                        return;
+                      }
 
                       setDialogState(() => dialogLoading = true);
                       try {
                         Map<String, dynamic> result;
                         if (isLogin) {
+                          if (passwordController.text.length < 6) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  "Le mot de passe doit comporter au moins 6 caractères",
+                                ),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                            setDialogState(() => dialogLoading = false);
+                            return;
+                          }
                           try {
                             result = await AuthService.loginUser(
                               phoneNumber: phoneController.text,
@@ -355,6 +386,18 @@ class _BookingPageState extends State<BookingPage> {
                             rethrow;
                           }
                         } else {
+                          if (passwordController.text.length < 6) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  "Le mot de passe doit comporter au moins 6 caractères",
+                                ),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                            setDialogState(() => dialogLoading = false);
+                            return;
+                          }
                           result = await AuthService.registerUser(
                             fullName:
                                 "Client ${phoneController.text.substring(phoneController.text.length - 4)}",
@@ -369,7 +412,10 @@ class _BookingPageState extends State<BookingPage> {
                         }
 
                         final prefs = await SharedPreferences.getInstance();
-                        await prefs.setString('jwt_token', result['token']);
+                        await prefs.setString(
+                          'jwt_token',
+                          result['data']['token'],
+                        );
 
                         await _checkCurrentUser();
                         if (mounted) {
@@ -379,7 +425,9 @@ class _BookingPageState extends State<BookingPage> {
                       } catch (e) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text(e.toString()),
+                            content: Text(
+                              e.toString().replaceAll('Exception: ', ''),
+                            ),
                             backgroundColor: Colors.red,
                           ),
                         );

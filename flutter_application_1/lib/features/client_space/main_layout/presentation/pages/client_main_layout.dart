@@ -55,6 +55,9 @@ class _ClientMainLayoutState extends State<ClientMainLayout> {
         if (index == 1) {
           // Force Upcoming/History tabs to reload data from API upon explicit click
           _pages[1] = AppointmentsPage(key: UniqueKey());
+        } else if (index == 3) {
+          // Force Profile tab to reload in case the user recently logged in (e.g guest booking)
+          _pages[3] = ProfilePage(key: UniqueKey());
         }
         _selectedIndex = index;
       });

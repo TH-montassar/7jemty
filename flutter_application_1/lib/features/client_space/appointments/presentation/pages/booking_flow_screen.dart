@@ -246,7 +246,8 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
   void _showGuestAuthDialog() {
     final phoneController = TextEditingController();
     final passwordController = TextEditingController();
-    bool isLogin = true;
+    bool isPhoneChecked = false;
+    bool phoneExists = false;
     bool dialogLoading = false;
 
     showDialog(
@@ -264,28 +265,21 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
               TextField(
                 controller: phoneController,
                 keyboardType: TextInputType.phone,
+                enabled: !isPhoneChecked || !phoneExists,
                 decoration: InputDecoration(
                   labelText: tr(context, 'phone_number'),
                   prefixIcon: const Icon(Icons.phone),
                 ),
               ),
-              const SizedBox(height: 15),
-              TextField(
-                controller: passwordController,
-                obscureText: true,
-                decoration: InputDecoration(
-                  labelText: tr(context, 'password'),
-                  helperText: !isLogin
-                      ? tr(context, 'guest_password_hint')
-                      : null,
-                  prefixIcon: const Icon(Icons.lock),
-                ),
-              ),
-              if (!isLogin) ...[
-                const SizedBox(height: 10),
-                Text(
-                  tr(context, 'auto_account_creation_info'),
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+              if (isPhoneChecked && phoneExists) ...[
+                const SizedBox(height: 15),
+                TextField(
+                  controller: passwordController,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    labelText: tr(context, 'password'),
+                    prefixIcon: const Icon(Icons.lock),
+                  ),
                 ),
               ],
             ],
@@ -299,63 +293,117 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
               onPressed: dialogLoading
                   ? null
                   : () async {
-                      if (phoneController.text.isEmpty ||
-                          passwordController.text.isEmpty) {
-                        return;
-                      }
-
-                      setDialogState(() => dialogLoading = true);
-                      try {
-                        Map<String, dynamic> result;
-                        if (isLogin) {
-                          try {
-                            result = await AuthService.loginUser(
-                              phoneNumber: phoneController.text,
-                              password: passwordController.text,
-                            );
-                          } catch (e) {
-                            if (e.toString().contains('not found') ||
-                                e.toString().toLowerCase().contains(
-                                  'introuvable',
-                                )) {
-                              setDialogState(() {
-                                isLogin = false;
-                                dialogLoading = false;
-                              });
-                              return;
-                            }
-                            rethrow;
-                          }
-                        } else {
-                          await AuthService.registerUser(
-                            fullName:
-                                "Client ${phoneController.text.substring(phoneController.text.length > 4 ? phoneController.text.length - 4 : 0)}",
-                            phoneNumber: phoneController.text,
-                            password: passwordController.text,
-                          );
-                          result = await AuthService.loginUser(
-                            phoneNumber: phoneController.text,
-                            password: passwordController.text,
-                          );
-                        }
-
-                        final prefs = await SharedPreferences.getInstance();
-                        await prefs.setString('jwt_token', result['token']);
-
-                        await _checkCurrentUser();
-                        if (mounted) {
-                          Navigator.pop(context);
-                          _submitBooking(); // Try booking again
-                        }
-                      } catch (e) {
+                      if (phoneController.text.trim().length != 8) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(e.toString()),
+                          const SnackBar(
+                            content: Text(
+                              "Le numéro doit comporter 8 chiffres",
+                            ),
                             backgroundColor: Colors.red,
                           ),
                         );
-                      } finally {
-                        setDialogState(() => dialogLoading = false);
+                        return;
+                      }
+
+                      if (!isPhoneChecked || !phoneExists) {
+                        // Étape 1 : Vérifier si le numéro existe
+                        setDialogState(() => dialogLoading = true);
+                        try {
+                          final exists = await AuthService.checkPhone(
+                            phoneController.text,
+                          );
+
+                          if (exists) {
+                            // Demander le mot de passe
+                            setDialogState(() {
+                              isPhoneChecked = true;
+                              phoneExists = true;
+                              dialogLoading = false;
+                            });
+                          } else {
+                            // Création automatique si le numéro n'existe pas
+                            final phone = phoneController.text;
+                            final generatedName =
+                                "Client ${phone.substring(phone.length > 4 ? phone.length - 4 : 0)}";
+
+                            await AuthService.registerUser(
+                              fullName: generatedName,
+                              phoneNumber: phone,
+                              password:
+                                  phone, // Mot de passe = numéro par défaut
+                            );
+
+                            final result = await AuthService.loginUser(
+                              phoneNumber: phone,
+                              password: phone,
+                            );
+
+                            final prefs = await SharedPreferences.getInstance();
+                            await prefs.setString(
+                              'jwt_token',
+                              result['data']['token'],
+                            );
+
+                            await _checkCurrentUser();
+                            if (mounted) {
+                              Navigator.pop(context);
+                              _submitBooking();
+                            }
+                          }
+                        } catch (e) {
+                          setDialogState(() => dialogLoading = false);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                e.toString().replaceAll('Exception: ', ''),
+                              ),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      } else {
+                        // Étape 2 : L'utilisateur existe, on tente de se connecter
+                        if (passwordController.text.length < 6) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                "Le mot de passe doit comporter au moins 6 caractères",
+                              ),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                          return;
+                        }
+
+                        setDialogState(() => dialogLoading = true);
+                        try {
+                          final result = await AuthService.loginUser(
+                            phoneNumber: phoneController.text,
+                            password: passwordController.text,
+                          );
+
+                          final prefs = await SharedPreferences.getInstance();
+                          await prefs.setString(
+                            'jwt_token',
+                            result['data']['token'],
+                          );
+
+                          await _checkCurrentUser();
+                          if (mounted) {
+                            Navigator.pop(context);
+                            _submitBooking();
+                          }
+                        } catch (e) {
+                          setDialogState(() => dialogLoading = false);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                e.toString().replaceAll('Exception: ', ''),
+                              ),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
                       }
                     },
               child: dialogLoading
@@ -368,9 +416,9 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                       ),
                     )
                   : Text(
-                      isLogin
+                      (isPhoneChecked && phoneExists)
                           ? tr(context, 'login')
-                          : tr(context, 'create_account'),
+                          : tr(context, 'next'),
                     ),
             ),
           ],

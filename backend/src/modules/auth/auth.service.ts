@@ -121,3 +121,10 @@ export const updateProfile = async (userId: number, data: { fullName?: string; p
         return updatedProfile;
     });
 };
+
+export const checkPhoneExists = async (phoneNumber: string) => {
+    const user = await prisma.user.findUnique({
+        where: { phoneNumber }
+    });
+    return !!user;
+};
