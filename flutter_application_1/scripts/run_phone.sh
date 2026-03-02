@@ -6,6 +6,16 @@ REAL_DEVICE=false
 WIFI_DEVICE=false
 DEVICE_ID=""
 WIFI_CONNECT=""
+SKIP_BACKEND_CHECK=false
+
+check_local_backend() {
+  if command -v curl >/dev/null 2>&1; then
+    if ! curl -fsS --max-time 2 "http://127.0.0.1:${PORT}/" >/dev/null; then
+      echo "Warning: backend does not seem reachable at http://127.0.0.1:${PORT}." >&2
+      echo "Start backend before running the app to avoid 'Connection refused'." >&2
+    fi
+  fi
+}
 
 show_help() {
   cat <<'EOT'
@@ -19,6 +29,7 @@ Options:
                         Run adb connect before flutter run (default port: 5555 if omitted).
   --device-id <id>      Explicit Flutter device id to run on.
   --port <port>         Backend API port (default: 3000).
+  --skip-backend-check  Skip local backend reachability check before flutter run.
   --help                Show this message.
 EOT
 }
@@ -57,6 +68,10 @@ while [[ $# -gt 0 ]]; do
       PORT="${2:-3000}"
       shift 2
       ;;
+    --skip-backend-check)
+      SKIP_BACKEND_CHECK=true
+      shift
+      ;;
     --help)
       show_help
       exit 0
@@ -87,7 +102,14 @@ if [[ "${REAL_DEVICE}" == "true" ]]; then
     fi
 
     echo "USB device detected (${DEVICE_ID}). Setting adb reverse tcp:${PORT} -> tcp:${PORT}"
-    adb reverse "tcp:${PORT}" "tcp:${PORT}" || true
+    if ! adb reverse "tcp:${PORT}" "tcp:${PORT}"; then
+      echo "Error: failed to set adb reverse for port ${PORT}." >&2
+      exit 1
+    fi
+
+    if [[ "${SKIP_BACKEND_CHECK}" != "true" ]]; then
+      check_local_backend
+    fi
 
     FLUTTER_CMD=(flutter run --dart-define="REAL_DEVICE=true")
     if [[ -n "${DEVICE_ID}" ]]; then
