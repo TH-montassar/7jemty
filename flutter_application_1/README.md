@@ -34,9 +34,11 @@ flutter run --dart-define=API_BASE_URL=http://192.168.1.100:3000
 ```bash
 cd flutter_application_1
 ./scripts/run_phone.sh --real-device --port 3000
+# or
+./scripts/run_phone.sh --usb-only --port 3000
 ```
 
-This first tries USB (`adb reverse`) and `REAL_DEVICE=true`. If no USB device is detected, it automatically falls back to Wi‑Fi/LAN mode (so your same command still works).
+This runs USB only (`adb reverse`) with `REAL_DEVICE=true`. If no USB device is detected, the script exits with an error (no Wi‑Fi fallback).
 
 2. **Wi-Fi mode (same network)**
 
@@ -67,5 +69,15 @@ Or force an exact target:
 ```bash
 ./scripts/run_phone.sh --device-id 192.168.1.35:38899 --port 3000
 ```
+
+### Troubleshooting (USB mode)
+
+If you see errors like `Connection refused` to `http://127.0.0.1:3000`:
+
+1. Start backend on your computer first (port `3000`).
+2. Check USB device is visible: `adb devices`.
+3. Check reverse is active: `adb reverse --list` (should include `tcp:3000 tcp:3000`).
+4. Re-run: `./scripts/run_phone.sh --usb-only --port 3000`.
+
 
 # 7jemty
