@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
-import 'dart:io' show Platform;
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../config/api_config.dart';
 
 class ProgressMultipartRequest extends http.MultipartRequest {
   final void Function(int bytes, int total) onProgress;
@@ -28,18 +29,7 @@ class ProgressMultipartRequest extends http.MultipartRequest {
 }
 
 class AuthService {
-  static String get baseUrl {
-    if (kIsWeb) {
-      // كان تخدم على Chrome (Web)
-      return 'http://localhost:3000/api/auth';
-    } else if (Platform.isAndroid) {
-      // كان تخدم على Android Emulator
-      return 'http://10.0.2.2:3000/api/auth';
-    } else {
-      // كان تخدم على iOS Simulator
-      return 'http://localhost:3000/api/auth';
-    }
-  }
+  static String get baseUrl => ApiConfig.endpoint('/api/auth');
 
   static Future<Map<String, dynamic>> getMe() async {
     try {

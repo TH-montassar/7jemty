@@ -1,20 +1,12 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart'; // 👈 Bech na3rfou kIsWeb
-import 'dart:io' show Platform;
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart'; // 👈 Bech njibou l'Token
 
+import '../config/api_config.dart';
+
 class SalonService {
   // 🧩 L'IP e-thkiya kima fel AuthService
-  static String get baseUrl {
-    if (kIsWeb) {
-      return 'http://localhost:3000/api/salon';
-    } else if (Platform.isAndroid) {
-      return 'http://10.0.2.2:3000/api/salon';
-    } else {
-      return 'http://localhost:3000/api/salon';
-    }
-  }
+  static String get baseUrl => ApiConfig.endpoint('/api/salon');
 
   static Future<Map<String, dynamic>> createSalon({
     required String name,
