@@ -1,19 +1,11 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
-import 'dart:io' show Platform;
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../config/api_config.dart';
+
 class AppointmentService {
-  static String get baseUrl {
-    if (kIsWeb) {
-      return 'http://localhost:3000/api/appointment';
-    } else if (Platform.isAndroid) {
-      return 'http://10.0.2.2:3000/api/appointment';
-    } else {
-      return 'http://localhost:3000/api/appointment';
-    }
-  }
+  static String get baseUrl => ApiConfig.endpoint('/api/appointment');
 
   // Changer le statut (CONFIRMED, DECLINED, COMPLETED, CANCELLED, IN_PROGRESS, STARTED)
   static Future<Map<String, dynamic>> updateStatus({
