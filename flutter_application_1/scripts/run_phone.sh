@@ -133,6 +133,40 @@ if [[ "${WIFI_DEVICE}" == "true" && -z "${DEVICE_ID}" ]]; then
   fi
 fi
 
+if [[ -n "${WIFI_CONNECT}" ]]; then
+  if ! command -v adb >/dev/null 2>&1; then
+    echo "Error: adb is required for --wifi-connect." >&2
+    exit 1
+  fi
+
+  if [[ "${WIFI_CONNECT}" != *:* ]]; then
+    WIFI_CONNECT="${WIFI_CONNECT}:5555"
+  fi
+
+  echo "Trying adb connect ${WIFI_CONNECT}"
+  adb connect "${WIFI_CONNECT}" || true
+
+  if [[ -z "${DEVICE_ID}" ]]; then
+    DEVICE_ID="${WIFI_CONNECT}"
+  fi
+
+  WIFI_DEVICE=true
+fi
+
+if [[ "${WIFI_DEVICE}" == "true" && -z "${DEVICE_ID}" ]]; then
+  if command -v adb >/dev/null 2>&1; then
+    WIFI_ADB_DEVICE="$(adb devices | awk '/^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:[0-9]+[[:space:]]+device$/ {print $1; exit}')"
+    if [[ -n "${WIFI_ADB_DEVICE}" ]]; then
+      DEVICE_ID="${WIFI_ADB_DEVICE}"
+      echo "Using Wi-Fi device from adb: ${DEVICE_ID}"
+    else
+      echo "Warning: no adb Wi-Fi device found. If needed, run with --wifi-connect <phone_ip[:port]>." >&2
+    fi
+  else
+    echo "Warning: adb not found; cannot auto-select Wi-Fi Android device." >&2
+  fi
+fi
+
 # Wi-Fi mode: auto-detect primary LAN IPv4 and pass API_BASE_URL.
 HOST_IP="$(hostname -I 2>/dev/null | awk '{print $1}')"
 if [[ -z "${HOST_IP}" ]]; then
