@@ -47,3 +47,17 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
         res.status(400).json({ success: false, message: error.message });
     }
 };
+
+export const checkPhone = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { phoneNumber } = req.body;
+        if (!phoneNumber) {
+            res.status(400).json({ success: false, message: 'Le numéro de téléphone est requis' });
+            return;
+        }
+        const exists = await authService.checkPhoneExists(phoneNumber);
+        res.status(200).json({ success: true, exists });
+    } catch (error: any) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
