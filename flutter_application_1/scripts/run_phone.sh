@@ -5,18 +5,21 @@ PORT=3000
 REAL_DEVICE=false
 WIFI_DEVICE=false
 DEVICE_ID=""
+WIFI_CONNECT=""
 
 show_help() {
-  cat <<'EOF'
+  cat <<'EOT'
 Usage: ./scripts/run_phone.sh [options] [-- flutter_run_args]
 
 Options:
-  --real-device      Run with REAL_DEVICE=true and try adb reverse.
-  --wifi-device      Prefer an Android device connected with wireless debugging (adb over Wi-Fi).
-  --device-id <id>   Explicit Flutter device id to run on.
-  --port <port>      Backend API port (default: 3000).
-  --help             Show this message.
-EOF
+  --real-device         Run with REAL_DEVICE=true and try adb reverse.
+  --wifi-device         Prefer an Android device connected with wireless debugging (adb over Wi-Fi).
+  --wifi-connect <ip[:port]>
+                        Run adb connect before flutter run (default port: 5555 if omitted).
+  --device-id <id>      Explicit Flutter device id to run on.
+  --port <port>         Backend API port (default: 3000).
+  --help                Show this message.
+EOT
 }
 
 while [[ $# -gt 0 ]]; do
@@ -28,6 +31,14 @@ while [[ $# -gt 0 ]]; do
     --wifi-device)
       WIFI_DEVICE=true
       shift
+      ;;
+    --wifi-connect)
+      WIFI_CONNECT="${2:-}"
+      if [[ -z "${WIFI_CONNECT}" ]]; then
+        echo "Error: --wifi-connect requires an IP (optionally with :port)." >&2
+        exit 1
+      fi
+      shift 2
       ;;
     --device-id)
       DEVICE_ID="${2:-}"
@@ -69,6 +80,26 @@ if [[ "${REAL_DEVICE}" == "true" ]]; then
   exit 0
 fi
 
+if [[ -n "${WIFI_CONNECT}" ]]; then
+  if ! command -v adb >/dev/null 2>&1; then
+    echo "Error: adb is required for --wifi-connect." >&2
+    exit 1
+  fi
+
+  if [[ "${WIFI_CONNECT}" != *:* ]]; then
+    WIFI_CONNECT="${WIFI_CONNECT}:5555"
+  fi
+
+  echo "Trying adb connect ${WIFI_CONNECT}"
+  adb connect "${WIFI_CONNECT}" || true
+
+  if [[ -z "${DEVICE_ID}" ]]; then
+    DEVICE_ID="${WIFI_CONNECT}"
+  fi
+
+  WIFI_DEVICE=true
+fi
+
 if [[ "${WIFI_DEVICE}" == "true" && -z "${DEVICE_ID}" ]]; then
   if command -v adb >/dev/null 2>&1; then
     WIFI_ADB_DEVICE="$(adb devices | awk '/^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:[0-9]+[[:space:]]+device$/ {print $1; exit}')"
@@ -76,7 +107,7 @@ if [[ "${WIFI_DEVICE}" == "true" && -z "${DEVICE_ID}" ]]; then
       DEVICE_ID="${WIFI_ADB_DEVICE}"
       echo "Using Wi-Fi device from adb: ${DEVICE_ID}"
     else
-      echo "Warning: no adb Wi-Fi device found. Falling back to default Flutter device." >&2
+      echo "Warning: no adb Wi-Fi device found. If needed, run with --wifi-connect <phone_ip[:port]>." >&2
     fi
   else
     echo "Warning: adb not found; cannot auto-select Wi-Fi Android device." >&2
@@ -100,7 +131,7 @@ echo "Using API_BASE_URL=${API_BASE_URL}"
 
 FLUTTER_CMD=(flutter run --dart-define="API_BASE_URL=${API_BASE_URL}")
 if [[ -n "${DEVICE_ID}" ]]; then
-  FLUTTER_CMD+=( -d "${DEVICE_ID}" )
+  FLUTTER_CMD+=(-d "${DEVICE_ID}")
 fi
 FLUTTER_CMD+=("$@")
 
