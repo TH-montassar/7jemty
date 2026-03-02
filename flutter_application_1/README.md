@@ -79,5 +79,11 @@ If you see errors like `Connection refused` to `http://127.0.0.1:3000`:
 3. Check reverse is active: `adb reverse --list` (should include `tcp:3000 tcp:3000`).
 4. Re-run: `./scripts/run_phone.sh --usb-only --port 3000`.
 
+If your phone is **not** connected by USB reverse, do **not** use `REAL_DEVICE=true` / `--real-device`; use Wi-Fi mode so the app targets your PC LAN IP instead:
+
+```bash
+./scripts/run_phone.sh --port 3000
+```
+
 
 # 7jemty
