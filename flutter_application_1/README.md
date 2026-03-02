@@ -36,7 +36,7 @@ cd flutter_application_1
 ./scripts/run_phone.sh --real-device --port 3000
 ```
 
-This will try `adb reverse tcp:3000 tcp:3000` and run with `REAL_DEVICE=true`.
+This first tries USB (`adb reverse`) and `REAL_DEVICE=true`. If no USB device is detected, it automatically falls back to Wi‑Fi/LAN mode (so your same command still works).
 
 2. **Wi-Fi mode (same network)**
 
