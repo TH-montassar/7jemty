@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:hjamty/features/client_space/home/presentation/widgets/top_rated_list.dart';
 import '../../../../../core/constants/app_colors.dart';
@@ -23,11 +24,49 @@ class _ClientHomePageState extends State<ClientHomePage> {
   bool _isLoading = true;
   String _clientName = "Client";
   Map<String, dynamic>? _nextAppointment;
+  Timer? _pollingTimer;
 
   @override
   void initState() {
     super.initState();
     _checkLoginStatus();
+    _startPolling();
+  }
+
+  @override
+  void dispose() {
+    _pollingTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startPolling() {
+    _pollingTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+      _fetchAppointmentsSilent();
+    });
+  }
+
+  Future<void> _fetchAppointmentsSilent() async {
+    if (!_isLoggedIn) return;
+
+    try {
+      final appointments = await AppointmentService.getClientAppointments();
+
+      Map<String, dynamic>? upcoming;
+      for (var appt in appointments) {
+        if (appt['status'] == 'CONFIRMED') {
+          upcoming = appt;
+          break;
+        }
+      }
+
+      if (mounted) {
+        setState(() {
+          _nextAppointment = upcoming;
+        });
+      }
+    } catch (e) {
+      // Ignore errors during silent background fetch
+    }
   }
 
   Future<void> _checkLoginStatus() async {

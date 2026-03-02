@@ -893,7 +893,26 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
           );
         }
 
-        final appointments = snapshot.data ?? [];
+        final appointments = List<dynamic>.from(snapshot.data ?? []);
+        appointments.sort((a, b) {
+          int getPriority(String? s) {
+            final st = (s ?? '').toUpperCase();
+            if (st == 'CONFIRMED' || st == 'IN_PROGRESS' || st == 'ARRIVED')
+              return 1;
+            if (st == 'PENDING') return 2;
+            return 3;
+          }
+
+          final pA = getPriority(a['status']);
+          final pB = getPriority(b['status']);
+          if (pA != pB) return pA.compareTo(pB);
+
+          final dateA =
+              DateTime.tryParse(a['appointmentDate'] ?? '') ?? DateTime.now();
+          final dateB =
+              DateTime.tryParse(b['appointmentDate'] ?? '') ?? DateTime.now();
+          return dateA.compareTo(dateB);
+        });
 
         if (appointments.isEmpty) {
           return Center(
