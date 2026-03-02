@@ -13,8 +13,11 @@ check_local_backend() {
     if ! curl -fsS --max-time 2 "http://127.0.0.1:${PORT}/" >/dev/null; then
       echo "Warning: backend does not seem reachable at http://127.0.0.1:${PORT}." >&2
       echo "Start backend before running the app to avoid 'Connection refused'." >&2
+      return 1
     fi
   fi
+
+  return 0
 }
 
 show_help() {
@@ -108,7 +111,11 @@ if [[ "${REAL_DEVICE}" == "true" ]]; then
     fi
 
     if [[ "${SKIP_BACKEND_CHECK}" != "true" ]]; then
-      check_local_backend
+      if ! check_local_backend; then
+        echo "Error: USB reverse mode needs a running local backend on port ${PORT}." >&2
+        echo "Hint: if your phone reaches backend over Wi-Fi/LAN, run without --real-device." >&2
+        exit 1
+      fi
     fi
 
     FLUTTER_CMD=(flutter run --dart-define="REAL_DEVICE=true")
