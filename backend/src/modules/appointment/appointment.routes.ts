@@ -8,7 +8,7 @@ const router = Router();
 router.patch('/:id/status', protect, updateStatus);
 
 // Endpoint pour vérifier les disponibilités
-router.get('/availability', protect, getAvailability);
+router.get('/availability', getAvailability);
 
 // Endpoint pour créer une réservation côté client
 router.post('/', protect, createAppointment);

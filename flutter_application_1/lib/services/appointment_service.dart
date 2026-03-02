@@ -147,10 +147,6 @@ class AppointmentService {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('jwt_token');
 
-    if (token == null) {
-      throw Exception('Rak mouch connecté!');
-    }
-
     final queryParams = {'salonId': salonId.toString(), 'date': date};
 
     if (barberId != null) {
@@ -169,7 +165,7 @@ class AppointmentService {
       uri,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token',
+        if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
       },
     );
 

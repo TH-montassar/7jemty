@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:toastification/toastification.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/localization/translation_service.dart';
 import '../../../../../services/salon_service.dart';
 import '../../../../../services/appointment_service.dart';
+import '../../../../../services/auth_service.dart';
 
 class BookingFlowScreen extends StatefulWidget {
   final int salonId;
@@ -20,6 +23,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
   bool _isCheckingAvailability = false;
   bool _isSubmitting = false;
   String _salonName = "";
+  Map<String, dynamic>? _currentUser;
 
   // Data from API
   List<dynamic> _services = [];
@@ -51,7 +55,25 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
     );
     _dateScrollController = ScrollController();
 
+    _checkCurrentUser();
     _fetchSalonDetails();
+  }
+
+  Future<void> _checkCurrentUser() async {
+    try {
+      final userData = await AuthService.getMe();
+      if (mounted) {
+        setState(() {
+          _currentUser = userData;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _currentUser = null;
+        });
+      }
+    }
   }
 
   @override
@@ -161,6 +183,11 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
       return;
     }
 
+    if (_currentUser == null) {
+      _showGuestAuthDialog();
+      return;
+    }
+
     setState(() => _isSubmitting = true);
 
     try {
@@ -214,6 +241,142 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
         );
       }
     }
+  }
+
+  void _showGuestAuthDialog() {
+    final phoneController = TextEditingController();
+    final passwordController = TextEditingController();
+    bool isLogin = true;
+    bool dialogLoading = false;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Text(tr(context, 'login_to_book')),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: phoneController,
+                keyboardType: TextInputType.phone,
+                decoration: InputDecoration(
+                  labelText: tr(context, 'phone_number'),
+                  prefixIcon: const Icon(Icons.phone),
+                ),
+              ),
+              const SizedBox(height: 15),
+              TextField(
+                controller: passwordController,
+                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: tr(context, 'password'),
+                  helperText: !isLogin
+                      ? tr(context, 'guest_password_hint')
+                      : null,
+                  prefixIcon: const Icon(Icons.lock),
+                ),
+              ),
+              if (!isLogin) ...[
+                const SizedBox(height: 10),
+                Text(
+                  tr(context, 'auto_account_creation_info'),
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: dialogLoading ? null : () => Navigator.pop(context),
+              child: Text(tr(context, 'cancel')),
+            ),
+            ElevatedButton(
+              onPressed: dialogLoading
+                  ? null
+                  : () async {
+                      if (phoneController.text.isEmpty ||
+                          passwordController.text.isEmpty) {
+                        return;
+                      }
+
+                      setDialogState(() => dialogLoading = true);
+                      try {
+                        Map<String, dynamic> result;
+                        if (isLogin) {
+                          try {
+                            result = await AuthService.loginUser(
+                              phoneNumber: phoneController.text,
+                              password: passwordController.text,
+                            );
+                          } catch (e) {
+                            if (e.toString().contains('not found') ||
+                                e.toString().toLowerCase().contains(
+                                  'introuvable',
+                                )) {
+                              setDialogState(() {
+                                isLogin = false;
+                                dialogLoading = false;
+                              });
+                              return;
+                            }
+                            rethrow;
+                          }
+                        } else {
+                          await AuthService.registerUser(
+                            fullName:
+                                "Client ${phoneController.text.substring(phoneController.text.length > 4 ? phoneController.text.length - 4 : 0)}",
+                            phoneNumber: phoneController.text,
+                            password: passwordController.text,
+                          );
+                          result = await AuthService.loginUser(
+                            phoneNumber: phoneController.text,
+                            password: passwordController.text,
+                          );
+                        }
+
+                        final prefs = await SharedPreferences.getInstance();
+                        await prefs.setString('jwt_token', result['token']);
+
+                        await _checkCurrentUser();
+                        if (mounted) {
+                          Navigator.pop(context);
+                          _submitBooking(); // Try booking again
+                        }
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(e.toString()),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      } finally {
+                        setDialogState(() => dialogLoading = false);
+                      }
+                    },
+              child: dialogLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Text(
+                      isLogin
+                          ? tr(context, 'login')
+                          : tr(context, 'create_account'),
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   double get _totalPrice {
