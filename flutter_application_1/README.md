@@ -36,7 +36,7 @@ cd flutter_application_1
 ./scripts/run_phone.sh --real-device --port 3000
 ```
 
-This will try `adb reverse tcp:3000 tcp:3000` and run with `REAL_DEVICE=true`.
+This first tries USB (`adb reverse`) and `REAL_DEVICE=true`. If no USB device is detected, it automatically falls back to Wi‑Fi/LAN mode (so your same command still works).
 
 2. **Wi-Fi mode (same network)**
 
@@ -46,5 +46,26 @@ cd flutter_application_1
 ```
 
 This auto-detects your LAN IP and runs Flutter with `API_BASE_URL=http://<LAN_IP>:3000`.
+
+3. **Run on a phone over Wi-Fi (without keeping USB plugged)**
+
+```bash
+cd flutter_application_1
+./scripts/run_phone.sh --wifi-connect 192.168.1.35:38899 --port 3000
+```
+
+- `--wifi-connect` runs `adb connect` first, then targets that phone directly.
+- If your port is omitted, it defaults to `5555` (example: `--wifi-connect 192.168.1.35`).
+- If already connected from Android Wireless Debugging, you can still use:
+
+```bash
+./scripts/run_phone.sh --wifi-device --port 3000
+```
+
+Or force an exact target:
+
+```bash
+./scripts/run_phone.sh --device-id 192.168.1.35:38899 --port 3000
+```
 
 # 7jemty
