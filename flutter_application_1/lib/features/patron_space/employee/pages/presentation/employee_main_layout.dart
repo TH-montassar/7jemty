@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../client_space/profile/presentation/pages/profile_page.dart';
+import '../../../../../core/widgets/notification_bell.dart';
 import 'employee_agenda_page.dart';
 
 class EmployeeMainLayout extends StatefulWidget {
@@ -51,16 +52,9 @@ class _EmployeeMainLayoutState extends State<EmployeeMainLayout> {
             child: CircleAvatar(
               backgroundColor: AppColors.primaryBlue.withOpacity(0.1),
               radius: 15,
-              child: IconButton(
-                padding: EdgeInsets.zero,
-                onPressed: () {
-                  // TODO: Implement notifications list
-                },
-                icon: const Icon(
-                  Icons.notifications_outlined,
-                  color: AppColors.primaryBlue,
-                  size: 20,
-                ),
+              child: const NotificationBell(
+                iconColor: AppColors.primaryBlue,
+                badgeColor: AppColors.actionRed,
               ),
             ),
           ),

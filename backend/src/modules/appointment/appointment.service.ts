@@ -1,4 +1,5 @@
 import { prisma } from '../../lib/db.js';
+import { sendNotification } from '../notifications/notifications.service.js';
 
 type UserRole = 'CLIENT' | 'EMPLOYEE' | 'PATRON' | 'ADMIN';
 type AppointmentStatusInput = 'PENDING' | 'CONFIRMED' | 'IN_PROGRESS' | 'ARRIVED' | 'COMPLETED' | 'CANCELLED' | 'DECLINED';
@@ -14,8 +15,31 @@ type NotifyPayload = {
 const ACTIVE_APPOINTMENT_STATUSES: AppointmentStatusInput[] = ['PENDING', 'CONFIRMED', 'IN_PROGRESS', 'ARRIVED'];
 
 const notifyUsers = async (_payload: NotifyPayload) => {
-    // TODO: brancher avec FCM/OneSignal provider.
-    return;
+    try {
+        const users = await prisma.user.findMany({
+            where: { id: { in: _payload.userIds } },
+            include: { profile: true }
+        });
+
+        for (const user of users) {
+            // 1. Create a persistent DB record
+            await prisma.notification.create({
+                data: {
+                    userId: user.id,
+                    title: _payload.title,
+                    body: _payload.body,
+                }
+            });
+
+            // 2. Transmit the physical Push Notification
+            const token = user.profile?.fcmToken;
+            if (token) {
+                await sendNotification(token, _payload.title, _payload.body, { appointmentId: _payload.appointmentId.toString() });
+            }
+        }
+    } catch (e) {
+        console.error("Failed to notify users via FCM:", e);
+    }
 };
 
 export const updateAppointmentStatus = async (
@@ -389,11 +413,22 @@ const emitStatusNotifications = async (
     }
 
     if (status === 'CANCELLED') {
-        const recipients = [clientId, barberId ?? patronId].filter((id, idx, arr): id is number => arr.indexOf(id) === idx);
+        const potentialRecipients = [clientId, barberId, patronId];
+        const recipients = potentialRecipients.filter((id, idx, arr): id is number => Boolean(id) && arr.indexOf(id) === idx);
+
         await notifyUsers({
             title: 'Rendez-vous annulé',
             body: 'Une modification a été effectuée sur le rendez-vous.',
             userIds: recipients,
+            appointmentId
+        });
+    }
+
+    if (status === 'DECLINED') {
+        await notifyUsers({
+            title: 'Rendez-vous refusé',
+            body: 'Malheureusement, le salon a refusé ce créneau. Veuillez en choisir un autre.',
+            userIds: [clientId],
             appointmentId
         });
     }

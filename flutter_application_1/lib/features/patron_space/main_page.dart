@@ -6,6 +6,7 @@ import 'salon_dashboard_screen.dart';
 import '../client_space/profile/presentation/pages/profile_page.dart';
 import '../../services/auth_service.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/widgets/notification_bell.dart';
 
 class MainPage extends StatefulWidget {
   final int initialIndex;
@@ -100,16 +101,9 @@ class _MainPageState extends State<MainPage> {
                       CircleAvatar(
                         backgroundColor: AppColors.primaryBlue.withOpacity(0.1),
                         radius: 15,
-                        child: IconButton(
-                          padding: EdgeInsets.zero,
-                          onPressed: () {
-                            // TODO: Implement notifications list
-                          },
-                          icon: const Icon(
-                            Icons.notifications_outlined,
-                            color: AppColors.primaryBlue,
-                            size: 20,
-                          ),
+                        child: const NotificationBell(
+                          iconColor: AppColors.primaryBlue,
+                          badgeColor: AppColors.actionRed,
                         ),
                       ),
                     ],

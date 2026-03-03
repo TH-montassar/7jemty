@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "832805495227",
+    "project_id": "hjamty",
+    "storage_bucket": "hjamty.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:832805495227:android:09469a635e89fb25a3a49e",
+        "android_client_info": {
+          "package_name": "com.example.hjamty"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDmJv0qKrf-AQCGd6xY0Badttwi745tg3Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

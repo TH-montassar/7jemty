@@ -12,6 +12,7 @@ import 'create_salon_screen.dart';
 import '../client_space/salon_profile/presentation/widgets/sticky_tab_bar_delegate.dart';
 import 'package:toastification/toastification.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../core/widgets/notification_bell.dart';
 
 class SalonDashboardScreen extends StatefulWidget {
   final bool isPatron;
@@ -199,6 +200,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                 elevation: 0,
                 iconTheme: const IconThemeData(color: Colors.white),
                 actions: [
+                  if (widget.isPatron) const NotificationBell(),
                   if (widget.isPatron)
                     IconButton(
                       icon: const Icon(Icons.settings, color: Colors.white),

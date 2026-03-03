@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/localization/translation_service.dart';
 import '../../../../client_space/search/presentation/pages/search_page.dart';
+import '../../../../../core/widgets/notification_bell.dart';
 
 class ClientHeaderSection extends StatelessWidget {
   final String userName;
@@ -35,37 +36,7 @@ class ClientHeaderSection extends StatelessWidget {
                 ),
               ),
               // 🔔 أيقونة الإشعارات مع النقطة الحمراء (Badge)
-              IconButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text("Ouverture des notifications... 🔔"),
-                    ),
-                  );
-                },
-                icon: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    const Icon(
-                      Icons.notifications_none,
-                      color: Colors.white,
-                      size: 28,
-                    ),
-                    Positioned(
-                      right: 2,
-                      top: 2,
-                      child: Container(
-                        width: 10,
-                        height: 10,
-                        decoration: const BoxDecoration(
-                          color: AppColors.actionRed, // لون النقطة أحمر
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              const NotificationBell(),
             ],
           ),
           const SizedBox(height: 20),
