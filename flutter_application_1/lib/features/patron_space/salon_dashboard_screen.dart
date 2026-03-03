@@ -954,14 +954,33 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                 : '';
 
             String countdownText = "";
+            bool isTimeReached = false;
             if (aptDate != null &&
-                (status == 'CONFIRMED' || status == 'PENDING')) {
-              final date = DateTime.parse(aptDate).toLocal();
-              final now = DateTime.now();
-              final difference = date.difference(now);
+                (status == 'CONFIRMED' ||
+                    status == 'PENDING' ||
+                    status == 'IN_PROGRESS')) {
+              DateTime targetDate;
+              if (status == 'IN_PROGRESS' && apt['estimatedEndTime'] != null) {
+                targetDate = DateTime.parse(apt['estimatedEndTime']).toLocal();
+              } else {
+                targetDate = DateTime.parse(aptDate).toLocal();
+              }
 
-              if (difference.isNegative) {
-                countdownText = "L'wa9t r7el";
+              final now = DateTime.now();
+              final difference = targetDate.difference(now);
+
+              if (difference.isNegative || difference.inSeconds <= 0) {
+                isTimeReached = true;
+                countdownText = status == 'IN_PROGRESS'
+                    ? "L'wa9t wfa!"
+                    : "L'wa9t r7el";
+              } else if (difference.inHours == 1 &&
+                  difference.inMinutes % 60 == 0 &&
+                  status != 'IN_PROGRESS') {
+                countdownText = "Mzel 1h";
+              } else if (difference.inMinutes == 15 &&
+                  status != 'IN_PROGRESS') {
+                countdownText = "Mzel 15mn";
               } else if (difference.inHours > 0) {
                 countdownText =
                     "Mazal ${difference.inHours}h ${difference.inMinutes % 60}min";
@@ -1125,7 +1144,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                           ),
                         ],
                       ),
-                    ] else if (status == 'CONFIRMED') ...[
+                    ] else if (status == 'CONFIRMED' && isTimeReached) ...[
                       const SizedBox(height: 16),
                       SizedBox(
                         width: double.infinity,

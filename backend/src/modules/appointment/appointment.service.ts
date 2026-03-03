@@ -569,9 +569,83 @@ export const getEmployeeAppointments = async (employeeId: number) => {
     return prisma.appointment.findMany({
         where: { barberId: employeeId },
         include: {
-            client: { select: { fullName: true, phoneNumber: true, profile: { select: { avatarUrl: true } } } },
+            client: { select: { id: true, fullName: true, phoneNumber: true } },
+            services: { include: { service: true } },
+            salon: { select: { name: true, address: true } }
+        },
+        orderBy: { appointmentDate: 'desc' },
+        take: 50
+    });
+};
+
+export const extendAppointment = async (appointmentId: number, minutes: number, userId: number, role: 'PATRON' | 'EMPLOYEE') => {
+    const appointment = await prisma.appointment.findUnique({
+        where: { id: appointmentId },
+        include: { salon: true }
+    });
+
+    if (!appointment) throw new Error("Rendez-vous moch mawjoud");
+
+    if (role === 'EMPLOYEE' && appointment.barberId !== userId) {
+        throw new Error("Non autorisé bch tzid wa9t");
+    }
+    if (role === 'PATRON' && appointment.salon.patronId !== userId) {
+        throw new Error("Non autorisé bch tzid wa9t");
+    }
+
+    if (appointment.status !== 'IN_PROGRESS') {
+        throw new Error("Tnajemchi tzid wa9t ken lel maw3ed li en cours");
+    }
+
+    const newEndTime = new Date(appointment.estimatedEndTime.getTime() + minutes * 60000);
+
+    return prisma.appointment.update({
+        where: { id: appointmentId },
+        data: { estimatedEndTime: newEndTime },
+        include: { client: true }
+    });
+};
+
+export const getUnreviewedAppointments = async (clientId: number) => {
+    return prisma.appointment.findMany({
+        where: {
+            clientId,
+            status: 'COMPLETED',
+            review: null
+        },
+        include: {
+            salon: { select: { id: true, name: true, coverImageUrl: true } },
+            barber: { select: { id: true, fullName: true } },
             services: { include: { service: true } }
         },
-        orderBy: { appointmentDate: 'desc' }
+        orderBy: { completedAt: 'desc' }
+    });
+};
+
+export const submitReview = async (appointmentId: number, clientId: number, salonId: number, rating: number, comment?: string) => {
+    const appointment = await prisma.appointment.findUnique({
+        where: { id: appointmentId, clientId, salonId }
+    });
+
+    if (!appointment || appointment.status !== 'COMPLETED') {
+        throw new Error("Rendez-vous ghalet ou mezal makmelch");
+    }
+
+    const existingReview = await prisma.review.findUnique({
+        where: { appointmentId }
+    });
+
+    if (existingReview) {
+        throw new Error("Aatit deja rayek f hal rendez-vous");
+    }
+
+    return prisma.review.create({
+        data: {
+            appointmentId,
+            clientId,
+            salonId,
+            rating,
+            comment: comment || null
+        }
     });
 };

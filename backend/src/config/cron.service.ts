@@ -10,9 +10,9 @@ export const initCronJobs = () => {
             // Get current time normalized to the minute (drop seconds)
             const currentTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes());
 
-            // Add exactly 60 minutes and 30 minutes to check matches
+            // Add exactly 60 minutes and 15 minutes to check matches
             const oneHourFromNow = new Date(currentTime.getTime() + 60 * 60000);
-            const thirtyMinsFromNow = new Date(currentTime.getTime() + 30 * 60000);
+            const fifteenMinsFromNow = new Date(currentTime.getTime() + 15 * 60000);
 
             // Fetch pending or confirmed appointments that haven't naturally completed yet
             const appointments = await prisma.appointment.findMany({
@@ -57,20 +57,23 @@ export const initCronJobs = () => {
                     await prisma.appointment.update({ where: { id: appt.id }, data: { is1hReminderSent: true } });
                 }
 
-                // 2. T - 30 minutes
-                if (normalizedApptTime.getTime() === thirtyMinsFromNow.getTime() && !appt.is10mReminderSent) {
-                    // Re-using the 10m boolean field here for the 30m slot based on the user's logic or we can add a new one.
-                    if (clientToken) await sendNotification(clientToken, "Rendez-vous imminent", "Votre rendez-vous est dans 30 minutes !");
-                    if (barberToken) await sendNotification(barberToken, "Client imminent", `Le rendez-vous avec ${appt.client.fullName} est dans 30 minutes.`);
+                // 2. T - 15 minutes
+                if (normalizedApptTime.getTime() === fifteenMinsFromNow.getTime() && !appt.is10mReminderSent) {
+                    // Re-using the 10m boolean field here since the DB schema dictates it, representing the second reminder
+                    if (clientToken) await sendNotification(clientToken, "Rendez-vous imminent", "Votre rendez-vous est dans 15 minutes !");
+                    if (barberToken) await sendNotification(barberToken, "Client imminent", `Le rendez-vous avec ${appt.client.fullName} est dans 15 minutes.`);
 
                     await prisma.appointment.update({ where: { id: appt.id }, data: { is10mReminderSent: true } });
                 }
 
                 // 3. T = 0 (Appointment Start time)
                 if (normalizedApptTime.getTime() === currentTime.getTime() && appt.status !== 'IN_PROGRESS') {
-                    // Send an alert to the barber asking if the client arrived. They will use the UI to update status.
+                    // Send an alert to the barber asking if the client arrived.
                     if (barberToken) {
                         await sendNotification(barberToken, "Le client est-il là ?", `Il est l'heure du rendez-vous pour ${appt.client.fullName}. Confirmez son arrivée !`);
+                    }
+                    if (clientToken) {
+                        await sendNotification(clientToken, "C'est l'heure !", "Votre rendez-vous commence maintenant.");
                     }
                 }
 

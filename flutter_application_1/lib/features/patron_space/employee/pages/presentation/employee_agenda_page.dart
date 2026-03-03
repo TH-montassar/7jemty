@@ -215,6 +215,7 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
     final status = (apt['status'] as String).toUpperCase();
     final isPending = status == 'PENDING';
     final isConfirmed = status == 'CONFIRMED' || status == 'ACCEPTED';
+    final isInProgress = status == 'IN_PROGRESS';
     final isCompleted = status == 'COMPLETED';
     final isDeclined = status == 'DECLINED' || status == 'CANCELLED';
 
@@ -240,6 +241,9 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
     } else if (isConfirmed) {
       statusColor = AppColors.primaryBlue;
       statusText = "M'akd";
+    } else if (isInProgress) {
+      statusColor = Colors.purple;
+      statusText = "En cours";
     } else if (isCompleted) {
       statusColor = AppColors.successGreen;
       statusText = "Kmal";
@@ -249,13 +253,38 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
     }
 
     String countdownText = "";
-    if (dateStr != null && (isConfirmed || isPending)) {
-      final date = DateTime.parse(dateStr).toLocal();
-      final now = DateTime.now();
-      final difference = date.difference(now);
+    bool isTimeReached = false;
 
-      if (difference.isNegative) {
-        countdownText = "L'wa9t r7el";
+    if (dateStr != null && (isConfirmed || isPending || isInProgress)) {
+      DateTime targetDate;
+      if (isInProgress && apt['estimatedEndTime'] != null) {
+        targetDate = DateTime.parse(apt['estimatedEndTime']).toLocal();
+      } else {
+        targetDate = DateTime.parse(dateStr).toLocal();
+      }
+
+      final now = DateTime.now();
+      final difference = targetDate.difference(now);
+
+      if (difference.isNegative || difference.inSeconds <= 0) {
+        isTimeReached = true;
+        countdownText = isInProgress ? "L'wa9t wfa!" : "L'wa9t r7el";
+
+        // Auto-trigger the completion modal if the time just ran out recently (< 20 seconds) logic.
+        // We do this by checking if difference is between 0 and -20s so it doesn't spam infinitely.
+        if (isInProgress &&
+            difference.inSeconds > -15 &&
+            difference.inSeconds <= 0) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _showCompletionModal(apt['id'], index);
+          });
+        }
+      } else if (difference.inHours == 1 &&
+          difference.inMinutes % 60 == 0 &&
+          !isInProgress) {
+        countdownText = "Mzel 1h";
+      } else if (difference.inMinutes == 15 && !isInProgress) {
+        countdownText = "Mzel 15mn";
       } else if (difference.inHours > 0) {
         countdownText =
             "Mazal ${difference.inHours}h ${difference.inMinutes % 60}min";
@@ -341,7 +370,8 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
             style: const TextStyle(color: Colors.grey, fontSize: 14),
           ),
 
-          if (isPending || isConfirmed) const SizedBox(height: 16),
+          if (isPending || isConfirmed || isInProgress)
+            const SizedBox(height: 16),
 
           if (isPending) // Accept or Decline buttons
             Row(
@@ -381,11 +411,34 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
               ],
             ),
 
-          if (isConfirmed) // Has ended?
+          if (isConfirmed && isTimeReached) // Client arrived?
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: () => _updateStatus(apt['id'], 'COMPLETED', index),
+                onPressed: () => _updateStatus(apt['id'], 'IN_PROGRESS', index),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.purple,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                icon: const Icon(Icons.person_add_alt_1, color: Colors.white),
+                label: const Text(
+                  "Jek l client ?",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+
+          if (isInProgress) // Finished?
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => _showCompletionModal(apt['id'], index),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.successGreen,
                   padding: const EdgeInsets.symmetric(vertical: 12),
@@ -405,6 +458,79 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
             ),
         ],
       ),
+    );
+  }
+
+  void _showCompletionModal(int appointmentId, int index) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                "Kmalt l'hjema ?",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    _updateStatus(appointmentId, 'COMPLETED', index);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.successGreen,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text(
+                    'Kamelt',
+                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () async {
+                    Navigator.pop(ctx);
+                    try {
+                      await AppointmentService.extendAppointment(
+                        appointmentId: appointmentId,
+                        minutes: 15,
+                      );
+                      _fetchAppointments();
+                    } catch (e) {
+                      // Handle error implicitly
+                      _fetchAppointments(); // Refresh anyway just in case
+                    }
+                  },
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text(
+                    'Zidni 15mn',
+                    style: TextStyle(color: AppColors.textDark, fontSize: 16),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

@@ -163,3 +163,96 @@ export const getEmployeeAppointmentsController = async (req: AuthRequest, res: R
         res.status(400).json({ success: false, message: error.message || "Erreur récupération des rdv employé" });
     }
 };
+
+export const extendAppointmentController = async (req: AuthRequest, res: Response) => {
+    try {
+        const appointmentId = parseInt(req.params.id as string);
+        if (isNaN(appointmentId)) {
+            return res.status(400).json({ success: false, message: "ID l'rendez-vous ghalet" });
+        }
+
+        const { extendAppointmentSchema } = await import('./appointment.schema.js');
+        const parsedSchema = extendAppointmentSchema.safeParse(req.body);
+        if (!parsedSchema.success) {
+            return res.status(400).json({ success: false, message: parsedSchema.error?.issues[0]?.message || 'Invalid data' });
+        }
+
+        const userId = req.user?.userId;
+        const role = req.user?.role;
+
+        if (!userId || !role || (role !== 'EMPLOYEE' && role !== 'PATRON')) {
+            return res.status(401).json({ success: false, message: "Non autorisé" });
+        }
+
+        const { extendAppointment } = await import('./appointment.service.js');
+        const updatedAppointment = await extendAppointment(appointmentId, parsedSchema.data.minutes, userId, role as 'PATRON' | 'EMPLOYEE');
+
+        res.status(200).json({
+            success: true,
+            message: "Wa9t tzad b nja7!",
+            data: updatedAppointment
+        });
+    } catch (error: any) {
+        res.status(400).json({ success: false, message: error.message || "Famma mochkla fel tzidyin lwa9t" });
+    }
+};
+
+export const getUnreviewedAppointmentsController = async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = req.user?.userId;
+        const role = req.user?.role;
+
+        if (!userId || role !== 'CLIENT') {
+            return res.status(401).json({ success: false, message: "Non autorisé, client kahaw" });
+        }
+
+        const { getUnreviewedAppointments } = await import('./appointment.service.js');
+        const appointments = await getUnreviewedAppointments(userId);
+
+        res.status(200).json({
+            success: true,
+            data: appointments
+        });
+    } catch (error: any) {
+        res.status(400).json({ success: false, message: error.message || "Erreur récupération des rdv sans avis" });
+    }
+};
+
+export const submitReviewController = async (req: AuthRequest, res: Response) => {
+    try {
+        const appointmentId = parseInt(req.params.id as string);
+        if (isNaN(appointmentId)) {
+            return res.status(400).json({ success: false, message: "ID l'rendez-vous ghalet" });
+        }
+
+        const { submitReviewSchema } = await import('./appointment.schema.js');
+        const parsedSchema = submitReviewSchema.safeParse(req.body);
+        if (!parsedSchema.success) {
+            return res.status(400).json({ success: false, message: parsedSchema.error?.issues[0]?.message || 'Invalid data' });
+        }
+
+        const userId = req.user?.userId;
+        const role = req.user?.role;
+
+        if (!userId || role !== 'CLIENT') {
+            return res.status(401).json({ success: false, message: "Non autorisé, client kahaw tnajjem t9ayem" });
+        }
+
+        const { submitReview } = await import('./appointment.service.js');
+        const review = await submitReview(
+            appointmentId,
+            userId,
+            parsedSchema.data.salonId,
+            parsedSchema.data.rating,
+            parsedSchema.data.comment
+        );
+
+        res.status(201).json({
+            success: true,
+            message: "Avis mte3ek tbaath, y3aychek!",
+            data: review
+        });
+    } catch (error: any) {
+        res.status(400).json({ success: false, message: error.message || "Famma mochkla fel envoyer avis" });
+    }
+};

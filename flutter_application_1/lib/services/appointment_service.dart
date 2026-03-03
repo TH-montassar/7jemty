@@ -207,4 +207,109 @@ class AppointmentService {
       throw Exception(data['message'] ?? 'Erreur création rdv');
     }
   }
+
+  static Future<Map<String, dynamic>> extendAppointment({
+    required int appointmentId,
+    required int minutes,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token');
+
+      if (token == null) {
+        throw Exception('Rak mouch connecté!');
+      }
+
+      final response = await http.patch(
+        Uri.parse('$baseUrl/$appointmentId/extend'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'minutes': minutes}),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return data;
+      } else {
+        throw Exception(
+          data['message'] ?? 'Erreur lors de l\'extension du temps',
+        );
+      }
+    } catch (e) {
+      throw Exception(e.toString().replaceAll('Exception: ', ''));
+    }
+  }
+
+  static Future<List<dynamic>> getUnreviewedAppointments() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('jwt_token');
+
+    if (token == null) {
+      throw Exception('Rak mouch connecté!');
+    }
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/unreviewed'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      return data['data'] ?? [];
+    } else {
+      throw Exception(
+        data['message'] ?? 'Erreur lors de la récupération des rdvs sans avis',
+      );
+    }
+  }
+
+  static Future<Map<String, dynamic>> submitReview({
+    required int appointmentId,
+    required int salonId,
+    required int rating,
+    String? comment,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token');
+
+      if (token == null) {
+        throw Exception('Rak mouch connecté!');
+      }
+
+      final body = {
+        'salonId': salonId,
+        'rating': rating,
+        if (comment != null && comment.isNotEmpty) 'comment': comment,
+      };
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/$appointmentId/review'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(body),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 201) {
+        return data;
+      } else {
+        throw Exception(
+          data['message'] ?? 'Erreur lors de l\'envois de l\'avis',
+        );
+      }
+    } catch (e) {
+      throw Exception(e.toString().replaceAll('Exception: ', ''));
+    }
+  }
 }

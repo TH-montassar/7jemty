@@ -82,7 +82,6 @@ class _ClientHomePageState extends State<ClientHomePage> {
         Map<String, dynamic>? upcoming;
         for (var appt in appointments) {
           if (appt['status'] == 'CONFIRMED') {
-            // In a real scenario we'd sort by date here, but assuming API order or just taking first valid
             upcoming = appt;
             break;
           }
@@ -97,6 +96,18 @@ class _ClientHomePageState extends State<ClientHomePage> {
             _nextAppointment = upcoming;
           });
         }
+
+        // Check for unreviewed appointments
+        try {
+          final unreviewedAppts =
+              await AppointmentService.getUnreviewedAppointments();
+          if (unreviewedAppts.isNotEmpty && mounted) {
+            // Show review modal for the most recently completed appointment
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _showReviewModal(context, unreviewedAppts.first);
+            });
+          }
+        } catch (_) {}
       } catch (e) {
         if (mounted) {
           setState(() {
@@ -232,7 +243,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
       // TODO: Remove this FloatingActionButton once FCM is fully integrated
       floatingActionButton: _isLoggedIn
           ? FloatingActionButton(
-              onPressed: () => _showReviewModal(context),
+              onPressed: () {},
               backgroundColor: AppColors.primaryBlue,
               child: const Icon(
                 Icons.notifications_active,
@@ -243,14 +254,25 @@ class _ClientHomePageState extends State<ClientHomePage> {
     );
   }
 
-  void _showReviewModal(BuildContext context) {
+  void _showReviewModal(
+    BuildContext context,
+    Map<String, dynamic> appointmentData,
+  ) {
     int _rating = 5;
     TextEditingController _reviewController = TextEditingController();
+    bool _isSubmitting = false;
+
+    final barberName = appointmentData['barber']?['fullName'] ?? 'Barber';
+    final salonName = appointmentData['salon']?['name'] ?? 'Salon';
+    final appointmentId = appointmentData['id'] as int;
+    final salonId = appointmentData['salonId'] as int;
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      isDismissible: false, // Force them to review or hit "Fout"
+      enableDrag: false,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setStateModal) {
@@ -284,7 +306,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
                   ),
                   const SizedBox(height: 16),
                   const Text(
-                    "Sa77atoulek!",
+                    "Sa77a L'7jema!",
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
@@ -292,10 +314,10 @@ class _ClientHomePageState extends State<ClientHomePage> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    "Rendez-vous mte3ek maa Ahmed fi salon 'Barbershop VIP' kmal.",
+                  Text(
+                    "Rendez-vous mte3ek maa $barberName fi salon '$salonName' kmal.",
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey, fontSize: 14),
+                    style: const TextStyle(color: Colors.grey, fontSize: 14),
                   ),
                   const SizedBox(height: 24),
                   const Text(
@@ -312,11 +334,13 @@ class _ClientHomePageState extends State<ClientHomePage> {
                           color: Colors.amber,
                           size: 32,
                         ),
-                        onPressed: () {
-                          setStateModal(() {
-                            _rating = index + 1;
-                          });
-                        },
+                        onPressed: _isSubmitting
+                            ? null
+                            : () {
+                                setStateModal(() {
+                                  _rating = index + 1;
+                                });
+                              },
                       );
                     }),
                   ),
@@ -324,6 +348,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
                   TextField(
                     controller: _reviewController,
                     maxLines: 3,
+                    enabled: !_isSubmitting,
                     decoration: InputDecoration(
                       hintText: "Khali commentaire (optionnel)...",
                       hintStyle: TextStyle(color: Colors.grey.shade400),
@@ -340,34 +365,72 @@ class _ClientHomePageState extends State<ClientHomePage> {
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(tr(context, 'review_sent_thank_you')),
-                            backgroundColor: AppColors.successGreen,
-                          ),
-                        );
-                      },
+                      onPressed: _isSubmitting
+                          ? null
+                          : () async {
+                              setStateModal(() {
+                                _isSubmitting = true;
+                              });
+                              try {
+                                await AppointmentService.submitReview(
+                                  appointmentId: appointmentId,
+                                  salonId: salonId,
+                                  rating: _rating,
+                                  comment: _reviewController.text.trim(),
+                                );
+                                if (mounted) {
+                                  Navigator.pop(context);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        tr(context, 'review_sent_thank_you'),
+                                      ),
+                                      backgroundColor: AppColors.successGreen,
+                                    ),
+                                  );
+                                }
+                              } catch (e) {
+                                setStateModal(() {
+                                  _isSubmitting = false;
+                                });
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(e.toString()),
+                                    backgroundColor: AppColors.actionRed,
+                                  ),
+                                );
+                              }
+                            },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primaryBlue,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(15),
                         ),
                       ),
-                      child: const Text(
-                        "Abaath l'avis",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
+                      child: _isSubmitting
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Text(
+                              "Abaath l'avis",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
                     ),
                   ),
                   const SizedBox(height: 10),
                   TextButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: _isSubmitting
+                        ? null
+                        : () => Navigator.pop(context),
                     child: const Text(
                       "Fout",
                       style: TextStyle(color: Colors.grey),
