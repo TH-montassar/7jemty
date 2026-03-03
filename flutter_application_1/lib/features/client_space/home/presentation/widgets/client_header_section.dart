@@ -12,8 +12,9 @@ class ClientHeaderSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       // Padding الفوقاني باش يتفادى الـ Status Bar متاع التليفون (البلاصة اللي فيها البطارية والريزو)
-      padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 20,
+      // Tawa zedna SafeArea fel page, donc nraj3ouh wadh7.
+      padding: const EdgeInsets.only(
+        top: 20,
         left: 20,
         right: 20,
         bottom: 40, // خلينا مساحة اللوطة باش المحتوى الأبيض يركب فوقها

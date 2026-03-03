@@ -17,10 +17,12 @@ class ApiConfig {
       // Real Android device mode (typically with adb reverse tcp:3000 tcp:3000).
       return 'http://127.0.0.1:3000';
     } else if (Platform.isAndroid) {
-      // Android emulator maps host machine localhost to 10.0.2.2.
-      return 'http://10.0.2.2:3000';
+      // ✅ 192.168.1.105 is the local IPv4 address of the dev machine.
+      // This is required so physical phones on the same WiFi can connect to the local API.
+      // E.g., not 10.0.2.2 which is only for emulators.
+      return 'http://192.168.1.105:3000';
     } else {
-      return 'http://localhost:3000';
+      return 'http://192.168.1.105:3000';
     }
   }
 

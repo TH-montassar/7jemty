@@ -65,7 +65,12 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                 builder: (context, setModalState) {
                   return SingleChildScrollView(
                     child: Padding(
-                      padding: const EdgeInsets.all(24.0),
+                      padding: EdgeInsets.only(
+                        left: 24.0,
+                        right: 24.0,
+                        top: 24.0,
+                        bottom: MediaQuery.of(context).viewInsets.bottom + 24.0,
+                      ),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -299,13 +304,18 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                           const SizedBox(height: 32),
 
                           // Footer Actions
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            alignment: WrapAlignment.spaceBetween,
-                            crossAxisAlignment: WrapCrossAlignment.center,
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               TextButton.icon(
+                                style: TextButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                  ),
+                                  minimumSize: Size.zero,
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                ),
                                 onPressed: () {
                                   toastification.show(
                                     context: context,
@@ -319,21 +329,35 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                                 icon: const Icon(
                                   Icons.delete_outline,
                                   color: Colors.red,
-                                  size: 20,
+                                  size: 18,
                                 ),
                                 label: const Text(
                                   'Supprimer',
-                                  style: TextStyle(color: Colors.red),
+                                  style: TextStyle(
+                                    color: Colors.red,
+                                    fontSize: 12,
+                                  ),
                                 ),
                               ),
                               Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   TextButton(
+                                    style: TextButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 4,
+                                      ),
+                                      minimumSize: Size.zero,
+                                      tapTargetSize:
+                                          MaterialTapTargetSize.shrinkWrap,
+                                    ),
                                     onPressed: () => Navigator.pop(context),
-                                    child: const Text('Annuler'),
+                                    child: const Text(
+                                      'Annuler',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
                                   ),
-                                  const SizedBox(width: 8),
+                                  const SizedBox(width: 4),
                                   ElevatedButton(
                                     onPressed: _isUploading
                                         ? null
@@ -383,14 +407,20 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                                       backgroundColor: AppColors.primaryBlue,
                                       foregroundColor: Colors.white,
                                       padding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 12,
+                                        horizontal: 10,
+                                        vertical: 8,
                                       ),
+                                      minimumSize: Size.zero,
+                                      tapTargetSize:
+                                          MaterialTapTargetSize.shrinkWrap,
                                       shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
+                                        borderRadius: BorderRadius.circular(10),
                                       ),
                                     ),
-                                    child: const Text('Enregistrer'),
+                                    child: const Text(
+                                      'Enregistrer',
+                                      style: TextStyle(fontSize: 12),
+                                    ),
                                   ),
                                 ],
                               ),
