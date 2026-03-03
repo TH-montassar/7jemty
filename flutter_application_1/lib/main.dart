@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hjamty/pages/splash_screen.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+import 'package:flutter/services.dart';
 import 'package:hjamty/core/localization/translation_service.dart';
 
 // Service de traduction global
@@ -9,6 +10,13 @@ final translationService = TranslationService();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Lock orientation to Portrait
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+
   await initializeDateFormatting('fr_FR', null);
 
   runApp(

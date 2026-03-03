@@ -131,92 +131,102 @@ class _ClientHomePageState extends State<ClientHomePage> {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.bgColor,
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // 1. الهيدر
-            ClientHeaderSection(userName: _clientName),
+      backgroundColor:
+          AppColors.primaryBlue, // The space under the notch will be blue
+      body: SafeArea(
+        bottom: false,
+        child: Container(
+          color:
+              AppColors.bgColor, // Below the header, background is light gray
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                // 1. الهيدر
+                ClientHeaderSection(userName: _clientName),
 
-            // 2. المحتوى
-            Transform.translate(
-              offset: const Offset(0, -20),
-              child: Container(
-                decoration: const BoxDecoration(
-                  color: AppColors.bgColor,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 20),
-                      if (_isLoggedIn && _nextAppointment != null) ...[
-                        NextRdvCard(appointmentData: _nextAppointment),
-                        const SizedBox(height: 25),
-                      ],
-
-                      Text(
-                        tr(context, 'top_categories'),
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textDark,
-                        ),
+                // 2. المحتوى
+                Transform.translate(
+                  offset: const Offset(0, -20),
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: AppColors.bgColor,
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(25),
                       ),
-                      const SizedBox(height: 15),
-                      const QuickCategories(),
-
-                      const SizedBox(height: 30),
-                      Row(
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          const SizedBox(height: 20),
+                          if (_isLoggedIn && _nextAppointment != null) ...[
+                            NextRdvCard(appointmentData: _nextAppointment),
+                            const SizedBox(height: 25),
+                          ],
+
                           Text(
-                            tr(context, 'near_you'),
+                            tr(context, 'top_categories'),
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                               color: AppColors.textDark,
                             ),
                           ),
-                          const Icon(
-                            Icons.location_on,
-                            color: Colors.grey,
-                            size: 20,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 15),
-                      const NearYouList(),
+                          const SizedBox(height: 15),
+                          const QuickCategories(),
 
-                      const SizedBox(height: 30),
-                      Row(
-                        children: [
-                          Text(
-                            tr(context, 'top_rated'),
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.textDark,
-                            ),
+                          const SizedBox(height: 30),
+                          Row(
+                            children: [
+                              Text(
+                                tr(context, 'near_you'),
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textDark,
+                                ),
+                              ),
+                              const Icon(
+                                Icons.location_on,
+                                color: Colors.grey,
+                                size: 20,
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 5),
-                          const Icon(
-                            Icons.star_border,
-                            color: Colors.grey,
-                            size: 20,
+                          const SizedBox(height: 15),
+                          const NearYouList(),
+
+                          const SizedBox(height: 30),
+                          Row(
+                            children: [
+                              Text(
+                                tr(context, 'top_rated'),
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textDark,
+                                ),
+                              ),
+                              const SizedBox(width: 5),
+                              const Icon(
+                                Icons.star_border,
+                                color: Colors.grey,
+                                size: 20,
+                              ),
+                            ],
                           ),
+                          const SizedBox(height: 15),
+                          const TopRatedList(),
+                          const SizedBox(height: 20),
                         ],
                       ),
-                      const SizedBox(height: 15),
-                      const TopRatedList(),
-                      const SizedBox(height: 20),
-                    ],
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
       // TODO: Remove this FloatingActionButton once FCM is fully integrated
