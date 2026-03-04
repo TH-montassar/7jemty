@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../generated/prisma/index.js';
 
 const prisma = new PrismaClient();
 
@@ -18,7 +18,7 @@ async function main() {
 
     // Set time to 1 minute from now
     const now = new Date();
-    now.setMinutes(now.getMinutes() + 1);
+    now.setMinutes(now.getMinutes() + 2);
 
     const startTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
 
@@ -26,7 +26,6 @@ async function main() {
         where: { id: apt.id },
         data: {
             appointmentDate: now,
-            startTime: startTime,
         },
     });
 

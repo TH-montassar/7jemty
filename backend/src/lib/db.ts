@@ -9,7 +9,7 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL!,
   max: 20, // Increase max connections to handle parallel Flutter app queries
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 5000,
+  connectionTimeoutMillis: 30000, // 30 seconds to allow Neon to spin up from sleep
 });
 const adapter = new PrismaPg(pool);
 
