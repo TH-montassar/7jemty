@@ -17,6 +17,7 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
   bool _isLoading = true;
   List<dynamic> _appointments = [];
   Timer? _pollingTimer;
+  Timer? _uiTimer;
 
   @override
   void initState() {
@@ -29,11 +30,19 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
         _fetchAppointmentsSilent();
       }
     });
+
+    // Add per-second UI timer for granular countdown (seconds)
+    _uiTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) {
+        setState(() {}); // Just redraw the UI
+      }
+    });
   }
 
   @override
   void dispose() {
     _pollingTimer?.cancel();
+    _uiTimer?.cancel();
     super.dispose();
   }
 
@@ -269,27 +278,14 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
       if (difference.isNegative || difference.inSeconds <= 0) {
         isTimeReached = true;
         countdownText = isInProgress ? "L'wa9t wfa!" : "L'wa9t r7el";
-
-        // Auto-trigger the completion modal if the time just ran out recently (< 20 seconds) logic.
-        // We do this by checking if difference is between 0 and -20s so it doesn't spam infinitely.
-        if (isInProgress &&
-            difference.inSeconds > -15 &&
-            difference.inSeconds <= 0) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _showCompletionModal(apt['id'], index);
-          });
-        }
-      } else if (difference.inHours == 1 &&
-          difference.inMinutes % 60 == 0 &&
-          !isInProgress) {
-        countdownText = "Mzel 1h";
-      } else if (difference.inMinutes == 15 && !isInProgress) {
-        countdownText = "Mzel 15mn";
       } else if (difference.inHours > 0) {
         countdownText =
             "Mazal ${difference.inHours}h ${difference.inMinutes % 60}min";
-      } else {
+      } else if (difference.inMinutes > 0) {
         countdownText = "Mazal ${difference.inMinutes}min";
+      } else {
+        // Less than 1 minute, show seconds
+        countdownText = "Mazal ${difference.inSeconds}s";
       }
     }
 
@@ -412,56 +408,112 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
             ),
 
           if (isConfirmed && isTimeReached) // Client arrived?
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () => _updateStatus(apt['id'], 'IN_PROGRESS', index),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purple,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () =>
+                        _updateStatus(apt['id'], 'CANCELLED', index),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.actionRed,
+                      side: const BorderSide(color: AppColors.actionRed),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    icon: const Icon(Icons.person_off, size: 18),
+                    label: const Text(
+                      "Majech",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ),
-                icon: const Icon(Icons.person_add_alt_1, color: Colors.white),
-                label: const Text(
-                  "Jek l client ?",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () =>
+                        _updateStatus(apt['id'], 'IN_PROGRESS', index),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.purple,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    icon: const Icon(
+                      Icons.person_add_alt_1,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                    label: const Text(
+                      "Jek a?",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
 
-          if (isInProgress) // Finished?
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () => _showCompletionModal(apt['id'], index),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.successGreen,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+          if (isInProgress)
+            Column(
+              children: [
+                if (isTimeReached) ...[
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => _showExtensionOptions(apt['id'], index),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.textDark,
+                        side: const BorderSide(color: Colors.grey),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      icon: const Icon(Icons.timer, color: Colors.grey),
+                      label: const Text(
+                        "Mzelt",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () =>
+                        _updateStatus(apt['id'], 'COMPLETED', index),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.successGreen,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    icon: const Icon(Icons.check_circle, color: Colors.white),
+                    label: const Text(
+                      "Kmalt l'hjema ?",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
-                icon: const Icon(Icons.check_circle, color: Colors.white),
-                label: const Text(
-                  "Kmalt l'hjema ?",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
+              ],
             ),
         ],
       ),
     );
   }
 
-  void _showCompletionModal(int appointmentId, int index) {
+  void _showExtensionOptions(int appointmentId, int index) {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -474,63 +526,64 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Text(
-                "Kmalt l'hjema ?",
+                "Mazzal chwaya?",
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(ctx);
-                    _updateStatus(appointmentId, 'COMPLETED', index);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.successGreen,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: const Text(
-                    'Kamelt',
-                    style: TextStyle(color: Colors.white, fontSize: 16),
-                  ),
-                ),
+              const SizedBox(height: 8),
+              const Text(
+                "Qadeh theb tzid wa9t?",
+                style: TextStyle(color: Colors.grey),
               ),
+              const SizedBox(height: 24),
+              _buildExtensionButton(ctx, appointmentId, 10, "10 mn"),
               const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: () async {
-                    Navigator.pop(ctx);
-                    try {
-                      await AppointmentService.extendAppointment(
-                        appointmentId: appointmentId,
-                        minutes: 15,
-                      );
-                      _fetchAppointments();
-                    } catch (e) {
-                      // Handle error implicitly
-                      _fetchAppointments(); // Refresh anyway just in case
-                    }
-                  },
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: const Text(
-                    'Zidni 15mn',
-                    style: TextStyle(color: AppColors.textDark, fontSize: 16),
-                  ),
-                ),
-              ),
+              _buildExtensionButton(ctx, appointmentId, 15, "15 mn"),
+              const SizedBox(height: 12),
+              _buildExtensionButton(ctx, appointmentId, 30, "30 mn"),
+              const SizedBox(height: 20),
             ],
           ),
         );
       },
+    );
+  }
+
+  Widget _buildExtensionButton(
+    BuildContext ctx,
+    int appointmentId,
+    int minutes,
+    String label,
+  ) {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton(
+        onPressed: () async {
+          Navigator.pop(ctx);
+          try {
+            await AppointmentService.extendAppointment(
+              appointmentId: appointmentId,
+              minutes: minutes,
+            );
+            _fetchAppointments();
+          } catch (e) {
+            _fetchAppointments();
+          }
+        },
+        style: OutlinedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+        child: Text(
+          "Zidni $label",
+          style: const TextStyle(
+            color: AppColors.textDark,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
     );
   }
 }

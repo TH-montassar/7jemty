@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/localization/translation_service.dart';
 import '../../../../../services/appointment_service.dart';
+import 'package:toastification/toastification.dart';
 
 class HistoryTab extends StatefulWidget {
   const HistoryTab({super.key});
@@ -54,7 +55,7 @@ class _HistoryTabState extends State<HistoryTab> {
     if (_appointments.isEmpty) {
       return Center(
         child: Text(
-          tr(context, 'no_history') ?? 'Aucun historique récent.',
+          tr(context, 'no_history'),
           style: const TextStyle(color: Colors.grey, fontSize: 16),
         ),
       );
@@ -169,22 +170,40 @@ class _HistoryTabState extends State<HistoryTab> {
                   const SizedBox(height: 15),
                   Row(
                     children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () {},
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Colors.amber),
-                            foregroundColor: Colors.amber[700],
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
+                      if (apt['review'] == null) ...[
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () async {
+                              final result = await showDialog(
+                                context: context,
+                                builder: (_) => _ReviewDialog(appointment: apt),
+                              );
+                              if (result == true) {
+                                _fetchAppointments(); // Refresh the list after successful review
+                                if (!context.mounted) return;
+                                toastification.show(
+                                  context: context,
+                                  type: ToastificationType.success,
+                                  title: const Text('Merci!'),
+                                  description: const Text(
+                                    'Votre avis a été ajouté avec succès.',
+                                  ),
+                                  autoCloseDuration: const Duration(seconds: 3),
+                                );
+                              }
+                            },
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: Colors.amber),
+                              foregroundColor: Colors.amber[700],
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
                             ),
-                          ),
-                          child: Text(
-                            tr(context, 'leave_review') ?? 'Khali avis',
+                            child: Text(tr(context, 'leave_review')),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 10),
+                        const SizedBox(width: 10),
+                      ],
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () {},
@@ -198,7 +217,7 @@ class _HistoryTabState extends State<HistoryTab> {
                               borderRadius: BorderRadius.circular(10),
                             ),
                           ),
-                          child: Text(tr(context, 'rebook') ?? 'Aawed Ahjez'),
+                          child: Text(tr(context, 'rebook')),
                         ),
                       ),
                     ],
@@ -209,6 +228,126 @@ class _HistoryTabState extends State<HistoryTab> {
           );
         },
       ),
+    );
+  }
+}
+
+class _ReviewDialog extends StatefulWidget {
+  final Map<String, dynamic> appointment;
+
+  const _ReviewDialog({required this.appointment});
+
+  @override
+  State<_ReviewDialog> createState() => _ReviewDialogState();
+}
+
+class _ReviewDialogState extends State<_ReviewDialog> {
+  int _rating = 0;
+  final TextEditingController _commentController = TextEditingController();
+  bool _isSubmitting = false;
+
+  Future<void> _submitReview() async {
+    if (_rating == 0) {
+      toastification.show(
+        context: context,
+        type: ToastificationType.warning,
+        title: const Text('Erreur'),
+        description: const Text('Veuillez sélectionner une note.'),
+        autoCloseDuration: const Duration(seconds: 3),
+      );
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+
+    try {
+      await AppointmentService.submitReview(
+        appointmentId: widget.appointment['id'],
+        salonId:
+            widget.appointment['salonId'] ?? widget.appointment['salon']['id'],
+        rating: _rating,
+        comment: _commentController.text.trim(),
+      );
+
+      if (!mounted) return;
+      Navigator.pop(context, true); // true indicates success
+    } catch (e) {
+      if (!mounted) return;
+      toastification.show(
+        context: context,
+        type: ToastificationType.error,
+        title: const Text('Erreur'),
+        description: Text(e.toString()),
+        autoCloseDuration: const Duration(seconds: 4),
+      );
+      setState(() => _isSubmitting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      title: const Text(
+        'Laisser un avis',
+        style: TextStyle(fontWeight: FontWeight.bold),
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(5, (index) {
+              return IconButton(
+                onPressed: () {
+                  setState(() => _rating = index + 1);
+                },
+                icon: Icon(
+                  index < _rating ? Icons.star : Icons.star_border,
+                  color: Colors.amber,
+                  size: 32,
+                ),
+              );
+            }),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _commentController,
+            maxLines: 3,
+            decoration: InputDecoration(
+              hintText: 'Votre commentaire (optionnel)',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Annuler', style: TextStyle(color: Colors.grey)),
+        ),
+        ElevatedButton(
+          onPressed: _isSubmitting ? null : _submitReview,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primaryBlue,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          child: _isSubmitting
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                )
+              : const Text('Envoyer', style: TextStyle(color: Colors.white)),
+        ),
+      ],
     );
   }
 }

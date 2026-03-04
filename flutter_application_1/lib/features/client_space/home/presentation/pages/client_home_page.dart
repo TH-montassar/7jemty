@@ -25,6 +25,8 @@ class _ClientHomePageState extends State<ClientHomePage> {
   String _clientName = "Client";
   Map<String, dynamic>? _nextAppointment;
   Timer? _pollingTimer;
+  bool _isReviewModalShowing = false;
+  final Set<int> _shownReviewApptIds = {}; // Track shown modals
 
   @override
   void initState() {
@@ -64,6 +66,22 @@ class _ClientHomePageState extends State<ClientHomePage> {
           _nextAppointment = upcoming;
         });
       }
+
+      // Automatically pop the review modal if the barber just finished
+      if (!_isReviewModalShowing) {
+        final unreviewedAppts =
+            await AppointmentService.getUnreviewedAppointments();
+        if (unreviewedAppts.isNotEmpty) {
+          final nextToReview = unreviewedAppts.first;
+          final aptId = nextToReview['id'] as int;
+
+          if (!_shownReviewApptIds.contains(aptId) && mounted) {
+            _shownReviewApptIds.add(aptId);
+            _isReviewModalShowing = true;
+            _showReviewModal(context, nextToReview);
+          }
+        }
+      }
     } catch (e) {
       // Ignore errors during silent background fetch
     }
@@ -97,15 +115,15 @@ class _ClientHomePageState extends State<ClientHomePage> {
           });
         }
 
-        // Check for unreviewed appointments
+        // Silence old unreviewed appointments on startup
         try {
           final unreviewedAppts =
               await AppointmentService.getUnreviewedAppointments();
-          if (unreviewedAppts.isNotEmpty && mounted) {
-            // Show review modal for the most recently completed appointment
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              _showReviewModal(context, unreviewedAppts.first);
-            });
+          if (unreviewedAppts.isNotEmpty) {
+            for (var appt in unreviewedAppts) {
+              final aptId = appt['id'] as int;
+              _shownReviewApptIds.add(aptId);
+            }
           }
         } catch (_) {}
       } catch (e) {
@@ -442,6 +460,12 @@ class _ClientHomePageState extends State<ClientHomePage> {
           },
         );
       },
-    );
+    ).then((_) {
+      if (mounted) {
+        setState(() {
+          _isReviewModalShowing = false;
+        });
+      }
+    });
   }
 }

@@ -11,7 +11,8 @@
     "prisma:mig": "prisma migrate dev",
     "prisma:gen": "prisma generate",
     "prisma:res": "prisma migrate reset",
-    "prisma:studio": "prisma studio"
+    "prisma:studio": "prisma studio",
+    "fast-forward": "tsx scripts/fast_forward.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.4.1",
