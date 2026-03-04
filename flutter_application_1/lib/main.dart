@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:hjamty/pages/splash_screen.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -20,19 +21,31 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-    await FcmService.initialize();
+    if (!kIsWeb) {
+      FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+      await FcmService.initialize();
+    } else {
+      debugPrint("Skipping FCM initialization on Web to prevent startup hang.");
+    }
   } catch (e) {
     debugPrint("Failed to initialize Firebase: $e");
   }
 
-  // Lock orientation to Portrait
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
+  try {
+    // Lock orientation to Portrait
+    await SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+  } catch (e) {
+    debugPrint("Failed to set preferred orientations: $e");
+  }
 
-  await initializeDateFormatting('fr_FR', null);
+  try {
+    await initializeDateFormatting('fr_FR', null);
+  } catch (e) {
+    debugPrint("Failed to initialize date formatting: $e");
+  }
 
   runApp(
     TranslationProvider(notifier: translationService, child: const MyApp()),
