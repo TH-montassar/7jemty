@@ -21,6 +21,27 @@ export const getMyNotifications = async (req: AuthRequest, res: Response) => {
     }
 };
 
+export const getUnreadCount = async (req: AuthRequest, res: Response) => {
+    try {
+        if (!req.user || !req.user.userId) {
+            res.status(401).json({ message: 'Non autorisé' });
+            return;
+        }
+
+        const count = await prisma.notification.count({
+            where: {
+                userId: req.user.userId,
+                isRead: false
+            }
+        });
+
+        res.json({ count });
+    } catch (e) {
+        console.error("Failed fetching unread notification count:", e);
+        res.status(500).json({ count: 0 });
+    }
+};
+
 export const markNotificationAsRead = async (req: AuthRequest, res: Response) => {
     try {
         if (!req.user || !req.user.userId) {

@@ -30,8 +30,23 @@ class NotificationService {
 
   static Future<int> getUnreadCount() async {
     try {
-      final notifications = await getMyNotifications();
-      return notifications.where((n) => n['isRead'] == false).length;
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token');
+      if (token == null) return 0;
+
+      final response = await http.get(
+        Uri.parse('${ApiConfig.host}/api/notifications/unread-count'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return data['count'] ?? 0;
+      }
+      return 0;
     } catch (e) {
       return 0;
     }
