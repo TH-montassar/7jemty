@@ -12,14 +12,21 @@ import '../../../../auth/signIn.dart'; // 👈 Baddel l'chemin 7asb dossieretk
 import '../../../home/presentation/widgets/client_bottom_nav.dart';
 
 class ClientMainLayout extends StatefulWidget {
-  const ClientMainLayout({super.key});
+  final int initialIndex;
+  const ClientMainLayout({super.key, this.initialIndex = 0});
 
   @override
   State<ClientMainLayout> createState() => _ClientMainLayoutState();
 }
 
 class _ClientMainLayoutState extends State<ClientMainLayout> {
-  int _selectedIndex = 0;
+  late int _selectedIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.initialIndex;
+  }
 
   List<Widget> _pages = [
     const ClientHomePage(),
