@@ -129,8 +129,10 @@ class _UpcomingTabState extends State<UpcomingTab> {
                     ? AppColors.primaryBlue
                     : Colors.orange);
           String statusText = status == 'CONFIRMED'
-              ? 'M\'akd'
-              : (status == 'IN_PROGRESS' ? 'En cours' : 'En attente');
+              ? tr(context, 'status_confirmed')
+              : (status == 'IN_PROGRESS'
+                    ? tr(context, 'status_in_progress', args: [])
+                    : tr(context, 'status_pending'));
 
           // Countdown logic
           final now = DateTime.now();
@@ -141,12 +143,22 @@ class _UpcomingTabState extends State<UpcomingTab> {
           String countdownText = "";
           if (status == 'CONFIRMED' || status == 'PENDING') {
             if (difference.isNegative) {
-              countdownText = "L'wa9t r7el";
+              countdownText = tr(context, 'time_passed');
             } else if (difference.inHours > 0) {
-              countdownText =
-                  "Mazal ${difference.inHours}h ${difference.inMinutes % 60}min";
+              countdownText = tr(
+                context,
+                'time_remaining_hours_min',
+                args: [
+                  difference.inHours.toString(),
+                  (difference.inMinutes % 60).toString(),
+                ],
+              );
             } else {
-              countdownText = "Mazal ${difference.inMinutes}min";
+              countdownText = tr(
+                context,
+                'time_remaining_min',
+                args: [difference.inMinutes.toString()],
+              );
             }
           }
 

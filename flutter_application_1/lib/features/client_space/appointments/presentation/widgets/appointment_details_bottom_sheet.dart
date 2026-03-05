@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:hjamty/core/constants/app_colors.dart';
+import 'package:hjamty/core/localization/translation_service.dart';
 
 Future<void> showAppointmentDetailsBottomSheet({
   required BuildContext context,
@@ -113,25 +114,25 @@ class _AppointmentDetailsSheet extends StatelessWidget {
     switch (statusStr) {
       case 'PENDING':
         statusColor = Colors.orange;
-        statusText = "En attente";
+        statusText = tr(context, 'status_pending');
         break;
       case 'CONFIRMED':
       case 'ACCEPTED':
         statusColor = const Color(0xFF2ECA7F); // green
-        statusText = "Confirmé";
+        statusText = tr(context, 'status_confirmed');
         break;
       case 'IN_PROGRESS':
         statusColor = AppColors.primaryBlue;
-        statusText = "En cours";
+        statusText = tr(context, 'status_in_progress');
         break;
       case 'COMPLETED':
         statusColor = Colors.blueGrey;
-        statusText = "Terminé";
+        statusText = tr(context, 'status_completed');
         break;
       case 'CANCELLED':
       case 'DECLINED':
         statusColor = AppColors.actionRed;
-        statusText = "Annulé/Refusé";
+        statusText = tr(context, 'status_cancelled');
         break;
     }
 
