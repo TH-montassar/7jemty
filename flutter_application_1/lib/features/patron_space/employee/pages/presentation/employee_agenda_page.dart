@@ -130,9 +130,9 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
         style: ToastificationStyle.fillColored,
         alignment: Alignment.topCenter,
         autoCloseDuration: const Duration(seconds: 2),
-        title: const Text(
-          'Kaad ybadal...',
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          tr(context, 'updating'),
+          style: const TextStyle(color: Colors.white),
         ),
         primaryColor: AppColors.primaryBlue,
         backgroundColor: AppColors.primaryBlue,
@@ -153,9 +153,9 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
         style: ToastificationStyle.fillColored,
         alignment: Alignment.topCenter,
         autoCloseDuration: const Duration(seconds: 4),
-        title: const Text(
-          'Badalna l\'statut! 🎉',
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          tr(context, 'status_updated_successfully'),
+          style: const TextStyle(color: Colors.white),
         ),
         primaryColor: AppColors.successGreen,
         backgroundColor: AppColors.successGreen,
@@ -200,8 +200,8 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
           final clientName = apt['client']?['fullName'] ?? 'Client';
           FcmService.showNotification(
             id: id,
-            title: "L'wa9t wfa!",
-            body: "L'hjema mta3 $clientName wfet. Thabb tzidha wa9t?",
+            title: tr(context, 'time_is_up'),
+            body: tr(context, 'haircut_finished_add_time', args: [clientName]),
           );
         }
       } else {
@@ -221,8 +221,8 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
-        title: const Text(
-          "Agenda mte3i",
+        title: Text(
+          tr(context, 'my_agenda'),
           style: TextStyle(
             color: AppColors.textDark,
             fontWeight: FontWeight.bold,
@@ -237,10 +237,10 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
               onRefresh: _fetchAppointments,
               color: AppColors.primaryBlue,
               child: _appointments.isEmpty
-                  ? const Center(
+                  ? Center(
                       child: Text(
-                        "Ma famma hatta rendez-vous lyoum.",
-                        style: TextStyle(color: Colors.grey),
+                        tr(context, 'no_appointments_today'),
+                        style: const TextStyle(color: Colors.grey),
                       ),
                     )
                   : ListView.builder(
@@ -281,19 +281,19 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
 
     if (isPending) {
       statusColor = Colors.orange;
-      statusText = "Yestanna";
+      statusText = tr(context, 'status_pending');
     } else if (isConfirmed) {
       statusColor = AppColors.primaryBlue;
-      statusText = "M'akd";
+      statusText = tr(context, 'status_confirmed_badge');
     } else if (isInProgress) {
       statusColor = Colors.purple;
-      statusText = "En cours";
+      statusText = tr(context, 'status_in_progress');
     } else if (isCompleted) {
       statusColor = AppColors.successGreen;
-      statusText = "Kmal";
+      statusText = tr(context, 'status_completed');
     } else if (isDeclined) {
       statusColor = AppColors.actionRed;
-      statusText = "Morfodh";
+      statusText = tr(context, 'status_cancelled');
     }
 
     String countdownText = "";
@@ -312,15 +312,31 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
 
       if (difference.isNegative || difference.inSeconds <= 0) {
         isTimeReached = true;
-        countdownText = isInProgress ? "L'wa9t wfa!" : "L'wa9t r7el";
+        countdownText = isInProgress
+            ? tr(context, 'time_is_up')
+            : tr(context, 'time_passed');
       } else if (difference.inHours > 0) {
-        countdownText =
-            "Mazal ${difference.inHours}h ${difference.inMinutes % 60}min";
+        countdownText = countdownText = tr(
+          context,
+          'time_remaining_hours_min',
+          args: [
+            difference.inHours.toString(),
+            (difference.inMinutes % 60).toString(),
+          ],
+        );
       } else if (difference.inMinutes > 0) {
-        countdownText = "Mazal ${difference.inMinutes}min";
+        countdownText = tr(
+          context,
+          'time_remaining_min',
+          args: [difference.inMinutes.toString()],
+        );
       } else {
         // Less than 1 minute, show seconds
-        countdownText = "Mazal ${difference.inSeconds}s";
+        countdownText = tr(
+          context,
+          'time_remaining_sec',
+          args: [difference.inSeconds.toString()],
+        );
       }
 
       // Add T+t2 breakdown for in-progress appointments
@@ -470,9 +486,9 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      child: const Text(
-                        "Ikbel",
-                        style: TextStyle(color: Colors.white),
+                      child: Text(
+                        tr(context, 'accept_btn'),
+                        style: const TextStyle(color: Colors.white),
                       ),
                     ),
                   ),
@@ -495,9 +511,9 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
                         ),
                       ),
                       icon: const Icon(Icons.person_off, size: 18),
-                      label: const Text(
-                        "Majech",
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                      label: Text(
+                        tr(context, 'did_not_show_up'),
+                        style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
@@ -519,9 +535,9 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
                         color: Colors.white,
                         size: 18,
                       ),
-                      label: const Text(
-                        "Jek a?",
-                        style: TextStyle(
+                      label: Text(
+                        tr(context, 'client_arrived'),
+                        style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
@@ -549,9 +565,9 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
                           ),
                         ),
                         icon: const Icon(Icons.timer, color: Colors.grey),
-                        label: const Text(
-                          "Mzelt",
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                        label: Text(
+                          tr(context, 'still_working'),
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),
                     ),
@@ -570,9 +586,9 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
                         ),
                       ),
                       icon: const Icon(Icons.check_circle, color: Colors.white),
-                      label: const Text(
-                        "Kmalt l'hjema ?",
-                        style: TextStyle(
+                      label: Text(
+                        tr(context, 'finished_haircut_q'),
+                        style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
@@ -599,14 +615,17 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                "Mazzal chwaya?",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              Text(
+                tr(context, 'need_more_time'),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 8),
-              const Text(
-                "Qadeh theb tzid wa9t?",
-                style: TextStyle(color: Colors.grey),
+              Text(
+                tr(context, 'how_much_time_to_add'),
+                style: const TextStyle(color: Colors.grey),
               ),
               const SizedBox(height: 24),
               _buildExtensionButton(ctx, appointmentId, 10, "10 mn"),
@@ -650,7 +669,7 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
           ),
         ),
         child: Text(
-          "Zidni $label",
+          tr(context, 'add_time_btn', args: [label]),
           style: const TextStyle(
             color: AppColors.textDark,
             fontSize: 16,

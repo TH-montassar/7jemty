@@ -108,9 +108,11 @@ class _UpcomingTabState extends State<UpcomingTab> {
         itemCount: _appointments.length,
         itemBuilder: (context, index) {
           final apt = _appointments[index];
-          final salonName = apt['salon']?['name'] ?? 'Salon inconnu';
+          final salonName =
+              apt['salon']?['name'] ?? tr(context, 'unknown_salon');
           final barberName =
-              apt['barber']?['fullName'] ?? 'Professionnel non assigné';
+              apt['barber']?['fullName'] ??
+              tr(context, 'unassigned_professional');
 
           // Format date
           final dateStr = apt['appointmentDate'];
@@ -291,7 +293,7 @@ class _UpcomingTabState extends State<UpcomingTab> {
                       ),
                       const SizedBox(width: 5),
                       Text(
-                        "Professionnel: $barberName",
+                        "${tr(context, 'professional')}: $barberName",
                         style: const TextStyle(
                           color: Colors.grey,
                           fontSize: 14,
@@ -318,7 +320,7 @@ class _UpcomingTabState extends State<UpcomingTab> {
                                 : Colors.grey,
                           ),
                           label: Text(
-                            tr(context, 'cancel') ?? "Batel",
+                            tr(context, 'cancel'),
                             style: TextStyle(
                               color: canCancel
                                   ? AppColors.actionRed
@@ -355,9 +357,9 @@ class _UpcomingTabState extends State<UpcomingTab> {
                             // Implement navigation to salon location if Google Maps URL is available -> MVP Phase
                           },
                           icon: const Icon(Icons.map_outlined, size: 18),
-                          label: const Text(
-                            "Thneya",
-                            style: TextStyle(fontWeight: FontWeight.bold),
+                          label: Text(
+                            tr(context, 'directions'),
+                            style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primaryBlue,
@@ -390,32 +392,32 @@ class _UpcomingTabState extends State<UpcomingTab> {
             borderRadius: BorderRadius.circular(20),
           ),
           title: Row(
-            children: const [
-              Icon(
+            children: [
+              const Icon(
                 Icons.warning_amber_rounded,
                 color: AppColors.actionRed,
                 size: 28,
               ),
-              SizedBox(width: 10),
+              const SizedBox(width: 10),
               Text(
-                "Rod belek",
-                style: TextStyle(
+                tr(parentContext, 'attention'),
+                style: const TextStyle(
                   color: AppColors.actionRed,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ],
           ),
-          content: const Text(
-            "Met'aked theb tbatel e-rendez-vous?\n\n⚠️ Kan tbatel 3 marrat wra baadhom comptek yetbloka.",
-            style: TextStyle(height: 1.4),
+          content: Text(
+            tr(parentContext, 'confirm_cancel_appointment'),
+            style: const TextStyle(height: 1.4),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text(
-                "Rjou3",
-                style: TextStyle(
+              child: Text(
+                tr(parentContext, 'go_back'),
+                style: const TextStyle(
                   color: Colors.grey,
                   fontWeight: FontWeight.bold,
                 ),
@@ -437,10 +439,7 @@ class _UpcomingTabState extends State<UpcomingTab> {
                 if (mounted) {
                   scaffoldMessenger.showSnackBar(
                     SnackBar(
-                      content: Text(
-                        tr(parentContext, 'appointment_cancelled') ??
-                            'Rendez-vous annulé',
-                      ),
+                      content: Text(tr(parentContext, 'appointment_cancelled')),
                       backgroundColor: AppColors.actionRed,
                     ),
                   );
@@ -452,9 +451,9 @@ class _UpcomingTabState extends State<UpcomingTab> {
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              child: const Text(
-                "Ey, Batel",
-                style: TextStyle(
+              child: Text(
+                tr(parentContext, 'yes_cancel'),
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),

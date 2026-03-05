@@ -82,7 +82,8 @@ class _HistoryTabState extends State<HistoryTab> {
               : DateTime.now();
           final formattedDate = DateFormat('dd MMM yyyy', 'fr_FR').format(date);
 
-          final salonName = apt['salon']?['name'] ?? 'Salon inconnu';
+          final salonName =
+              apt['salon']?['name'] ?? tr(context, 'unknown_salon');
 
           // Extract services and total price
           final servicesList = apt['services'] as List<dynamic>? ?? [];
@@ -186,9 +187,9 @@ class _HistoryTabState extends State<HistoryTab> {
                                 toastification.show(
                                   context: context,
                                   type: ToastificationType.success,
-                                  title: const Text('Merci!'),
-                                  description: const Text(
-                                    'Votre avis a été ajouté avec succès.',
+                                  title: Text(tr(context, 'thank_you')),
+                                  description: Text(
+                                    tr(context, 'review_added_success'),
                                   ),
                                   autoCloseDuration: const Duration(seconds: 3),
                                 );
@@ -253,8 +254,8 @@ class _ReviewDialogState extends State<_ReviewDialog> {
       toastification.show(
         context: context,
         type: ToastificationType.warning,
-        title: const Text('Erreur'),
-        description: const Text('Veuillez sélectionner une note.'),
+        title: Text(tr(context, 'error')),
+        description: Text(tr(context, 'please_select_rating')),
         autoCloseDuration: const Duration(seconds: 3),
       );
       return;
@@ -278,7 +279,7 @@ class _ReviewDialogState extends State<_ReviewDialog> {
       toastification.show(
         context: context,
         type: ToastificationType.error,
-        title: const Text('Erreur'),
+        title: Text(tr(context, 'error')),
         description: Text(e.toString()),
         autoCloseDuration: const Duration(seconds: 4),
       );
@@ -290,9 +291,9 @@ class _ReviewDialogState extends State<_ReviewDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      title: const Text(
-        'Laisser un avis',
-        style: TextStyle(fontWeight: FontWeight.bold),
+      title: Text(
+        tr(context, 'leave_review'),
+        style: const TextStyle(fontWeight: FontWeight.bold),
       ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
@@ -317,7 +318,7 @@ class _ReviewDialogState extends State<_ReviewDialog> {
             controller: _commentController,
             maxLines: 3,
             decoration: InputDecoration(
-              hintText: 'Votre commentaire (optionnel)',
+              hintText: tr(context, 'your_comment_optional'),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
               ),
@@ -328,7 +329,10 @@ class _ReviewDialogState extends State<_ReviewDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Annuler', style: TextStyle(color: Colors.grey)),
+          child: Text(
+            tr(context, 'cancel'),
+            style: const TextStyle(color: Colors.grey),
+          ),
         ),
         ElevatedButton(
           onPressed: _isSubmitting ? null : _submitReview,
@@ -347,7 +351,10 @@ class _ReviewDialogState extends State<_ReviewDialog> {
                     strokeWidth: 2,
                   ),
                 )
-              : const Text('Envoyer', style: TextStyle(color: Colors.white)),
+              : Text(
+                  tr(context, 'send'),
+                  style: const TextStyle(color: Colors.white),
+                ),
         ),
       ],
     );

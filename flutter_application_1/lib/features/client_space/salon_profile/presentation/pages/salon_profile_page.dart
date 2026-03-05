@@ -8,6 +8,7 @@ import 'package:hjamty/features/client_space/salon_profile/presentation/widgets/
 import 'package:hjamty/features/client_space/salon_profile/presentation/widgets/reviews_tab.dart';
 import 'package:hjamty/features/client_space/salon_profile/data/salon_service.dart';
 import 'package:hjamty/features/client_space/appointments/presentation/pages/booking_flow_screen.dart';
+import 'package:hjamty/core/localization/translation_service.dart';
 
 class SalonProfilePage extends StatefulWidget {
   final int salonId;
@@ -54,14 +55,18 @@ class _SalonProfilePageState extends State<SalonProfilePage> {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      "Erreur: ${snapshot.error}",
+                      tr(
+                        context,
+                        'error_msg',
+                        args: [snapshot.error.toString()],
+                      ),
                       style: const TextStyle(color: AppColors.actionRed),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: () => Navigator.pop(context),
-                      child: const Text("Retour"),
+                      child: Text(tr(context, 'go_back')),
                     ),
                   ],
                 ),
@@ -70,7 +75,7 @@ class _SalonProfilePageState extends State<SalonProfilePage> {
           }
 
           if (!snapshot.hasData) {
-            return const Center(child: Text("Aucune donnée trouvée."));
+            return Center(child: Text(tr(context, 'no_data_found')));
           }
 
           final salonData = snapshot.data!;
@@ -127,11 +132,11 @@ class _SalonProfilePageState extends State<SalonProfilePage> {
                         labelStyle: const TextStyle(
                           fontWeight: FontWeight.bold,
                         ),
-                        tabs: const [
-                          Tab(text: "Services"),
-                          Tab(text: "Produits"),
-                          Tab(text: "Portfolio"),
-                          Tab(text: "Avis"),
+                        tabs: [
+                          Tab(text: tr(context, 'tab_services')),
+                          Tab(text: tr(context, 'products')),
+                          Tab(text: tr(context, 'portfolio')),
+                          Tab(text: tr(context, 'tab_reviews')),
                         ],
                       ),
                     ),
@@ -163,9 +168,12 @@ class _SalonProfilePageState extends State<SalonProfilePage> {
         },
         backgroundColor: AppColors.primaryBlue,
         icon: const Icon(Icons.calendar_month, color: Colors.white),
-        label: const Text(
-          "Prendre Rendez-vous",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        label: Text(
+          tr(context, 'book_appointment'),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,

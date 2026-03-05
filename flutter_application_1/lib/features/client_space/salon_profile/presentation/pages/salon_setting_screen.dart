@@ -8,6 +8,7 @@ import 'package:hjamty/features/auth/data/auth_service.dart';
 import 'package:hjamty/features/client_space/salon_profile/data/salon_service.dart';
 import 'package:hjamty/features/patron_space/create_salon_screen.dart';
 import 'package:hjamty/features/client_space/salon_profile/presentation/widgets/sticky_tab_bar_delegate.dart';
+import 'package:hjamty/core/localization/translation_service.dart';
 
 class SalonScreenUnifiee extends StatefulWidget {
   final int initialTabIndex;
@@ -194,13 +195,16 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
         style: ToastificationStyle.fillColored,
         alignment: Alignment.topCenter,
         autoCloseDuration: const Duration(seconds: 4),
-        title: const Text(
-          'Mabrouk! 🎉',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        title: Text(
+          tr(context, 'congrats'),
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
-        description: const Text(
-          'Sauvegarde réussie',
-          style: TextStyle(color: Colors.white),
+        description: Text(
+          tr(context, 'save_success'),
+          style: const TextStyle(color: Colors.white),
         ),
         primaryColor: AppColors.successGreen,
         backgroundColor: AppColors.successGreen,
@@ -215,9 +219,12 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
         style: ToastificationStyle.fillColored,
         alignment: Alignment.topCenter,
         autoCloseDuration: const Duration(seconds: 4),
-        title: const Text(
-          'Mochkla',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        title: Text(
+          tr(context, 'error_title'),
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
         description: Text(
           error.toString(),
@@ -265,8 +272,8 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
         toastification.show(
           context: context,
           type: ToastificationType.success,
-          title: const Text('Tsawra tplodet!'),
-          description: const Text('Tawa a3mel "Sajjel el cambiamenti"'),
+          title: Text(tr(context, 'image_uploaded')),
+          description: Text(tr(context, 'save_changes_instruction')),
           autoCloseDuration: const Duration(seconds: 3),
         );
       } catch (e) {
@@ -274,7 +281,7 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
         toastification.show(
           context: context,
           type: ToastificationType.error,
-          title: const Text('Erreur upload'),
+          title: Text(tr(context, 'upload_error')),
           description: Text(e.toString()),
         );
       }
@@ -316,7 +323,7 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
         toastification.show(
           context: context,
           type: ToastificationType.error,
-          title: const Text('Erreur upload service'),
+          title: Text(tr(context, 'upload_error_service')),
           description: Text(e.toString()),
         );
       }
@@ -358,7 +365,7 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
         toastification.show(
           context: context,
           type: ToastificationType.error,
-          title: const Text('Erreur upload employé'),
+          title: Text(tr(context, 'upload_error_employee')),
           description: Text(e.toString()),
         );
       }
@@ -372,8 +379,8 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
       toastification.show(
         context: context,
         type: ToastificationType.warning,
-        title: const Text('Maaloumet ne9sa'),
-        description: const Text('Lesm, soum wel wa9t lezmin'),
+        title: Text(tr(context, 'missing_info')),
+        description: Text(tr(context, 'name_price_time_required')),
         autoCloseDuration: const Duration(seconds: 3),
       );
       return;
@@ -398,7 +405,7 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
       toastification.show(
         context: context,
         type: ToastificationType.success,
-        title: const Text('Zadna Service 🎉'),
+        title: Text(tr(context, 'service_added')),
         autoCloseDuration: const Duration(seconds: 3),
       );
 
@@ -417,7 +424,7 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
       toastification.show(
         context: context,
         type: ToastificationType.error,
-        title: const Text('Mochkla'),
+        title: Text(tr(context, 'error_title')),
         description: Text(e.toString()),
         autoCloseDuration: const Duration(seconds: 4),
       );
@@ -450,9 +457,9 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                 color: Colors.grey,
               ),
               const SizedBox(height: 16),
-              const Text(
-                "Ma famma hatta salon.",
-                style: TextStyle(fontSize: 18, color: Colors.grey),
+              Text(
+                tr(context, 'no_salon'),
+                style: const TextStyle(fontSize: 18, color: Colors.grey),
               ),
               const SizedBox(height: 20),
               Row(
@@ -468,9 +475,9 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                       ).then((_) => _fetchSalonData());
                     },
                     icon: const Icon(Icons.add, size: 18, color: Colors.white),
-                    label: const Text(
-                      "Aamel salon mte3ek",
-                      style: TextStyle(color: Colors.white),
+                    label: Text(
+                      tr(context, 'create_your_salon'),
+                      style: const TextStyle(color: Colors.white),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primaryBlue,
@@ -483,7 +490,7 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                   OutlinedButton.icon(
                     onPressed: _fetchSalonData,
                     icon: const Icon(Icons.refresh, size: 18),
-                    label: const Text("Tijdid"),
+                    label: Text(tr(context, 'refresh')),
                     style: OutlinedButton.styleFrom(
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -499,21 +506,23 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
     }
 
     final List<Widget> tabs = [
-      const Tab(text: "Paramètres"),
-      const Tab(text: "Services"),
-      const Tab(text: "Equipe"),
-      const Tab(text: "Horaires"),
-      const Tab(text: "Galerie"),
-      const Tab(text: "Rendez-vous"),
+      Tab(text: tr(context, 'settings_fr')),
+      Tab(text: tr(context, 'tab_services')),
+      Tab(text: tr(context, 'team')),
+      Tab(text: tr(context, 'working_hours')),
+      Tab(text: tr(context, 'gallery')),
+      Tab(text: tr(context, 'appointments')),
     ];
 
     final List<Widget> tabViews = [
       _buildInfoTabEditable(),
       _buildServicesTabEditable(),
       _buildEquipeTabEditable(),
-      const Center(child: Text("Horaires Editables (Coming soon)")),
-      const Center(child: Text("Galerie Editables (Coming soon)")),
-      const Center(child: Text("Rendez-vous List (Coming soon)")),
+      Center(child: Text(tr(context, 'coming_soon', args: ['Horaires']))),
+      Center(child: Text(tr(context, 'coming_soon', args: ['Galerie']))),
+      Center(
+        child: Text(tr(context, 'coming_soon', args: ['Rendez-vous List'])),
+      ),
     ];
 
     return Scaffold(
@@ -551,9 +560,9 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                     ),
                     icon: const Icon(Icons.save_outlined, size: 18),
-                    label: const Text(
-                      "Sajjel kol chay",
-                      style: TextStyle(
+                    label: Text(
+                      tr(context, 'save_all'),
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 13,
                       ),
@@ -563,7 +572,8 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
               ],
               flexibleSpace: FlexibleSpaceBar(
                 title: Text(
-                  _salonData?['name']?.toString() ?? "Mon Salon",
+                  _salonData?['name']?.toString() ??
+                      tr(context, 'my_salon_default'),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 16,
@@ -627,7 +637,7 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
           // ── Cover Image ──
           _buildSectionHeader(
             Icons.image_outlined,
-            "Taswira mta3 salon (cover)",
+            tr(context, 'salon_cover_image'),
           ),
           const SizedBox(height: 10),
           Row(
@@ -663,7 +673,7 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
-                                      "Zid taswira mta3 el salon",
+                                      tr(context, 'add_salon_image'),
                                       style: TextStyle(
                                         color: Colors.grey.shade500,
                                         fontSize: 14,
@@ -701,7 +711,7 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                               const SizedBox(height: 4),
                               Text(
                                 _coverUploadProgress >= 1.0
-                                    ? "Sajjel..."
+                                    ? tr(context, 'saving')
                                     : "${(_coverUploadProgress * 100).toInt()}%",
                                 style: const TextStyle(
                                   color: Colors.white,
@@ -724,7 +734,7 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                     OutlinedButton.icon(
                       onPressed: _pickCoverImage,
                       icon: const Icon(Icons.upload_outlined, size: 18),
-                      label: const Text("Plodi mel galerie"),
+                      label: Text(tr(context, 'upload_from_gallery')),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.primaryBlue,
                         side: const BorderSide(color: AppColors.primaryBlue),
@@ -737,7 +747,7 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                     const SizedBox(height: 8),
                     _buildInputField(
                       _coverImageController,
-                      "aw 7ott URL mte3 taswira...",
+                      tr(context, 'or_put_image_url'),
                       Icons.link,
                     ),
                   ],
@@ -748,15 +758,22 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
           const SizedBox(height: 30),
 
           // ── Identité ──
-          _buildSectionHeader(Icons.storefront_outlined, "Identité"),
+          _buildSectionHeader(
+            Icons.storefront_outlined,
+            tr(context, 'identity'),
+          ),
           const SizedBox(height: 12),
-          _buildLabelInput("Esm e-salon"),
-          _buildInputField(_nameController, "Esm e-salon", Icons.title),
+          _buildLabelInput(tr(context, 'salon_name')),
+          _buildInputField(
+            _nameController,
+            tr(context, 'salon_name'),
+            Icons.title,
+          ),
           const SizedBox(height: 10),
           _buildLabelInput("Description"),
           _buildInputField(
             _descController,
-            "Chneya les services w el jaw fel salon?",
+            tr(context, 'salon_desc_hint'),
             Icons.description_outlined,
             maxLines: 4,
           ),
@@ -764,42 +781,48 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
           _buildLabelInput("Spécialité"),
           _buildInputField(
             _specialityController,
-            "ex: Coiffure, Barbershop...",
+            tr(context, 'speciality_hint'),
             Icons.auto_awesome_outlined,
           ),
           const SizedBox(height: 30),
 
           // ── Contact ──
-          _buildSectionHeader(Icons.contact_phone_outlined, "Contact"),
+          _buildSectionHeader(
+            Icons.contact_phone_outlined,
+            tr(context, 'contact'),
+          ),
           const SizedBox(height: 12),
-          _buildLabelInput("Numéro de contact"),
+          _buildLabelInput(tr(context, 'contact_number')),
           _buildInputField(
             _phoneController,
-            "ex: 50 123 456",
+            tr(context, 'phone_hint'),
             Icons.phone_outlined,
             keyboardType: TextInputType.phone,
           ),
           const SizedBox(height: 30),
 
           // ── Localisation ──
-          _buildSectionHeader(Icons.location_on_outlined, "Localisation"),
+          _buildSectionHeader(
+            Icons.location_on_outlined,
+            tr(context, 'location'),
+          ),
           const SizedBox(height: 12),
           _buildLabelInput("Adresse"),
           _buildInputField(
             _addressController,
-            "Adresse complète",
+            tr(context, 'full_address'),
             Icons.location_on_outlined,
             maxLines: 2,
           ),
           const SizedBox(height: 10),
-          _buildLabelInput("Google Maps URL"),
+          _buildLabelInput(tr(context, 'google_maps_link')),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: _buildInputField(
                   _googleMapsController,
-                  "https://maps.google.com/?q=...",
+                  tr(context, 'google_maps_hint'),
                   Icons.map_outlined,
                 ),
               ),
@@ -847,7 +870,7 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
           const SizedBox(height: 30),
 
           // ── Web & Réseaux sociaux ──
-          _buildLabelInput("Site web"),
+          _buildLabelInput(tr(context, 'account_type')),
           _buildInputField(
             _websiteController,
             "https://www.mon-salon.com",
@@ -1102,8 +1125,8 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                "Les services",
+              Text(
+                tr(context, 'tab_services'),
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -1128,7 +1151,9 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                   color: Colors.white,
                 ),
                 label: Text(
-                  _isAddingService ? "Saker" : "Zid service",
+                  _isAddingService
+                      ? tr(context, 'close')
+                      : tr(context, 'add_new_service'),
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -1156,8 +1181,8 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text(
-                    "SERVICE JDID",
+                  Text(
+                    tr(context, 'add_new_service').toUpperCase(),
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
@@ -1225,7 +1250,7 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                           color: !_isSrvUrlMode ? Colors.white : Colors.grey,
                         ),
                         label: Text(
-                          "Plodi mel galerie",
+                          tr(context, 'upload_from_gallery'),
                           style: TextStyle(
                             color: !_isSrvUrlMode ? Colors.white : Colors.grey,
                           ),
@@ -1245,7 +1270,7 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                     const SizedBox(height: 8),
                     Text(
                       _srvUploadProgress >= 1.0
-                          ? "Sajjel..."
+                          ? tr(context, 'saving')
                           : "${(_srvUploadProgress * 100).toInt()}% uploaded...",
                       textAlign: TextAlign.center,
                       style: const TextStyle(
@@ -1259,31 +1284,31 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                   if (_isSrvUrlMode)
                     _buildInputField(
                       _srvUrlController,
-                      "Hott lien mtaa taswira...",
+                      tr(context, 'or_put_image_url'),
                       Icons.link,
                     ),
                   const SizedBox(height: 12),
-                  _buildLabelInput("Esm el service"),
+                  _buildLabelInput(tr(context, 'service_name')),
                   _buildInputField(
                     _srvNameController,
-                    "Esm service",
+                    tr(context, 'service_name_hint'),
                     Icons.design_services,
                   ),
                   const SizedBox(height: 12),
-                  _buildLabelInput("Soum (TND)"),
+                  _buildLabelInput(tr(context, 'price_tnd')),
                   _buildInputField(
                     _srvPriceController,
-                    "Soum",
+                    tr(context, 'price_hint'),
                     Icons.attach_money,
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
                   ),
                   const SizedBox(height: 12),
-                  _buildLabelInput("Wa9t (bl minute)"),
+                  _buildLabelInput(tr(context, 'duration_min')),
                   _buildInputField(
                     _srvDurationController,
-                    "Wa9t (min)",
+                    tr(context, 'duration_hint'),
                     Icons.timer_outlined,
                     keyboardType: TextInputType.number,
                   ),
@@ -1305,9 +1330,9 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                         borderRadius: BorderRadius.circular(16),
                       ),
                     ),
-                    child: const Text(
-                      "Sajjel el service",
-                      style: TextStyle(
+                    child: Text(
+                      tr(context, 'save_service'),
+                      style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
@@ -1320,12 +1345,12 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
           ],
 
           if (services.isEmpty)
-            const Center(
+            Center(
               child: Padding(
-                padding: EdgeInsets.all(20.0),
+                padding: const EdgeInsets.all(20.0),
                 child: Text(
-                  "Ma famma 7atta service ltawa.",
-                  style: TextStyle(color: Colors.grey),
+                  tr(context, 'no_data_found'),
+                  style: const TextStyle(color: Colors.grey),
                 ),
               ),
             )
@@ -1421,8 +1446,8 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
       toastification.show(
         context: context,
         type: ToastificationType.warning,
-        title: const Text('Maaloumet ne9sa'),
-        description: const Text('Esm, noumro wel kelmet essir lezmin'),
+        title: Text(tr(context, 'missing_info')),
+        description: Text(tr(context, 'name_phone_password_required')),
         autoCloseDuration: const Duration(seconds: 3),
       );
       return;
@@ -1450,7 +1475,7 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
       toastification.show(
         context: context,
         type: ToastificationType.success,
-        title: const Text('Spécialiste mzid 🎉'),
+        title: Text(tr(context, 'specialist_added')),
         autoCloseDuration: const Duration(seconds: 3),
       );
       _empNameController.clear();
@@ -1468,7 +1493,7 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
       toastification.show(
         context: context,
         type: ToastificationType.error,
-        title: const Text('Mochkla'),
+        title: Text(tr(context, 'error_title')),
         description: Text(e.toString().replaceAll('Exception: ', '')),
         autoCloseDuration: const Duration(seconds: 4),
       );
@@ -1488,7 +1513,7 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "${employees.length} spécialiste${employees.length != 1 ? 's' : ''}",
+                "${employees.length} ${tr(context, 'specialist')}${employees.length != 1 ? 's' : ''}",
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -1510,7 +1535,9 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                   color: Colors.white,
                 ),
                 label: Text(
-                  _isAddingSpecialist ? "Saker" : "+ Zid Spécialiste",
+                  _isAddingSpecialist
+                      ? tr(context, 'close')
+                      : "+ ${tr(context, 'add_specialist')}",
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -1538,9 +1565,9 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text(
-                    "SPÉCIALISTE JDID",
-                    style: TextStyle(
+                  Text(
+                    tr(context, 'new_specialist').toUpperCase(),
+                    style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                       color: Colors.grey,
@@ -1548,22 +1575,22 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                     ),
                   ),
                   const SizedBox(height: 16),
-                  _buildLabelInput("Esm el spécialiste *"),
+                  _buildLabelInput("${tr(context, 'specialist_name')} *"),
                   _buildInputField(
                     _empNameController,
-                    "Esm w Lqeb",
+                    tr(context, 'first_last_name'),
                     Icons.person_outline,
                   ),
                   const SizedBox(height: 12),
-                  _buildLabelInput("Noumro Téléphone *"),
+                  _buildLabelInput("${tr(context, 'contact_number')} *"),
                   _buildInputField(
                     _empPhoneController,
-                    "ex: 50 123 456",
+                    tr(context, 'phone_hint'),
                     Icons.phone_outlined,
                     keyboardType: TextInputType.phone,
                   ),
                   const SizedBox(height: 12),
-                  _buildLabelInput("Kelmet essir *"),
+                  _buildLabelInput("${tr(context, 'password')} *"),
                   Container(
                     decoration: BoxDecoration(
                       color: Colors.grey.shade50,
@@ -1584,7 +1611,7 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                             controller: _empPasswordController,
                             obscureText: !_empPasswordVisible,
                             decoration: InputDecoration(
-                              hintText: "Kelmet essir mte3 el compte",
+                              hintText: tr(context, 'account_password'),
                               hintStyle: TextStyle(color: Colors.grey.shade400),
                               border: InputBorder.none,
                               isDense: true,
@@ -1610,22 +1637,22 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                     ),
                   ),
                   const SizedBox(height: 12),
-                  _buildLabelInput("Spécialité / Rôle"),
+                  _buildLabelInput(tr(context, 'role_speciality')),
                   _buildInputField(
                     _empRoleController,
-                    "ex: Coiffeur, Barbier...",
+                    tr(context, 'role_hint'),
                     Icons.auto_awesome_outlined,
                   ),
                   const SizedBox(height: 12),
-                  _buildLabelInput("Bio (optionnel)"),
+                  _buildLabelInput(tr(context, 'bio_optional')),
                   _buildInputField(
                     _empBioController,
-                    "Quelques mots sur le spécialiste...",
+                    tr(context, 'bio_hint'),
                     Icons.info_outline,
                     maxLines: 2,
                   ),
                   const SizedBox(height: 12),
-                  _buildLabelInput("Taswira (optionnel)"),
+                  _buildLabelInput(tr(context, 'image_optional')),
                   Row(
                     children: [
                       ElevatedButton.icon(
@@ -1682,7 +1709,7 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                           color: !_isEmpUrlMode ? Colors.white : Colors.grey,
                         ),
                         label: Text(
-                          "Plodi mel galerie",
+                          tr(context, 'upload_from_gallery'),
                           style: TextStyle(
                             color: !_isEmpUrlMode ? Colors.white : Colors.grey,
                           ),
@@ -1702,7 +1729,7 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                     const SizedBox(height: 8),
                     Text(
                       _empUploadProgress >= 1.0
-                          ? "Sajjel..."
+                          ? tr(context, 'saving')
                           : "${(_empUploadProgress * 100).toInt()}% uploaded...",
                       textAlign: TextAlign.center,
                       style: const TextStyle(
@@ -1716,7 +1743,7 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                   if (_isEmpUrlMode)
                     _buildInputField(
                       _empImageUrlController,
-                      "https://... lien mte3 taswira",
+                      tr(context, 'or_put_image_url'),
                       Icons.image_outlined,
                     )
                   else
@@ -1731,9 +1758,9 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                         borderRadius: BorderRadius.circular(16),
                       ),
                     ),
-                    child: const Text(
-                      "Enregistrer le Spécialiste",
-                      style: TextStyle(
+                    child: Text(
+                      tr(context, 'save_specialist'),
+                      style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                         fontSize: 15,
@@ -1757,9 +1784,9 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                       color: Colors.grey.shade300,
                     ),
                     const SizedBox(height: 12),
-                    const Text(
-                      "Ma famma 7atta spécialiste ltawa.",
-                      style: TextStyle(color: Colors.grey, fontSize: 14),
+                    Text(
+                      tr(context, 'no_data_found'),
+                      style: const TextStyle(color: Colors.grey, fontSize: 14),
                     ),
                   ],
                 ),
@@ -1919,7 +1946,7 @@ class _SocialLinkAdderState extends State<_SocialLinkAdder> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            "${_platforms.firstWhere((p) => p['id'] == _selectedPlatform)['label']} deja mawjouda!",
+            "${_platforms.firstWhere((p) => p['id'] == _selectedPlatform)['label']} ${tr(context, 'already_exists')}",
           ),
           backgroundColor: Colors.orange,
           behavior: SnackBarBehavior.floating,
@@ -1952,7 +1979,9 @@ class _SocialLinkAdderState extends State<_SocialLinkAdder> {
               }),
         icon: const Icon(Icons.add, size: 18),
         label: Text(
-          available.isEmpty ? "Zedna kol platform" : "+ Zid réseau social",
+          available.isEmpty
+              ? tr(context, 'all_platforms_added')
+              : "+ ${tr(context, 'add_social_network')}",
         ),
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.primaryBlue,
@@ -1982,7 +2011,7 @@ class _SocialLinkAdderState extends State<_SocialLinkAdder> {
           DropdownButtonFormField<String>(
             value: _selectedPlatform,
             decoration: InputDecoration(
-              labelText: "Platform",
+              labelText: tr(context, 'platform'),
               filled: true,
               fillColor: Colors.grey.shade50,
               border: OutlineInputBorder(
@@ -2034,9 +2063,9 @@ class _SocialLinkAdderState extends State<_SocialLinkAdder> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  child: const Text(
-                    "Zid",
-                    style: TextStyle(
+                  child: Text(
+                    tr(context, 'add'),
+                    style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
                     ),
@@ -2046,9 +2075,9 @@ class _SocialLinkAdderState extends State<_SocialLinkAdder> {
               const SizedBox(width: 8),
               TextButton(
                 onPressed: () => setState(() => _expanded = false),
-                child: const Text(
-                  "Batel",
-                  style: TextStyle(color: Colors.grey),
+                child: Text(
+                  tr(context, 'cancel'),
+                  style: const TextStyle(color: Colors.grey),
                 ),
               ),
             ],

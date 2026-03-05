@@ -116,9 +116,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
           context: context,
           type: ToastificationType.error,
           title: const Text('Erreur'),
-          description: const Text(
-            "Impossible de charger les détails du salon.",
-          ),
+          description: Text(tr(context, 'error_loading_salon_details')),
         );
       }
     }
@@ -163,23 +161,19 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
   Future<void> _submitBooking() async {
     if (_selectedServiceIds.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Veuillez sélectionner au moins un service."),
-        ),
+        SnackBar(content: Text(tr(context, 'select_at_least_one_service'))),
       );
       return;
     }
     if (_selectedBarberId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Veuillez sélectionner un coiffeur.")),
+        SnackBar(content: Text(tr(context, 'select_barber_validation'))),
       );
       return;
     }
     if (_selectedTime == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Veuillez choisir une heure de rendez-vous."),
-        ),
+        SnackBar(content: Text(tr(context, 'select_time_validation'))),
       );
       return;
     }
@@ -222,8 +216,8 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
         toastification.show(
           context: context,
           type: ToastificationType.success,
-          title: const Text('Rendez-vous confirmé! ✅'),
-          description: const Text("Votre réservation a été créée avec succès."),
+          title: Text('${tr(context, 'appointment_confirmed')} ✅'),
+          description: Text(tr(context, 'booking_created_success')),
           autoCloseDuration: const Duration(seconds: 4),
         );
 
@@ -242,7 +236,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
         toastification.show(
           context: context,
           type: ToastificationType.error,
-          title: const Text('Erreur de réservation'),
+          title: Text(tr(context, 'booking_error_title')),
           description: Text(e.toString()),
           autoCloseDuration: const Duration(seconds: 5),
         );
@@ -302,9 +296,9 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                   : () async {
                       if (phoneController.text.trim().length != 8) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
+                          SnackBar(
                             content: Text(
-                              "Le numéro doit comporter 8 chiffres",
+                              tr(context, 'phone_must_be_8_digits'),
                             ),
                             backgroundColor: Colors.red,
                           ),
@@ -357,9 +351,13 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                                 context: context,
                                 type: ToastificationType.info,
                                 style: ToastificationStyle.flat,
-                                title: const Text('Bienvenue ! 🎉'),
+                                title: Text(tr(context, 'welcome_exclamation')),
                                 description: Text(
-                                  "Un compte a été créé. Votre mot de passe est votre numéro : $phone",
+                                  tr(
+                                    context,
+                                    'account_created_password_is_phone',
+                                    args: [phone],
+                                  ),
                                 ),
                                 autoCloseDuration: const Duration(seconds: 7),
                                 primaryColor: AppColors.primaryBlue,
@@ -383,9 +381,9 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                         // Étape 2 : L'utilisateur existe, on tente de se connecter
                         if (passwordController.text.length < 6) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
+                            SnackBar(
                               content: Text(
-                                "Le mot de passe doit comporter au moins 6 caractères",
+                                tr(context, 'password_must_be_6_chars'),
                               ),
                               backgroundColor: Colors.red,
                             ),
@@ -474,7 +472,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
         elevation: 0,
         centerTitle: true,
         title: Text(
-          "Prendre RDV - $_salonName",
+          tr(context, 'book_appointment_for', args: [_salonName]),
           style: const TextStyle(
             color: AppColors.textDark,
             fontWeight: FontWeight.bold,
@@ -496,11 +494,11 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // --- Services Section ---
-                  _buildSectionTitle("1. Choisissez vos services"),
+                  _buildSectionTitle(tr(context, 'choose_your_services')),
                   if (_services.isEmpty)
-                    const Text(
-                      "Aucun service disponible",
-                      style: TextStyle(color: Colors.grey),
+                    Text(
+                      tr(context, 'no_service_available'),
+                      style: const TextStyle(color: Colors.grey),
                     )
                   else
                     ..._services.map(
@@ -510,7 +508,13 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                           svc['name'] ?? '',
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        subtitle: Text("${svc['durationMinutes'] ?? 30} min"),
+                        subtitle: Text(
+                          tr(
+                            context,
+                            'duration_min',
+                            args: [(svc['durationMinutes'] ?? 30).toString()],
+                          ),
+                        ),
                         secondary: Text(
                           "${svc['price'] ?? 0} TND",
                           style: const TextStyle(
@@ -535,7 +539,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                   const SizedBox(height: 25),
 
                   // --- Professional Section ---
-                  _buildSectionTitle("2. Choisissez le professionnel"),
+                  _buildSectionTitle(tr(context, 'choose_professional_title')),
                   _buildBarberSelection(),
                   const SizedBox(height: 25),
 
@@ -543,7 +547,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _buildSectionTitle("3. Date & Heure"),
+                      _buildSectionTitle(tr(context, 'date_and_time_step')),
                       IconButton(
                         padding: EdgeInsets.zero,
                         icon: const Icon(
@@ -568,12 +572,12 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                       ),
                     )
                   else if (_availableSlots.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 20),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
                       child: Center(
                         child: Text(
-                          "Aucun horaire disponible pour cette date.",
-                          style: TextStyle(color: Colors.grey),
+                          tr(context, 'no_slots_available'),
+                          style: const TextStyle(color: Colors.grey),
                         ),
                       ),
                     )
@@ -606,9 +610,9 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
 
   Widget _buildBarberSelection() {
     if (_professionals.isEmpty) {
-      return const Text(
-        "Aucun professionnel trouvé. Mettez à jour le salon.",
-        style: TextStyle(color: Colors.grey),
+      return Text(
+        tr(context, 'no_professional_found_update'),
+        style: const TextStyle(color: Colors.grey),
       );
     }
 
@@ -661,7 +665,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    p['name'] ?? 'Inconnu',
+                    p['name'] ?? tr(context, 'unknown'),
                     style: TextStyle(
                       fontWeight: isSelected
                           ? FontWeight.bold
@@ -878,9 +882,9 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  "Total",
-                  style: TextStyle(color: Colors.grey, fontSize: 13),
+                Text(
+                  tr(context, 'total'),
+                  style: const TextStyle(color: Colors.grey, fontSize: 13),
                 ),
                 Text(
                   "$_totalPrice TND",
@@ -924,9 +928,9 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                         strokeWidth: 2,
                       ),
                     )
-                  : const Text(
-                      "Réserver",
-                      style: TextStyle(
+                  : Text(
+                      tr(context, 'reserve_btn'),
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,

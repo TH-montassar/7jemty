@@ -332,9 +332,9 @@ class _BookingPageState extends State<BookingPage> {
                   : () async {
                       if (phoneController.text.trim().length != 8) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
+                          SnackBar(
                             content: Text(
-                              "Le numéro doit comporter 8 chiffres",
+                              tr(context, 'phone_must_be_8_digits'),
                             ),
                             backgroundColor: Colors.red,
                           ),
@@ -343,9 +343,9 @@ class _BookingPageState extends State<BookingPage> {
                       }
                       if (passwordController.text.length < 6) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
+                          SnackBar(
                             content: Text(
-                              "Le mot de passe doit comporter au moins 6 caractères",
+                              tr(context, 'password_must_be_6_chars'),
                             ),
                             backgroundColor: Colors.red,
                           ),
@@ -359,9 +359,9 @@ class _BookingPageState extends State<BookingPage> {
                         if (isLogin) {
                           if (passwordController.text.length < 6) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
+                              SnackBar(
                                 content: Text(
-                                  "Le mot de passe doit comporter au moins 6 caractères",
+                                  tr(context, 'password_must_be_6_chars'),
                                 ),
                                 backgroundColor: Colors.red,
                               ),
@@ -388,9 +388,9 @@ class _BookingPageState extends State<BookingPage> {
                         } else {
                           if (passwordController.text.length < 6) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
+                              SnackBar(
                                 content: Text(
-                                  "Le mot de passe doit comporter au moins 6 caractères",
+                                  tr(context, 'password_must_be_6_chars'),
                                 ),
                                 backgroundColor: Colors.red,
                               ),
@@ -661,9 +661,7 @@ class _BookingPageState extends State<BookingPage> {
     }
 
     if (_availableSlots.isEmpty) {
-      return const Center(
-        child: Text("Aucun créneau disponible pour ce jour."),
-      );
+      return Center(child: Text(tr(context, 'no_slots_available')));
     }
 
     return Wrap(
