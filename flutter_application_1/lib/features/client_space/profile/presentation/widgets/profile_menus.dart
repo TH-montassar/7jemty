@@ -29,13 +29,13 @@ class ActivityMenu extends StatelessWidget {
           _ProfileMenuItem(
             icon: Icons.local_shipping_outlined,
             title: tr(context, 'product_orders'),
-            subtitle: "2 mazelou",
+            subtitle: tr(context, 'orders_remaining', args: ['2']),
           ),
           Divider(height: 1, indent: 60),
           _ProfileMenuItem(
             icon: Icons.favorite_border,
             title: tr(context, 'favorite_salons'),
-            subtitle: "4 salons",
+            subtitle: tr(context, 'favorite_salons_count', args: ['4']),
           ),
         ],
       ),

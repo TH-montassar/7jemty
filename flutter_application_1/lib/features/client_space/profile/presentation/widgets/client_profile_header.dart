@@ -4,6 +4,7 @@ import 'package:hjamty/features/auth/data/auth_service.dart';
 import 'package:toastification/toastification.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:hjamty/core/constants/app_colors.dart';
+import 'package:hjamty/core/localization/translation_service.dart';
 
 class ProfileHeader extends StatefulWidget {
   final Map<String, dynamic>? userData;
@@ -96,7 +97,7 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                                     Text(
                                       fullName.isNotEmpty
                                           ? fullName
-                                          : 'Utilisateur',
+                                          : tr(context, 'default_user'),
                                       style: const TextStyle(
                                         fontSize: 22,
                                         fontWeight: FontWeight.bold,
@@ -105,7 +106,7 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                                     Text(
                                       emailController.text.isNotEmpty
                                           ? emailController.text
-                                          : 'pas d\'email',
+                                          : tr(context, 'no_email'),
                                       style: TextStyle(
                                         color: Colors.grey[600],
                                         fontSize: 14,
@@ -119,9 +120,9 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                           const SizedBox(height: 32),
 
                           // Input Fields
-                          const Text(
-                            'Informations personnelles',
-                            style: TextStyle(
+                          Text(
+                            tr(context, 'personal_info'),
+                            style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 18,
                               color: AppColors.textDark,
@@ -135,7 +136,7 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                                 child: TextField(
                                   controller: firstNameController,
                                   decoration: InputDecoration(
-                                    labelText: 'Prénom',
+                                    labelText: tr(context, 'first_name'),
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
                                     ),
@@ -147,7 +148,7 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                                 child: TextField(
                                   controller: lastNameController,
                                   decoration: InputDecoration(
-                                    labelText: 'Nom',
+                                    labelText: tr(context, 'last_name'),
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
                                     ),
@@ -162,7 +163,7 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                             controller: phoneController,
                             keyboardType: TextInputType.phone,
                             decoration: InputDecoration(
-                              labelText: 'Numéro de téléphone',
+                              labelText: tr(context, 'phone_number'),
                               prefixIcon: const Icon(Icons.phone_outlined),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -174,7 +175,7 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                           TextField(
                             controller: emailController,
                             decoration: InputDecoration(
-                              labelText: 'Adresse Email',
+                              labelText: tr(context, 'email_address'),
                               prefixIcon: const Icon(Icons.email_outlined),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -183,9 +184,9 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                           ),
                           const SizedBox(height: 24),
 
-                          const Text(
-                            'Photo de profil',
-                            style: TextStyle(
+                          Text(
+                            tr(context, 'profile_photo'),
+                            style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 18,
                               color: AppColors.textDark,
@@ -206,8 +207,15 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                                 const SizedBox(height: 8),
                                 Text(
                                   _uploadProgress >= 1.0
-                                      ? 'Traitement en cours...'
-                                      : 'Envoi en cours: ${(_uploadProgress * 100).toStringAsFixed(0)}%',
+                                      ? tr(context, 'processing')
+                                      : tr(
+                                          context,
+                                          'uploading_progress',
+                                          args: [
+                                            (_uploadProgress * 100)
+                                                .toStringAsFixed(0),
+                                          ],
+                                        ),
                                   style: const TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
@@ -255,9 +263,12 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                                           toastification.show(
                                             context: context,
                                             type: ToastificationType.success,
-                                            title: const Text('Succès'),
-                                            description: const Text(
-                                              'Image uploadée avec succès !',
+                                            title: Text(tr(context, 'success')),
+                                            description: Text(
+                                              tr(
+                                                context,
+                                                'image_uploaded_success',
+                                              ),
                                             ),
                                           );
                                         } catch (e) {
@@ -267,14 +278,16 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                                           toastification.show(
                                             context: context,
                                             type: ToastificationType.error,
-                                            title: const Text('Erreur upload'),
+                                            title: Text(
+                                              tr(context, 'upload_error'),
+                                            ),
                                             description: Text(e.toString()),
                                           );
                                         }
                                       }
                                     },
                                     icon: const Icon(Icons.upload_file),
-                                    label: const Text('Choisir une image'),
+                                    label: Text(tr(context, 'choose_image')),
                                     style: OutlinedButton.styleFrom(
                                       padding: const EdgeInsets.symmetric(
                                         vertical: 12,
@@ -291,7 +304,7 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                           TextField(
                             controller: urlController,
                             decoration: InputDecoration(
-                              labelText: 'Ou coller un URL',
+                              labelText: tr(context, 'or_paste_url'),
                               prefixIcon: const Icon(Icons.link),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -320,9 +333,9 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                                   toastification.show(
                                     context: context,
                                     type: ToastificationType.error,
-                                    title: const Text('Attention'),
-                                    description: const Text(
-                                      'Fonctionnalité bientôt disponible',
+                                    title: Text(tr(context, 'attention')),
+                                    description: Text(
+                                      tr(context, 'feature_soon'),
                                     ),
                                   );
                                 },
@@ -331,9 +344,9 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                                   color: Colors.red,
                                   size: 18,
                                 ),
-                                label: const Text(
-                                  'Supprimer',
-                                  style: TextStyle(
+                                label: Text(
+                                  tr(context, 'delete'),
+                                  style: const TextStyle(
                                     color: Colors.red,
                                     fontSize: 12,
                                   ),
@@ -352,9 +365,9 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                                           MaterialTapTargetSize.shrinkWrap,
                                     ),
                                     onPressed: () => Navigator.pop(context),
-                                    child: const Text(
-                                      'Annuler',
-                                      style: TextStyle(fontSize: 12),
+                                    child: Text(
+                                      tr(context, 'cancel'),
+                                      style: const TextStyle(fontSize: 12),
                                     ),
                                   ),
                                   const SizedBox(width: 4),
@@ -383,9 +396,14 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                                                   context: context,
                                                   type: ToastificationType
                                                       .success,
-                                                  title: const Text('Succès'),
-                                                  description: const Text(
-                                                    'Profil mis à jour !',
+                                                  title: Text(
+                                                    tr(context, 'success'),
+                                                  ),
+                                                  description: Text(
+                                                    tr(
+                                                      context,
+                                                      'profile_updated',
+                                                    ),
                                                   ),
                                                 );
                                               }
@@ -395,7 +413,9 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                                                   context: context,
                                                   type:
                                                       ToastificationType.error,
-                                                  title: const Text('Erreur'),
+                                                  title: Text(
+                                                    tr(context, 'error_title'),
+                                                  ),
                                                   description: Text(
                                                     e.toString(),
                                                   ),
@@ -417,9 +437,9 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                                         borderRadius: BorderRadius.circular(10),
                                       ),
                                     ),
-                                    child: const Text(
-                                      'Enregistrer',
-                                      style: TextStyle(fontSize: 12),
+                                    child: Text(
+                                      tr(context, 'save_btn2'),
+                                      style: const TextStyle(fontSize: 12),
                                     ),
                                   ),
                                 ],
@@ -442,8 +462,8 @@ class _ProfileHeaderState extends State<ProfileHeader> {
   @override
   Widget build(BuildContext context) {
     // If userData is provided (fetched from database), priority is given to it
-    final name = widget.userData?['fullName'] ?? 'Utilisateur';
-    final role = widget.userData?['role'] ?? 'Client';
+    final name = widget.userData?['fullName'] ?? tr(context, 'default_user');
+    final role = widget.userData?['role'] ?? tr(context, 'default_user');
     final phone = widget.userData?['phoneNumber'] ?? '';
     final avatarUrl = widget.userData?['profile']?['avatarUrl'];
 

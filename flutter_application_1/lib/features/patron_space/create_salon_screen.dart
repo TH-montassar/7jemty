@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:hjamty/core/constants/app_colors.dart';
 import 'package:hjamty/features/client_space/salon_profile/data/salon_service.dart';
 import 'main_page.dart';
+import 'package:hjamty/core/localization/translation_service.dart';
 
 class CreateSalonScreen extends StatefulWidget {
   const CreateSalonScreen({super.key});
@@ -146,13 +147,16 @@ class _CreateSalonScreenState extends State<CreateSalonScreen> {
         style: ToastificationStyle.fillColored,
         alignment: Alignment.topCenter,
         autoCloseDuration: const Duration(seconds: 4),
-        title: const Text(
-          'Mabrouk! 🎉',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        title: Text(
+          tr(context, 'salon_created_success_title'),
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
-        description: const Text(
-          'Salon mte3ek thal mriguel',
-          style: TextStyle(color: Colors.white),
+        description: Text(
+          tr(context, 'salon_created_success_desc'),
+          style: const TextStyle(color: Colors.white),
         ),
         primaryColor: AppColors.successGreen,
         backgroundColor: AppColors.successGreen,
@@ -183,9 +187,12 @@ class _CreateSalonScreenState extends State<CreateSalonScreen> {
       style: ToastificationStyle.fillColored,
       alignment: Alignment.topCenter,
       autoCloseDuration: const Duration(seconds: 4),
-      title: const Text(
-        'Mochkla',
-        style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+      title: Text(
+        tr(context, 'problem'),
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
       ),
       description: Text(text, style: const TextStyle(color: Colors.white)),
       primaryColor: AppColors.actionRed,
@@ -199,9 +206,9 @@ class _CreateSalonScreenState extends State<CreateSalonScreen> {
     return Scaffold(
       backgroundColor: AppColors.bgColor,
       appBar: AppBar(
-        title: const Text(
-          "Riguel Salon mte3ek",
-          style: TextStyle(
+        title: Text(
+          tr(context, 'setup_salon'),
+          style: const TextStyle(
             color: AppColors.textDark,
             fontWeight: FontWeight.bold,
           ),
@@ -271,58 +278,59 @@ class _CreateSalonScreenState extends State<CreateSalonScreen> {
               color: AppColors.primaryBlue,
             ),
             const SizedBox(height: 16),
-            const Text(
-              "Identité du salon",
-              style: TextStyle(
+            Text(
+              tr(context, 'salon_identity'),
+              style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
                 color: AppColors.textDark,
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              "Hatt les infos de base mtaa el salon mte3ek bech les clients yal9aweh bshoula.",
+            Text(
+              tr(context, 'salon_identity_desc'),
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: Colors.grey),
+              style: const TextStyle(fontSize: 14, color: Colors.grey),
             ),
             const SizedBox(height: 32),
 
             _buildInput(
               controller: _nameController,
-              label: "Esm Salon *",
-              hint: "ex: Barbershop VIP",
+              label: tr(context, 'salon_name_req'),
+              hint: tr(context, 'salon_name_hint'),
               icon: Icons.title,
-              validator: (v) =>
-                  v == null || v.trim().isEmpty ? "Esem e-salon lezem" : null,
+              validator: (v) => v == null || v.trim().isEmpty
+                  ? tr(context, 'salon_name_validation')
+                  : null,
             ),
             const SizedBox(height: 16),
             _buildInput(
               controller: _addressController,
-              label: "Adresse complète *",
-              hint: "ex: 12 Rue Habib Bourguiba, Tunis",
+              label: tr(context, 'address_req'),
+              hint: tr(context, 'address_hint'),
               icon: Icons.location_on_outlined,
               validator: (v) => v == null || v.trim().length < 5
-                  ? "L'adresse lezem tkon s7i7a"
+                  ? tr(context, 'address_validation')
                   : null,
             ),
             const SizedBox(height: 16),
             _buildInput(
               controller: _googleMapsController,
-              label: "Lien Google Maps (Optionnel)",
-              hint: "Copie le lien mel Maps w hatou lenna",
+              label: tr(context, 'google_maps_optional'),
+              hint: tr(context, 'google_maps_hint'),
               icon: Icons.map_outlined,
             ),
             const SizedBox(height: 16),
             _buildInput(
               controller: _specialityController,
-              label: "Spécialité (Optionnel)",
-              hint: "ex: Coiffure, Esthétique...",
+              label: tr(context, 'speciality_optional'),
+              hint: tr(context, 'speciality_hint'),
               icon: Icons.auto_awesome_outlined,
             ),
             const SizedBox(height: 32),
 
             _buildPrimaryButton(
-              text: "Suivant",
+              text: tr(context, 'next'),
               onPressed: _nextStep,
               isLoading: _isLoading,
             ),
@@ -346,49 +354,49 @@ class _CreateSalonScreenState extends State<CreateSalonScreen> {
             color: AppColors.primaryBlue,
           ),
           const SizedBox(height: 16),
-          const Text(
-            "Présentation (Optionnel)",
-            style: TextStyle(
+          Text(
+            tr(context, 'presentation_optional'),
+            style: const TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
               color: AppColors.textDark,
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            "Ac3ti aktar tafasil bech tjib aktar clients.",
+          Text(
+            tr(context, 'presentation_desc'),
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 14, color: Colors.grey),
+            style: const TextStyle(fontSize: 14, color: Colors.grey),
           ),
           const SizedBox(height: 32),
 
           _buildInput(
             controller: _descController,
-            label: "Description",
-            hint: "Chneya les services w el jaw fel salon?",
+            label: tr(context, 'description_label'),
+            hint: tr(context, 'description_hint'),
             icon: Icons.description_outlined,
             maxLines: 3,
           ),
           const SizedBox(height: 16),
           _buildInput(
             controller: _phoneController,
-            label: "Numéro de contact",
-            hint: "Numrou tlifoun",
+            label: tr(context, 'contact_phone'),
+            hint: tr(context, 'contact_phone_hint'),
             icon: Icons.phone_android_outlined,
             keyboardType: TextInputType.phone,
           ),
           const SizedBox(height: 16),
           _buildInput(
             controller: _websiteController,
-            label: "Site web",
-            hint: "https://www.mon-salon.com",
+            label: tr(context, 'website_label'),
+            hint: tr(context, 'website_hint'),
             icon: Icons.language_outlined,
             keyboardType: TextInputType.url,
           ),
           const SizedBox(height: 32),
 
           _buildPrimaryButton(
-            text: "Suivant",
+            text: tr(context, 'next'),
             onPressed: () {
               FocusScope.of(context).unfocus();
               _nextStep();
@@ -397,9 +405,12 @@ class _CreateSalonScreenState extends State<CreateSalonScreen> {
           const SizedBox(height: 12),
           TextButton(
             onPressed: _nextStep,
-            child: const Text(
-              "Fout l'etape",
-              style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
+            child: Text(
+              tr(context, 'skip_step'),
+              style: const TextStyle(
+                color: Colors.grey,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],
@@ -421,19 +432,19 @@ class _CreateSalonScreenState extends State<CreateSalonScreen> {
             color: AppColors.primaryBlue,
           ),
           const SizedBox(height: 16),
-          const Text(
-            "Photo de couverture",
-            style: TextStyle(
+          Text(
+            tr(context, 'cover_photo'),
+            style: const TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.bold,
               color: AppColors.textDark,
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            "Taswira mezyena ll salon mte3ek tzid ml iqbal.",
+          Text(
+            tr(context, 'cover_photo_desc'),
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 14, color: Colors.grey),
+            style: const TextStyle(fontSize: 14, color: Colors.grey),
           ),
           const SizedBox(height: 32),
 
@@ -471,7 +482,7 @@ class _CreateSalonScreenState extends State<CreateSalonScreen> {
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          "Nzel lena bech tplodi taswira",
+                          tr(context, 'upload_photo_prompt'),
                           style: TextStyle(
                             color: Colors.grey.shade600,
                             fontWeight: FontWeight.w500,
@@ -486,11 +497,11 @@ class _CreateSalonScreenState extends State<CreateSalonScreen> {
           Row(
             children: [
               const Expanded(child: Divider()),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Text(
-                  "Wala aamel lien",
-                  style: TextStyle(color: Colors.grey),
+                  tr(context, 'or_use_link'),
+                  style: const TextStyle(color: Colors.grey),
                 ),
               ),
               const Expanded(child: Divider()),
@@ -525,7 +536,7 @@ class _CreateSalonScreenState extends State<CreateSalonScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 20),
                 ),
                 child: Text(
-                  "Astaa'mel URL",
+                  tr(context, 'use_url'),
                   style: TextStyle(
                     color: _isUrlMode ? Colors.white : Colors.black87,
                   ),
@@ -537,7 +548,7 @@ class _CreateSalonScreenState extends State<CreateSalonScreen> {
           const SizedBox(height: 48),
 
           _buildPrimaryButton(
-            text: "Terminer",
+            text: tr(context, 'finish'),
             onPressed: () {
               FocusScope.of(context).unfocus();
               _finishOnboarding();
@@ -547,9 +558,12 @@ class _CreateSalonScreenState extends State<CreateSalonScreen> {
           const SizedBox(height: 12),
           TextButton(
             onPressed: _finishOnboarding,
-            child: const Text(
-              "Fout l'etape",
-              style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
+            child: Text(
+              tr(context, 'skip_step'),
+              style: const TextStyle(
+                color: Colors.grey,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],

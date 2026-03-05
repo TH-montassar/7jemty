@@ -153,14 +153,14 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
     }
 
     final tabs = <Tab>[
-      const Tab(text: "Tafasil"),
-      const Tab(text: "Services"),
-      const Tab(text: "Spécialiste"),
+      Tab(text: tr(context, 'tab_details')),
+      Tab(text: tr(context, 'services_tab_val')),
+      Tab(text: tr(context, 'tab_specialist')),
     ];
     if (widget.isPatron) {
-      tabs.add(const Tab(text: "Rendez-vous"));
+      tabs.add(Tab(text: tr(context, 'tab_appointments')));
     }
-    tabs.add(const Tab(text: "Avis"));
+    tabs.add(Tab(text: tr(context, 'tab_reviews')));
 
     return DefaultTabController(
       length: tabs.length,
@@ -179,9 +179,9 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                 },
                 backgroundColor: AppColors.primaryBlue,
                 icon: const Icon(Icons.calendar_month, color: Colors.white),
-                label: const Text(
-                  "Prendre Rendez-vous",
-                  style: TextStyle(
+                label: Text(
+                  tr(context, 'reserve_btn'),
+                  style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),
@@ -289,7 +289,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                         children: [
                           Expanded(
                             child: Text(
-                              _salonData?['name'] ?? 'Salon mte3i',
+                              _salonData?['name'] ?? tr(context, 'my_salon'),
                               style: const TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
@@ -306,9 +306,9 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                               color: AppColors.successGreen.withAlpha(20),
                               borderRadius: BorderRadius.circular(20),
                             ),
-                            child: const Text(
-                              "Mahloul",
-                              style: TextStyle(
+                            child: Text(
+                              tr(context, 'opened_status'),
+                              style: const TextStyle(
                                 color: AppColors.successGreen,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 12,
@@ -329,7 +329,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                           Expanded(
                             child: Text(
                               _salonData?['address'] ??
-                                  'Ma famma hatta adresse',
+                                  tr(context, 'no_address'),
                               style: const TextStyle(
                                 fontSize: 14,
                                 color: Colors.grey,
@@ -353,7 +353,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            "(0 avis)",
+                            tr(context, 'zero_reviews'),
                             style: TextStyle(
                               color: Colors.grey.shade500,
                               fontSize: 14,
@@ -483,9 +483,9 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            "Aal salon",
-            style: TextStyle(
+          Text(
+            tr(context, 'about_salon'),
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: AppColors.textDark,
@@ -493,7 +493,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            _salonData?['description'] ?? 'Ma famma hatta description tawa.',
+            _salonData?['description'] ?? tr(context, 'no_description'),
             style: const TextStyle(
               fontSize: 14,
               color: Colors.grey,
@@ -501,9 +501,9 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
             ),
           ),
           const SizedBox(height: 24),
-          const Text(
-            "Contact & Adresse",
-            style: TextStyle(
+          Text(
+            tr(context, 'contact_address'),
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: AppColors.textDark,
@@ -522,7 +522,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                   }
                 },
                 child: Text(
-                  _salonData?['contactPhone'] ?? 'Mouch m9ayed',
+                  _salonData?['contactPhone'] ?? tr(context, 'not_registered'),
                   style: const TextStyle(
                     fontSize: 14,
                     color: AppColors.primaryBlue,
@@ -547,7 +547,8 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                 child: GestureDetector(
                   onTap: _openMap,
                   child: Text(
-                    _salonData?['address'] ?? 'Adresse mouch m9ayda',
+                    _salonData?['address'] ??
+                        tr(context, 'address_not_registered'),
                     style: const TextStyle(
                       fontSize: 14,
                       color: AppColors.primaryBlue,
@@ -562,9 +563,9 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
 
           if (socialLinks.isNotEmpty) ...[
             const SizedBox(height: 24),
-            const Text(
-              "Reseaux Sociaux",
-              style: TextStyle(
+            Text(
+              tr(context, 'social_networks'),
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: AppColors.textDark,
@@ -604,9 +605,9 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
 
           if (workingHours.isNotEmpty) ...[
             const SizedBox(height: 24),
-            const Text(
-              "Aw9at el 5edma",
-              style: TextStyle(
+            Text(
+              tr(context, 'working_hours'),
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: AppColors.textDark,
@@ -641,7 +642,9 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                           ),
                         ),
                         Text(
-                          isOff ? "Mesaker" : "$open - $close",
+                          isOff
+                              ? tr(context, 'closed_status')
+                              : "$open - $close",
                           style: TextStyle(
                             color: isOff ? Colors.red : Colors.grey.shade700,
                             fontWeight: isOff
@@ -659,9 +662,9 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
 
           if (portfolio.isNotEmpty) ...[
             const SizedBox(height: 24),
-            const Text(
-              "Portfolio",
-              style: TextStyle(
+            Text(
+              tr(context, 'portfolio'),
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: AppColors.textDark,
@@ -709,9 +712,9 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
           children: [
             Icon(Icons.cut_outlined, size: 70, color: Colors.grey.shade300),
             const SizedBox(height: 16),
-            const Text(
-              "Ma famma hatta service tawa.",
-              style: TextStyle(color: Colors.grey, fontSize: 15),
+            Text(
+              tr(context, 'no_service_yet'),
+              style: const TextStyle(color: Colors.grey, fontSize: 15),
             ),
             if (widget.isPatron) ...[
               const SizedBox(height: 16),
@@ -729,9 +732,9 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                   ).then((_) => _fetchSalonData());
                 },
                 icon: const Icon(Icons.add, size: 16, color: Colors.white),
-                label: const Text(
-                  "Zid service jdid",
-                  style: TextStyle(
+                label: Text(
+                  tr(context, 'add_new_service'),
+                  style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),
@@ -890,7 +893,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
         if (snapshot.hasError) {
           return Center(
             child: Text(
-              "Erreur: ${snapshot.error}",
+              tr(context, 'error_msg', args: [snapshot.error.toString()]),
               style: const TextStyle(color: Colors.red),
             ),
           );
@@ -928,9 +931,9 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                   color: Colors.grey.shade300,
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  "Ma famma hatta rendez-vous lyoum.",
-                  style: TextStyle(color: Colors.grey),
+                Text(
+                  tr(context, 'no_appointments_today'),
+                  style: const TextStyle(color: Colors.grey),
                 ),
               ],
             ),
@@ -973,20 +976,30 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
               if (difference.isNegative || difference.inSeconds <= 0) {
                 isTimeReached = true;
                 countdownText = status == 'IN_PROGRESS'
-                    ? "L'wa9t wfa!"
-                    : "L'wa9t r7el";
+                    ? tr(context, 'time_up')
+                    : tr(context, 'time_passed');
               } else if (difference.inHours == 1 &&
                   difference.inMinutes % 60 == 0 &&
                   status != 'IN_PROGRESS') {
-                countdownText = "Mzel 1h";
+                countdownText = tr(context, '1h_remaining');
               } else if (difference.inMinutes == 15 &&
                   status != 'IN_PROGRESS') {
-                countdownText = "Mzel 15mn";
+                countdownText = tr(context, '15m_remaining');
               } else if (difference.inHours > 0) {
-                countdownText =
-                    "Mazal ${difference.inHours}h ${difference.inMinutes % 60}min";
+                countdownText = tr(
+                  context,
+                  'time_remaining_hours_min',
+                  args: [
+                    difference.inHours.toString(),
+                    (difference.inMinutes % 60).toString(),
+                  ],
+                );
               } else {
-                countdownText = "Mazal ${difference.inMinutes}min";
+                countdownText = tr(
+                  context,
+                  'time_remaining_min',
+                  args: [difference.inMinutes.toString()],
+                );
               }
             }
 
@@ -1041,7 +1054,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(
-                                  status,
+                                  tr(context, 'status_${status.toLowerCase()}'),
                                   style: TextStyle(
                                     color: status == 'PENDING'
                                         ? Colors.orange
@@ -1124,9 +1137,11 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                 ),
-                                child: const Text(
-                                  "Refuser",
-                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                child: Text(
+                                  tr(context, 'decline_btn'),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
                             ),
@@ -1141,9 +1156,9 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                 ),
-                                child: const Text(
-                                  "Accepter",
-                                  style: TextStyle(
+                                child: Text(
+                                  tr(context, 'accept_btn'),
+                                  style: const TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -1161,9 +1176,11 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                                 onPressed: () =>
                                     _updateAptStatus(apt['id'], 'CANCELLED'),
                                 icon: const Icon(Icons.person_off, size: 18),
-                                label: const Text(
-                                  "Majech",
-                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                label: Text(
+                                  tr(context, 'no_show_btn'),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                                 style: OutlinedButton.styleFrom(
                                   foregroundColor: Colors.red,
@@ -1187,9 +1204,9 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                                   color: Colors.white,
                                   size: 18,
                                 ),
-                                label: const Text(
-                                  "Bda l'7jama",
-                                  style: TextStyle(
+                                label: Text(
+                                  tr(context, 'start_service_btn'),
+                                  style: const TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -1219,13 +1236,13 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                                   toastification.show(
                                     context: context,
                                     type: ToastificationType.info,
-                                    title: const Text(
-                                      'Rappel dans 15 min acté',
+                                    title: Text(
+                                      tr(context, 'reminder_15m_set'),
                                     ),
                                   );
                                 },
                                 icon: const Icon(Icons.timer, size: 18),
-                                label: const Text("Mezel 15 min"),
+                                label: Text(tr(context, '15m_remaining')),
                                 style: OutlinedButton.styleFrom(
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
@@ -1242,9 +1259,9 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                                   Icons.check,
                                   color: Colors.white,
                                 ),
-                                label: const Text(
-                                  "Kamalt",
-                                  style: TextStyle(
+                                label: Text(
+                                  tr(context, 'completed_btn'),
+                                  style: const TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -1299,9 +1316,9 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                   size: 18,
                   color: Colors.white,
                 ),
-                label: const Text(
-                  "+ Zid Specialiste fereger",
-                  style: TextStyle(
+                label: Text(
+                  tr(context, 'add_new_specialist'),
+                  style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),
@@ -1317,11 +1334,11 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
             ),
           ),
         if (employees.isEmpty)
-          const Expanded(
+          Expanded(
             child: Center(
               child: Text(
-                "Ma famma hatta specialiste tawa.",
-                style: TextStyle(color: Colors.grey, fontSize: 15),
+                tr(context, 'no_specialist_yet'),
+                style: const TextStyle(color: Colors.grey, fontSize: 15),
               ),
             ),
           )
@@ -1332,8 +1349,10 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
               itemCount: employees.length,
               itemBuilder: (context, index) {
                 final emp = employees[index] as Map<String, dynamic>;
-                final name = (emp['name'] ?? 'Specialiste') as String;
-                final role = (emp['role'] ?? 'Spécialiste') as String;
+                final name =
+                    (emp['name'] ?? tr(context, 'specialist_role')) as String;
+                final role =
+                    (emp['role'] ?? tr(context, 'specialist_role')) as String;
                 final bio = emp['bio'] as String?;
                 final imageUrl = emp['imageUrl'] as String?;
 
@@ -1435,10 +1454,10 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
   }
 
   Widget _buildAvisTab() {
-    return const Center(
+    return Center(
       child: Text(
-        "Ma famma hatta avis mtaa client tawa.",
-        style: TextStyle(color: Colors.grey),
+        tr(context, 'no_reviews_yet'),
+        style: const TextStyle(color: Colors.grey),
       ),
     );
   }

@@ -127,26 +127,26 @@ class _MainPageState extends State<MainPage> {
           ],
         ),
         child: BottomNavigationBar(
-          items: const <BottomNavigationBarItem>[
+          items: <BottomNavigationBarItem>[
             BottomNavigationBarItem(
               icon: Icon(Icons.home_outlined),
               activeIcon: Icon(Icons.home),
-              label: 'Accueil',
+              label: tr(context, 'home'),
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.calendar_today_outlined),
               activeIcon: Icon(Icons.calendar_today),
-              label: 'Agenda mte3i',
+              label: tr(context, 'my_calendar'),
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.storefront_outlined),
               activeIcon: Icon(Icons.storefront),
-              label: 'Salon mte3i',
+              label: tr(context, 'my_salon'),
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.person_outline),
               activeIcon: Icon(Icons.person),
-              label: 'Profil',
+              label: tr(context, 'profile'),
             ),
           ],
           currentIndex: _selectedIndex,
