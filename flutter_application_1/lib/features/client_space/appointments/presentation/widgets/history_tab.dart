@@ -91,7 +91,9 @@ class _HistoryTabState extends State<HistoryTab> {
               .join(' + ');
           final price = apt['totalPrice'] ?? 0;
 
-          final statusText = isCancelled ? 'Tbatel' : 'Kmal';
+          final statusText = isCancelled
+              ? tr(context, 'status_cancelled')
+              : tr(context, 'status_completed');
 
           return Container(
             margin: const EdgeInsets.only(bottom: 15),

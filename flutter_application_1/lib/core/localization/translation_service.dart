@@ -72,6 +72,11 @@ class TranslationService extends ChangeNotifier {
       'status_confirmed': 'M\'akd',
       'status_completed': 'Kmal',
       'status_cancelled': 'Tbatel',
+      'status_in_progress': 'Fi wosst',
+      'status_pending': 'Mazel',
+      'time_passed': 'L\'wa9t r7el',
+      'time_remaining_hours_min': 'Mazal {0}h {1}min',
+      'time_remaining_min': 'Mazal {0}min',
 
       // Booking
       'book_appointment': 'A7jez RDV',
@@ -304,6 +309,11 @@ class TranslationService extends ChangeNotifier {
       'status_confirmed': 'Confirmed',
       'status_completed': 'Completed',
       'status_cancelled': 'Cancelled',
+      'status_in_progress': 'In Progress',
+      'status_pending': 'Pending',
+      'time_passed': 'Time has passed',
+      'time_remaining_hours_min': '{0}h {1}min remaining',
+      'time_remaining_min': '{0}min remaining',
 
       // Booking
       'book_appointment': 'Book Appointment',
@@ -351,8 +361,8 @@ class TranslationService extends ChangeNotifier {
       'i_am_salon_owner': 'Ena moulé salon (Patron)',
       'check_this_to_add_salon': 'Cochi hethi ken theb tzid salon mte3ek',
       'already_have_account': 'Aandek compte deja ? ',
-      'leave_review': '⭐ Khali avis',
-      'rebook': '↻ Aawed Ahjez',
+      'leave_review': '⭐ leave review',
+      'rebook': '↻ Rebook',
       'date_example': '📅 24 Fév - 14:00',
       'barber_king_name': 'Barber King 👑',
       'haircut_beard_price': 'Hjema + Lihya - 25 DT',

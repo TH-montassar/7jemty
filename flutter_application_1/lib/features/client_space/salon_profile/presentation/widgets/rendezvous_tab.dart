@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hjamty/core/constants/app_colors.dart';
+import 'package:hjamty/core/localization/translation_service.dart';
 
 class RendezvousTab extends StatelessWidget {
   const RendezvousTab({super.key});
@@ -13,7 +14,7 @@ class RendezvousTab extends StatelessWidget {
         'specialist': 'Malek Ben Ali',
         'date': 'Sam 1 Mars 2026',
         'time': '10:00',
-        'status': 'Confirmé',
+        'status': tr(context, 'status_confirmed'),
         'statusColor': Colors.green,
       },
       {
@@ -21,7 +22,7 @@ class RendezvousTab extends StatelessWidget {
         'specialist': 'Yassine Trabelsi',
         'date': 'Dim 9 Mars 2026',
         'time': '14:30',
-        'status': 'En attente',
+        'status': tr(context, 'status_pending'),
         'statusColor': Colors.orange,
       },
     ];
@@ -33,9 +34,9 @@ class RendezvousTab extends StatelessWidget {
           children: [
             Icon(Icons.event_available, size: 70, color: Colors.grey.shade300),
             const SizedBox(height: 15),
-            const Text(
-              "Ma 3andekch rendez-vous",
-              style: TextStyle(color: Colors.grey, fontSize: 16),
+            Text(
+              tr(context, 'no_appointments'),
+              style: const TextStyle(color: Colors.grey, fontSize: 16),
             ),
           ],
         ),
