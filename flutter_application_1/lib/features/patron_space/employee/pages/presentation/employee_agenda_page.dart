@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:flutter/material.dart';
+import 'package:hjamty/core/services/fcm_service.dart';
 import 'package:intl/intl.dart';
 import 'package:toastification/toastification.dart';
 import '../../../../../core/constants/app_colors.dart';
@@ -16,6 +17,7 @@ class EmployeeAgendaPage extends StatefulWidget {
 class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
   bool _isLoading = true;
   List<dynamic> _appointments = [];
+  final Set<int> _notifiedAptIds = {};
   Timer? _pollingTimer;
   Timer? _uiTimer;
 
@@ -34,6 +36,7 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
     // Add per-second UI timer for granular countdown (seconds)
     _uiTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) {
+        _checkNotifications();
         setState(() {}); // Just redraw the UI
       }
     });
@@ -178,6 +181,37 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
     }
   }
 
+  void _checkNotifications() {
+    for (var apt in _appointments) {
+      final status = (apt['status'] as String).toUpperCase();
+      if (status != 'IN_PROGRESS') continue;
+
+      final id = apt['id'] as int;
+      final endTimeStr = apt['estimatedEndTime'];
+      if (endTimeStr == null) continue;
+
+      final endTime = DateTime.parse(endTimeStr).toLocal();
+      final difference = endTime.difference(DateTime.now());
+
+      if (difference.isNegative || difference.inSeconds <= 0) {
+        if (!_notifiedAptIds.contains(id)) {
+          _notifiedAptIds.add(id);
+          final clientName = apt['client']?['fullName'] ?? 'Client';
+          FcmService.showNotification(
+            id: id,
+            title: "L'wa9t wfa!",
+            body: "L'hjema mta3 $clientName wfet. Thabb tzidha wa9t?",
+          );
+        }
+      } else {
+        // If time was extended and is now in the future, allow notification to fire again later
+        if (_notifiedAptIds.contains(id)) {
+          _notifiedAptIds.remove(id);
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -286,6 +320,35 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
       } else {
         // Less than 1 minute, show seconds
         countdownText = "Mazal ${difference.inSeconds}s";
+      }
+
+      // Add T+t2 breakdown for in-progress appointments
+      if (isInProgress) {
+        int originalDuration = 0;
+        final services = apt['services'] as List?;
+        if (services != null) {
+          for (var s in services) {
+            final srv = s['service'];
+            if (srv != null) {
+              originalDuration +=
+                  (srv['durationMinutes'] as num?)?.toInt() ?? 0;
+            }
+          }
+        }
+
+        int totalDurationSoFar = 0;
+        if (dateStr != null && apt['estimatedEndTime'] != null) {
+          final start = DateTime.parse(dateStr).toLocal();
+          final end = DateTime.parse(apt['estimatedEndTime']).toLocal();
+          totalDurationSoFar = end.difference(start).inMinutes;
+        }
+
+        int extensionDuration = totalDurationSoFar - originalDuration;
+        String formula = "T(${originalDuration}mn)";
+        if (extensionDuration > 0) {
+          formula += " + t2(${extensionDuration}mn)";
+        }
+        countdownText = "$countdownText ($formula)";
       }
     }
 

@@ -80,12 +80,25 @@ class FcmService {
 
   // Local physical pop-up showing the Push logic
   static Future<void> _showLocalNotification(RemoteMessage message) async {
+    await showNotification(
+      id: message.hashCode,
+      title: message.notification?.title ?? '',
+      body: message.notification?.body ?? '',
+    );
+  }
+
+  static Future<void> showNotification({
+    required int id,
+    required String title,
+    required String body,
+  }) async {
     const AndroidNotificationDetails androidDetails =
         AndroidNotificationDetails(
           'hjamty_main_channel', // channelId
           'Hjamty Notifications', // channelName
           importance: Importance.max,
           priority: Priority.high,
+          playSound: true,
         );
 
     const NotificationDetails platformDetails = NotificationDetails(
@@ -93,9 +106,9 @@ class FcmService {
     );
 
     await _localNotifications.show(
-      id: message.hashCode,
-      title: message.notification?.title,
-      body: message.notification?.body,
+      id: id,
+      title: title,
+      body: body,
       notificationDetails: platformDetails,
     );
   }
