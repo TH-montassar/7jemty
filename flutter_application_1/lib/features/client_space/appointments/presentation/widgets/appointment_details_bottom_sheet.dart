@@ -5,22 +5,34 @@ import 'package:hjamty/core/constants/app_colors.dart';
 Future<void> showAppointmentDetailsBottomSheet({
   required BuildContext context,
   required Map<String, dynamic> appointment,
+  bool showClientDetails = true,
+  bool showBarberDetails = true,
 }) {
   return showModalBottomSheet(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     builder: (context) {
-      return _AppointmentDetailsSheet(appointment: appointment);
+      return _AppointmentDetailsSheet(
+        appointment: appointment,
+        showClientDetails: showClientDetails,
+        showBarberDetails: showBarberDetails,
+      );
     },
   );
 }
 
 class _AppointmentDetailsSheet extends StatelessWidget {
   final Map<String, dynamic> appointment;
+  final bool showClientDetails;
+  final bool showBarberDetails;
 
-  const _AppointmentDetailsSheet({Key? key, required this.appointment})
-    : super(key: key);
+  const _AppointmentDetailsSheet({
+    Key? key,
+    required this.appointment,
+    this.showClientDetails = true,
+    this.showBarberDetails = true,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -203,21 +215,25 @@ class _AppointmentDetailsSheet extends StatelessWidget {
             const Divider(height: 32),
 
             // Person Details
-            _buildInfoRow(
-              icon: Icons.person_outline,
-              title: "Client",
-              value: clientName,
-              subtitle: clientPhone.isNotEmpty ? "Tél: $clientPhone" : null,
-              iconColor: Colors.purple,
-            ),
-            const SizedBox(height: 16),
-            _buildInfoRow(
-              icon: Icons.content_cut,
-              title: "Spécialiste",
-              value: barberName,
-              iconColor: Colors.deepOrange,
-            ),
-            const SizedBox(height: 16),
+            if (showClientDetails) ...[
+              _buildInfoRow(
+                icon: Icons.person_outline,
+                title: "Client",
+                value: clientName,
+                subtitle: clientPhone.isNotEmpty ? "Tél: $clientPhone" : null,
+                iconColor: Colors.purple,
+              ),
+              const SizedBox(height: 16),
+            ],
+            if (showBarberDetails) ...[
+              _buildInfoRow(
+                icon: Icons.content_cut,
+                title: "Spécialiste",
+                value: barberName,
+                iconColor: Colors.deepOrange,
+              ),
+              const SizedBox(height: 16),
+            ],
             _buildInfoRow(
               icon: Icons.storefront_outlined,
               title: "Salon",

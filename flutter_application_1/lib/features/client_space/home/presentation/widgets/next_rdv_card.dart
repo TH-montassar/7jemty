@@ -64,6 +64,7 @@ class NextRdvCard extends StatelessWidget {
         showAppointmentDetailsBottomSheet(
           context: context,
           appointment: appointmentData!,
+          showClientDetails: false,
         );
       },
       child: Container(

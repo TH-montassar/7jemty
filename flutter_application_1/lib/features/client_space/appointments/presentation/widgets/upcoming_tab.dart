@@ -162,6 +162,7 @@ class _UpcomingTabState extends State<UpcomingTab> {
               showAppointmentDetailsBottomSheet(
                 context: context,
                 appointment: apt,
+                showClientDetails: false,
               );
             },
             child: Container(

@@ -355,7 +355,11 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
 
     return GestureDetector(
       onTap: () {
-        showAppointmentDetailsBottomSheet(context: context, appointment: apt);
+        showAppointmentDetailsBottomSheet(
+          context: context,
+          appointment: apt,
+          showBarberDetails: false,
+        );
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 15),
