@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../core/constants/app_colors.dart';
 
-void showAppointmentDetailsBottomSheet({
+Future<void> showAppointmentDetailsBottomSheet({
   required BuildContext context,
   required Map<String, dynamic> appointment,
 }) {
-  showModalBottomSheet(
+  return showModalBottomSheet(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,

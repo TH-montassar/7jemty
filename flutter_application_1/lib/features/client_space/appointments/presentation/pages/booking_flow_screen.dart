@@ -8,6 +8,7 @@ import '../../../../../core/localization/translation_service.dart';
 import '../../../../../services/salon_service.dart';
 import '../../../../../services/appointment_service.dart';
 import '../../../../../services/auth_service.dart';
+import '../../../main_layout/presentation/pages/client_main_layout.dart';
 
 class BookingFlowScreen extends StatefulWidget {
   final int salonId;
@@ -222,12 +223,18 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
           context: context,
           type: ToastificationType.success,
           title: const Text('Rendez-vous confirmé! ✅'),
-          description: const Text(
-            "Votre réservation est en attente de confirmation.",
-          ),
+          description: const Text("Votre réservation a été créée avec succès."),
           autoCloseDuration: const Duration(seconds: 4),
         );
-        Navigator.pop(context); // Go back after booking
+
+        // Navigate to the Appointments tab (index 1)
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const ClientMainLayout(initialIndex: 1),
+          ),
+          (route) => false,
+        );
       }
     } catch (e) {
       if (mounted) {

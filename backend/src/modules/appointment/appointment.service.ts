@@ -288,6 +288,12 @@ export const createClientAppointment = async (
             services: {
                 create: serviceIds.map((serviceId) => ({ service: { connect: { id: serviceId } } }))
             }
+        },
+        include: {
+            client: { select: { fullName: true, phoneNumber: true } },
+            salon: { select: { name: true, address: true, coverImageUrl: true } },
+            barber: { select: { fullName: true, profile: { select: { avatarUrl: true } } } },
+            services: { include: { service: true } }
         }
     });
 
