@@ -6,3 +6,5 @@ git reset --soft HEAD~1
 ./scripts/run_phone.sh --real-device #wifi
 
 npx ts-node scripts/fast_forward.ts
+
+npm run create-admin -- "Admin Name" "12345678" "yourpassword"

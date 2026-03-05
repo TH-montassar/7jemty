@@ -9,10 +9,13 @@
   "scripts": {
     "dev": "nodemon -L --exec tsx server.ts",
     "prisma:mig": "prisma migrate dev",
-    "prisma:gen": "prisma generate",
+    "build": "prisma generate",
     "prisma:res": "prisma migrate reset",
     "prisma:studio": "prisma studio",
-    "fast-forward": "tsx scripts/fast_forward.ts"
+    "fast-forward": "tsx scripts/fast_forward.ts",
+    "create-admin": "tsx scripts/create_admin.ts",
+    "start": "node dist/index.js",
+    "start:prod": "prisma migrate deploy && node dist/index.js"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.4.1",

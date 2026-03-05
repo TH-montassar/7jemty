@@ -44,3 +44,12 @@ export const isPatron = (req: AuthRequest, res: Response, next: NextFunction): v
         res.status(403).json({ success: false, message: 'Accès refusé, réservé aux Patrons' });
     }
 };
+
+// Middleware bech nthabtou ken l'user Admin
+export const isAdmin = (req: AuthRequest, res: Response, next: NextFunction): void => {
+    if (req.user && req.user.role === 'ADMIN') {
+        next();
+    } else {
+        res.status(403).json({ success: false, message: 'Accès refusé, réservé aux Admins' });
+    }
+};

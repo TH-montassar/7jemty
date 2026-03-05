@@ -1575,83 +1575,6 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                     ),
                   ),
                   const SizedBox(height: 16),
-                  _buildLabelInput("${tr(context, 'specialist_name')} *"),
-                  _buildInputField(
-                    _empNameController,
-                    tr(context, 'first_last_name'),
-                    Icons.person_outline,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildLabelInput("${tr(context, 'contact_number')} *"),
-                  _buildInputField(
-                    _empPhoneController,
-                    tr(context, 'phone_hint'),
-                    Icons.phone_outlined,
-                    keyboardType: TextInputType.phone,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildLabelInput("${tr(context, 'password')} *"),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade50,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: Colors.grey.shade200),
-                    ),
-                    child: Row(
-                      children: [
-                        const SizedBox(width: 14),
-                        const Icon(
-                          Icons.lock_outline,
-                          color: Colors.grey,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: TextField(
-                            controller: _empPasswordController,
-                            obscureText: !_empPasswordVisible,
-                            decoration: InputDecoration(
-                              hintText: tr(context, 'account_password'),
-                              hintStyle: TextStyle(color: Colors.grey.shade400),
-                              border: InputBorder.none,
-                              isDense: true,
-                              contentPadding: const EdgeInsets.symmetric(
-                                vertical: 14,
-                              ),
-                            ),
-                          ),
-                        ),
-                        IconButton(
-                          icon: Icon(
-                            _empPasswordVisible
-                                ? Icons.visibility_off_outlined
-                                : Icons.visibility_outlined,
-                            color: Colors.grey,
-                            size: 20,
-                          ),
-                          onPressed: () => setState(
-                            () => _empPasswordVisible = !_empPasswordVisible,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildLabelInput(tr(context, 'role_speciality')),
-                  _buildInputField(
-                    _empRoleController,
-                    tr(context, 'role_hint'),
-                    Icons.auto_awesome_outlined,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildLabelInput(tr(context, 'bio_optional')),
-                  _buildInputField(
-                    _empBioController,
-                    tr(context, 'bio_hint'),
-                    Icons.info_outline,
-                    maxLines: 2,
-                  ),
-                  const SizedBox(height: 12),
                   _buildLabelInput(tr(context, 'image_optional')),
                   Row(
                     children: [
@@ -1748,6 +1671,83 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                     )
                   else
                     const SizedBox.shrink(),
+                  const SizedBox(height: 16),
+                  _buildLabelInput("${tr(context, 'specialist_name')} *"),
+                  _buildInputField(
+                    _empNameController,
+                    tr(context, 'first_last_name'),
+                    Icons.person_outline,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildLabelInput("${tr(context, 'contact_number')} *"),
+                  _buildInputField(
+                    _empPhoneController,
+                    tr(context, 'phone_hint'),
+                    Icons.phone_outlined,
+                    keyboardType: TextInputType.phone,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildLabelInput("${tr(context, 'password')} *"),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
+                    child: Row(
+                      children: [
+                        const SizedBox(width: 14),
+                        const Icon(
+                          Icons.lock_outline,
+                          color: Colors.grey,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: TextField(
+                            controller: _empPasswordController,
+                            obscureText: !_empPasswordVisible,
+                            decoration: InputDecoration(
+                              hintText: tr(context, 'account_password'),
+                              hintStyle: TextStyle(color: Colors.grey.shade400),
+                              border: InputBorder.none,
+                              isDense: true,
+                              contentPadding: const EdgeInsets.symmetric(
+                                vertical: 14,
+                              ),
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          icon: Icon(
+                            _empPasswordVisible
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
+                            color: Colors.grey,
+                            size: 20,
+                          ),
+                          onPressed: () => setState(
+                            () => _empPasswordVisible = !_empPasswordVisible,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildLabelInput(tr(context, 'role_speciality')),
+                  _buildInputField(
+                    _empRoleController,
+                    tr(context, 'role_hint'),
+                    Icons.auto_awesome_outlined,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildLabelInput(tr(context, 'bio_optional')),
+                  _buildInputField(
+                    _empBioController,
+                    tr(context, 'bio_hint'),
+                    Icons.info_outline,
+                    maxLines: 2,
+                  ),
                   const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: _handleAddSpecialist,

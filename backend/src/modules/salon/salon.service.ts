@@ -171,10 +171,10 @@ export const createEmployeeAccount = async (patronId: number, data: any) => {
     };
 };
 
-export const getAllSalons = async (lat?: number, lng?: number) => {
-    // Njibou tous les salons men base de données (sans conditions)
+export const getAllSalons = async (lat?: number, lng?: number, includeUnapproved: boolean = false) => {
+    // Njibou tous les salons men base de données
     const salons = await prisma.salon.findMany({
-        // Removed heavy relation includes to speed up startup
+        where: !includeUnapproved ? { approvalStatus: 'APPROVED' } : {},
     });
 
     // Ken 3ana les coordonnées mta3 el client, n7esbou el distance (en km mthln)
@@ -303,8 +303,9 @@ export const getSalonById = async (id: number) => {
     };
 };
 
-export const getTopRatedSalons = async (limit: number = 10) => {
+export const getTopRatedSalons = async (limit: number = 10, includeUnapproved: boolean = false) => {
     const salons = await prisma.salon.findMany({
+        where: !includeUnapproved ? { approvalStatus: 'APPROVED' } : {},
         orderBy: { rating: 'desc' } as any,
         take: limit,
         // Removed include: { services: true } to speed up startup
@@ -317,9 +318,10 @@ export const getTopRatedSalons = async (limit: number = 10) => {
     }));
 };
 
-export const searchSalons = async (query: string) => {
+export const searchSalons = async (query: string, includeUnapproved: boolean = false) => {
     const salons = await prisma.salon.findMany({
         where: {
+            ...(!includeUnapproved ? { approvalStatus: 'APPROVED' } : {}),
             OR: [
                 { name: { contains: query, mode: 'insensitive' } },
                 { description: { contains: query, mode: 'insensitive' } },

@@ -38,7 +38,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
 
   Future<void> _fetchSalonData() async {
     try {
-      final response = widget.isPatron
+      final response = (widget.isPatron && widget.salonId == null)
           ? await SalonService.getMySalon()
           : await SalonService.getSalonById(widget.salonId!);
       if (!mounted) return;
