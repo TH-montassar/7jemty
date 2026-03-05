@@ -58,24 +58,41 @@ class _AppointmentDetailsSheet extends StatelessWidget {
     ).format(date);
 
     // Calculate end time
-    DateTime? endTime;
-    if (appointment['estimatedEndTime'] != null) {
-      try {
-        endTime = DateTime.parse(appointment['estimatedEndTime']).toLocal();
-      } catch (e) {}
-    } else {
-      endTime = date.add(
-        Duration(
-          minutes: totalDuration is int
-              ? totalDuration
-              : (totalDuration as double).toInt(),
-        ),
+    String formattedEndTime = '--:--';
+    try {
+      final startTime = DateFormat(
+        'HH:mm',
+      ).format(date); // Get start time from the 'date' DateTime object
+      final parts = startTime.split(':');
+      final start = TimeOfDay(
+        hour: int.parse(parts[0]),
+        minute: int.parse(parts[1]),
       );
-    }
+      final int duration = totalDuration is int
+          ? totalDuration
+          : (totalDuration as double).toInt();
 
-    final formattedEndTime = endTime != null
-        ? DateFormat('HH:mm', 'fr_FR').format(endTime)
-        : '--:--';
+      final int totalMins = start.hour * 60 + start.minute + duration;
+      final endHour = (totalMins ~/ 60) % 24; // Apply modulo 24 here
+      final endMin = totalMins % 60;
+      formattedEndTime =
+          "${endHour.toString().padLeft(2, '0')}:${endMin.toString().padLeft(2, '0')}";
+    } catch (_) {
+      // Fallback to estimatedEndTime if calculation fails or if it's available
+      if (appointment['estimatedEndTime'] != null) {
+        try {
+          final endTimeDateTime = DateTime.parse(
+            appointment['estimatedEndTime'],
+          ).toLocal();
+          formattedEndTime = DateFormat(
+            'HH:mm',
+            'fr_FR',
+          ).format(endTimeDateTime);
+        } catch (e) {
+          // Keep default '--:--'
+        }
+      }
+    }
 
     // Status config
     Color statusColor = Colors.grey;

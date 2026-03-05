@@ -36,6 +36,15 @@ export const registerUser = async (data: any) => {
         }
     });
 
+    // Create a welcome notification with the password instructions
+    await prisma.notification.create({
+        data: {
+            userId: user.id,
+            title: "Bienvenue sur 7jemty ! 🎉",
+            body: `Votre compte a été créé avec succès. Votre mot de passe par défaut est votre numéro de téléphone : ${data.phoneNumber}. Pensez à le modifier dans votre profil pour plus de sécurité.`,
+        }
+    });
+
 
     const token = jwt.sign({ userId: user.id, role: user.role }, env.JWT_SECRET, {
         expiresIn: '30d',

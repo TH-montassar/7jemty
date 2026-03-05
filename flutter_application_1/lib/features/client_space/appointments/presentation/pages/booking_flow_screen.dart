@@ -353,6 +353,17 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
 
                             await _checkCurrentUser();
                             if (mounted) {
+                              toastification.show(
+                                context: context,
+                                type: ToastificationType.info,
+                                style: ToastificationStyle.flat,
+                                title: const Text('Bienvenue ! 🎉'),
+                                description: Text(
+                                  "Un compte a été créé. Votre mot de passe est votre numéro : $phone",
+                                ),
+                                autoCloseDuration: const Duration(seconds: 7),
+                                primaryColor: AppColors.primaryBlue,
+                              );
                               Navigator.pop(context);
                               _submitBooking();
                             }
