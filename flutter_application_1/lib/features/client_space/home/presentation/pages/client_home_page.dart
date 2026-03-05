@@ -21,7 +21,6 @@ class ClientHomePage extends StatefulWidget {
 
 class _ClientHomePageState extends State<ClientHomePage> {
   bool _isLoggedIn = false;
-  bool _isLoading = true;
   String _clientName = "Client";
   Map<String, dynamic>? _nextAppointment;
   Timer? _pollingTimer;
@@ -140,25 +139,10 @@ class _ClientHomePageState extends State<ClientHomePage> {
         });
       }
     }
-
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Scaffold(
-        backgroundColor: AppColors.bgColor,
-        body: Center(
-          child: CircularProgressIndicator(color: AppColors.primaryBlue),
-        ),
-      );
-    }
-
     return Scaffold(
       backgroundColor:
           AppColors.primaryBlue, // The space under the notch will be blue

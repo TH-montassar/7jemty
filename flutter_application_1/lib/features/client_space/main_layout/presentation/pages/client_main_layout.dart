@@ -74,7 +74,7 @@ class _ClientMainLayoutState extends State<ClientMainLayout> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: _selectedIndex, children: _pages),
+      body: _pages[_selectedIndex],
       bottomNavigationBar: ClientBottomNav(
         selectedIndex: _selectedIndex,
         onTap: _onItemTapped, // 👈 N3aytou lel fonction elli fiha l'Auth check

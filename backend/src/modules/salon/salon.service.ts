@@ -174,11 +174,7 @@ export const createEmployeeAccount = async (patronId: number, data: any) => {
 export const getAllSalons = async (lat?: number, lng?: number) => {
     // Njibou tous les salons men base de données (sans conditions)
     const salons = await prisma.salon.findMany({
-        include: {
-            services: true,
-            workingHours: true,
-            // nzidou ay relation nestanfe3ou beha kima l'reviews ken theb
-        }
+        // Removed heavy relation includes to speed up startup
     });
 
     // Ken 3ana les coordonnées mta3 el client, n7esbou el distance (en km mthln)
@@ -311,9 +307,7 @@ export const getTopRatedSalons = async (limit: number = 10) => {
     const salons = await prisma.salon.findMany({
         orderBy: { rating: 'desc' } as any,
         take: limit,
-        include: {
-            services: true,
-        },
+        // Removed include: { services: true } to speed up startup
     });
 
     return salons.map(salon => ({
