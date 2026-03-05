@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:hjamty/pages/splash_screen.dart';
+import 'package:hjamty/features/splash/presentation/pages/splash_screen.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import 'package:flutter/services.dart';

@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../config/api_config.dart';
+import 'package:hjamty/config/api_config.dart';
 
 class AppointmentService {
   static String get baseUrl => ApiConfig.endpoint('/api/appointment');

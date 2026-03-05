@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/constants/app_colors.dart';
-import '../../../../../core/localization/translation_service.dart';
+import 'package:hjamty/core/constants/app_colors.dart';
+import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hjamty/features/auth/signIn.dart';
 

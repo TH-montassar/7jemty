@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../core/constants/app_colors.dart';
+import 'package:hjamty/core/constants/app_colors.dart';
 
 Future<void> showAppointmentDetailsBottomSheet({
   required BuildContext context,

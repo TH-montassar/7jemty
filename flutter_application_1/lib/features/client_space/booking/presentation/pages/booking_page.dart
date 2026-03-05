@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import '../../../../../core/constants/app_colors.dart';
-import '../widgets/booking_summary_card.dart';
-import '../widgets/checkout_bottom_bar.dart';
-import '../../../../../core/localization/translation_service.dart';
-import '../../../../../services/auth_service.dart';
-import '../../../../../services/appointment_service.dart';
+import 'package:hjamty/core/constants/app_colors.dart';
+import 'package:hjamty/features/client_space/booking/presentation/widgets/booking_summary_card.dart';
+import 'package:hjamty/features/client_space/booking/presentation/widgets/checkout_bottom_bar.dart';
+import 'package:hjamty/core/localization/translation_service.dart';
+import 'package:hjamty/features/auth/data/auth_service.dart';
+import 'package:hjamty/features/client_space/appointments/data/appointment_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class BookingPage extends StatefulWidget {

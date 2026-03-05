@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'shared_widgets.dart'; // Import CircularStat
+import 'package:hjamty/core/widgets/shared_widgets.dart'; // Import CircularStat
 
 class SubscriptionCard extends StatelessWidget {
   final VoidCallback onPointsTap;

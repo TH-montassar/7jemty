@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:toastification/toastification.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../core/constants/app_colors.dart';
-import '../../services/salon_service.dart';
+import 'package:hjamty/core/constants/app_colors.dart';
+import 'package:hjamty/features/client_space/salon_profile/data/salon_service.dart';
 import 'main_page.dart';
 
 class CreateSalonScreen extends StatefulWidget {

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../../../../core/constants/app_colors.dart';
-import '../../../../../core/localization/translation_service.dart';
-import '../../../../../services/appointment_service.dart';
+import 'package:hjamty/core/constants/app_colors.dart';
+import 'package:hjamty/core/localization/translation_service.dart';
+import 'package:hjamty/features/client_space/appointments/data/appointment_service.dart';
 import 'package:toastification/toastification.dart';
 
 class HistoryTab extends StatefulWidget {

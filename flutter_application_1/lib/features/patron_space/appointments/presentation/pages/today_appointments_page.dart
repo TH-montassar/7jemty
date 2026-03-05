@@ -1,6 +1,6 @@
 import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:flutter/material.dart';
-import '../widgets/appointment_card.dart';
+import 'package:hjamty/features/client_space/appointments/presentation/widgets/appointment_card.dart';
 
 class TodayAppointmentsPage extends StatelessWidget {
   final List<Map<String, String>> todayAppointments;

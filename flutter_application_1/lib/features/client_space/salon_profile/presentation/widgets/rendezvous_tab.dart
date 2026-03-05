@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/constants/app_colors.dart';
+import 'package:hjamty/core/constants/app_colors.dart';
 
 class RendezvousTab extends StatelessWidget {
   const RendezvousTab({super.key});

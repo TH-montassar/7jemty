@@ -1,6 +1,6 @@
 import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:flutter/material.dart';
-import 'info_card.dart';
+import 'package:hjamty/core/widgets/info_card.dart';
 
 class DashboardStats extends StatelessWidget {
   const DashboardStats({super.key});

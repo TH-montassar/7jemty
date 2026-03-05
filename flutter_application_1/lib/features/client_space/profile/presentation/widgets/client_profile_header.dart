@@ -1,9 +1,9 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:hjamty/services/auth_service.dart';
+import 'package:hjamty/features/auth/data/auth_service.dart';
 import 'package:toastification/toastification.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../../../../core/constants/app_colors.dart';
+import 'package:hjamty/core/constants/app_colors.dart';
 
 class ProfileHeader extends StatefulWidget {
   final Map<String, dynamic>? userData;

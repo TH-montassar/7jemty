@@ -1,14 +1,14 @@
 import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:flutter/material.dart';
-import '../../core/constants/app_colors.dart';
+import 'package:hjamty/core/constants/app_colors.dart';
 import 'signUp.dart';
-import '../../services/auth_service.dart';
+import 'package:hjamty/features/auth/data/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../patron_space/main_page.dart';
-import '../client_space/main_layout/presentation/pages/client_main_layout.dart';
-import '../admin_space/presentation/pages/admin_home_page.dart';
-import '../patron_space/employee/pages/presentation/employee_main_layout.dart';
-import '../patron_space/create_salon_screen.dart'; // 👈 Nzidou hedhi hena
+import 'package:hjamty/features/patron_space/main_page.dart';
+import 'package:hjamty/features/client_space/main_layout/presentation/pages/client_main_layout.dart';
+import 'package:hjamty/features/admin_space/presentation/pages/admin_home_page.dart';
+import 'package:hjamty/features/patron_space/employee/pages/presentation/employee_main_layout.dart';
+import 'package:hjamty/features/patron_space/create_salon_screen.dart';
 
 class SignInScreen extends StatefulWidget {
   final String? prefilledPhone;

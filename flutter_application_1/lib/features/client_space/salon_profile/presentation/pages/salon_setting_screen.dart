@@ -4,10 +4,10 @@ import 'package:toastification/toastification.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../../../core/constants/app_colors.dart';
-import 'package:hjamty/services/auth_service.dart';
-import 'package:hjamty/services/salon_service.dart';
+import 'package:hjamty/features/auth/data/auth_service.dart';
+import 'package:hjamty/features/client_space/salon_profile/data/salon_service.dart';
 import 'package:hjamty/features/patron_space/create_salon_screen.dart';
-import '../widgets/sticky_tab_bar_delegate.dart';
+import 'package:hjamty/features/client_space/salon_profile/presentation/widgets/sticky_tab_bar_delegate.dart';
 
 class SalonScreenUnifiee extends StatefulWidget {
   final int initialTabIndex;

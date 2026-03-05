@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:hjamty/core/services/fcm_service.dart';
 import 'package:intl/intl.dart';
 import 'package:toastification/toastification.dart';
-import '../../../../../core/constants/app_colors.dart';
-import '../../../../../services/appointment_service.dart';
-import '../../../../../widgets/appointment_details_bottom_sheet.dart';
+import 'package:hjamty/core/constants/app_colors.dart';
+import 'package:hjamty/features/client_space/appointments/data/appointment_service.dart';
+import 'package:hjamty/features/client_space/appointments/presentation/widgets/appointment_details_bottom_sheet.dart';
 
 class EmployeeAgendaPage extends StatefulWidget {
   const EmployeeAgendaPage({super.key});

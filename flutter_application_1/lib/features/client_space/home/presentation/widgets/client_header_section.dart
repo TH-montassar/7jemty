@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/constants/app_colors.dart';
-import '../../../../../core/localization/translation_service.dart';
-import '../../../../client_space/search/presentation/pages/search_page.dart';
-import '../../../../../core/widgets/notification_bell.dart';
+import 'package:hjamty/core/constants/app_colors.dart';
+import 'package:hjamty/core/localization/translation_service.dart';
+import 'package:hjamty/features/client_space/search/presentation/pages/search_page.dart';
+import 'package:hjamty/core/widgets/notification_bell.dart';
 
 class ClientHeaderSection extends StatelessWidget {
   final String userName;

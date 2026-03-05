@@ -1,6 +1,6 @@
 import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:flutter/material.dart';
-import '../../../../../core/constants/app_colors.dart';
+import 'package:hjamty/core/constants/app_colors.dart';
 
 class ReviewsTab extends StatelessWidget {
   const ReviewsTab({super.key});

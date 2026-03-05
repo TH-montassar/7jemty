@@ -7,7 +7,7 @@ class ApiConfig {
 
   static String get host {
     if (_overrideHost.isNotEmpty) return _overrideHost;
-    if (kIsWeb) return 'http://localhost:3000';
+    if (kIsWeb) return 'http://127.0.0.1:3000';
     if (Platform.isAndroid && _realDevice) return 'http://127.0.0.1:3000';
 
     // Android emulator

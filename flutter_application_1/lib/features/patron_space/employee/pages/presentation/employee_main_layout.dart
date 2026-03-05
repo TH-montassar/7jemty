@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/constants/app_colors.dart';
-import '../../../../client_space/profile/presentation/pages/profile_page.dart';
-import '../../../../../core/widgets/notification_bell.dart';
+import 'package:hjamty/core/constants/app_colors.dart';
+import 'package:hjamty/features/client_space/profile/presentation/pages/client_profile_page.dart';
+import 'package:hjamty/core/widgets/notification_bell.dart';
 import 'employee_agenda_page.dart';
 
 class EmployeeMainLayout extends StatefulWidget {

@@ -1,13 +1,13 @@
 import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:flutter/material.dart';
-import 'calendar_page.dart';
-import 'all_appointments_page.dart';
-import 'today_appointments_page.dart';
-import '../widgets/animated_button.dart';
-import '../widgets/animated_text_button.dart'; // تأكد أنك صنعت الملف هذا
-import '../widgets/appointment_card.dart';
-import '../widgets/dashboard_stats.dart';
-import '../widgets/info_card.dart';
+import 'package:hjamty/features/patron_space/appointments/presentation/pages/calendar_page.dart';
+import 'package:hjamty/features/patron_space/appointments/presentation/pages/all_appointments_page.dart';
+import 'package:hjamty/features/patron_space/appointments/presentation/pages/today_appointments_page.dart';
+import 'package:hjamty/core/widgets/animated_button.dart';
+import 'package:hjamty/core/widgets/animated_text_button.dart'; // تأكد أنك صنعت الملف هذا
+import 'package:hjamty/features/client_space/appointments/presentation/widgets/appointment_card.dart';
+import 'package:hjamty/features/patron_space/salon_management/presentation/widgets/dashboard_stats.dart';
+import 'package:hjamty/core/widgets/info_card.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});

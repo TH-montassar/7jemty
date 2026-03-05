@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/constants/app_colors.dart';
-import '../widgets/salon_info_section.dart';
-import '../widgets/sticky_tab_bar_delegate.dart';
-import '../widgets/services_tab.dart';
-import '../widgets/products_tab.dart';
-import '../widgets/portfolio_tab.dart';
-import '../widgets/reviews_tab.dart';
-import '../../../../../services/salon_service.dart';
-import '../../../appointments/presentation/pages/booking_flow_screen.dart';
+import 'package:hjamty/core/constants/app_colors.dart';
+import 'package:hjamty/features/client_space/salon_profile/presentation/widgets/salon_info_section.dart';
+import 'package:hjamty/features/client_space/salon_profile/presentation/widgets/sticky_tab_bar_delegate.dart';
+import 'package:hjamty/features/client_space/salon_profile/presentation/widgets/services_tab.dart';
+import 'package:hjamty/features/client_space/salon_profile/presentation/widgets/products_tab.dart';
+import 'package:hjamty/features/client_space/salon_profile/presentation/widgets/portfolio_tab.dart';
+import 'package:hjamty/features/client_space/salon_profile/presentation/widgets/reviews_tab.dart';
+import 'package:hjamty/features/client_space/salon_profile/data/salon_service.dart';
+import 'package:hjamty/features/client_space/appointments/presentation/pages/booking_flow_screen.dart';
 
 class SalonProfilePage extends StatefulWidget {
   final int salonId;

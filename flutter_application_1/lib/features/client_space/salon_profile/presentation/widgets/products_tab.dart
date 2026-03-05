@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/constants/app_colors.dart';
+import 'package:hjamty/core/constants/app_colors.dart';
 // 👈 1. زيد هذي الفوق باش تنجم تعيطلها
-import '../../../products/presentation/pages/product_details_page.dart';
+import 'package:hjamty/features/client_space/products/presentation/pages/product_details_page.dart';
 
 class ProductsTab extends StatelessWidget {
   const ProductsTab({super.key});

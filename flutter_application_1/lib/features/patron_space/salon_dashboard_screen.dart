@@ -1,19 +1,19 @@
 import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:flutter/material.dart';
-import '../../core/utils/cloudinary_utils.dart';
-import '../../core/constants/app_colors.dart';
-import '../../services/salon_service.dart';
-import '../../services/appointment_service.dart';
-import '../../widgets/appointment_details_bottom_sheet.dart';
+import 'package:hjamty/core/utils/cloudinary_utils.dart';
+import 'package:hjamty/core/constants/app_colors.dart';
+import 'package:hjamty/features/client_space/salon_profile/data/salon_service.dart';
+import 'package:hjamty/features/client_space/appointments/data/appointment_service.dart';
+import 'package:hjamty/features/client_space/appointments/presentation/widgets/appointment_details_bottom_sheet.dart';
 import 'package:intl/intl.dart';
 
-import '../client_space/salon_profile/presentation/pages/salon_setting_screen.dart';
-import '../client_space/appointments/presentation/pages/booking_flow_screen.dart';
+import 'package:hjamty/features/client_space/salon_profile/presentation/pages/salon_setting_screen.dart';
+import 'package:hjamty/features/client_space/appointments/presentation/pages/booking_flow_screen.dart';
 import 'create_salon_screen.dart';
-import '../client_space/salon_profile/presentation/widgets/sticky_tab_bar_delegate.dart';
+import 'package:hjamty/features/client_space/salon_profile/presentation/widgets/sticky_tab_bar_delegate.dart';
 import 'package:toastification/toastification.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../core/widgets/notification_bell.dart';
+import 'package:hjamty/core/widgets/notification_bell.dart';
 
 class SalonDashboardScreen extends StatefulWidget {
   final bool isPatron;

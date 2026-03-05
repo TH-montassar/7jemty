@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../features/client_space/notifications/presentation/pages/notifications_page.dart';
-import '../services/notification_service.dart';
-import '../constants/app_colors.dart';
+import 'package:hjamty/features/client_space/notifications/presentation/pages/notifications_page.dart';
+import 'package:hjamty/core/services/notification_service.dart';
+import 'package:hjamty/core/constants/app_colors.dart';
 
 class NotificationBell extends StatefulWidget {
   final Color iconColor;

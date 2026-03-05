@@ -1,7 +1,7 @@
 import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:flutter/material.dart';
-import '../../../../../core/constants/app_colors.dart';
-import '../../../booking/presentation/pages/booking_page.dart';
+import 'package:hjamty/core/constants/app_colors.dart';
+import 'package:hjamty/features/client_space/booking/presentation/pages/booking_page.dart';
 
 class ServicesTab extends StatelessWidget {
   const ServicesTab({super.key});

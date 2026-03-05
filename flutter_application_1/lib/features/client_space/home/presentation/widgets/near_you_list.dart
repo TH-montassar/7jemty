@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../../patron_space/salon_dashboard_screen.dart';
-import '../../../../../core/constants/app_colors.dart';
-import '../../../../../services/salon_service.dart';
-import '../../../../../core/utils/cloudinary_utils.dart';
+import 'package:hjamty/features/patron_space/salon_dashboard_screen.dart';
+import 'package:hjamty/core/constants/app_colors.dart';
+import 'package:hjamty/features/client_space/salon_profile/data/salon_service.dart';
+import 'package:hjamty/core/utils/cloudinary_utils.dart';
 
 class NearYouList extends StatefulWidget {
   const NearYouList({super.key});

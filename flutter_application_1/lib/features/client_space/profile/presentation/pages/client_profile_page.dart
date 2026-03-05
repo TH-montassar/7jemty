@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/constants/app_colors.dart';
-import '../widgets/profile_header.dart';
-import '../widgets/loyalty_cards_section.dart';
-import '../widgets/profile_menus.dart';
+import 'package:hjamty/core/constants/app_colors.dart';
+import 'package:hjamty/features/client_space/profile/presentation/widgets/client_profile_header.dart';
+import 'package:hjamty/features/client_space/profile/presentation/widgets/loyalty_cards_section.dart';
+import 'package:hjamty/features/client_space/profile/presentation/widgets/profile_menus.dart';
 
 import 'package:hjamty/core/localization/translation_service.dart';
-import 'package:hjamty/services/auth_service.dart';
+import 'package:hjamty/features/auth/data/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfilePage extends StatefulWidget {

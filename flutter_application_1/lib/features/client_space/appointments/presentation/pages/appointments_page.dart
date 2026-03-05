@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../../../core/constants/app_colors.dart';
-import '../widgets/upcoming_tab.dart';
-import '../widgets/history_tab.dart';
-import '../../../../../core/localization/translation_service.dart';
-import '../../../../auth/signIn.dart';
-import '../../../main_layout/presentation/pages/client_main_layout.dart';
+import 'package:hjamty/core/constants/app_colors.dart';
+import 'package:hjamty/features/client_space/appointments/presentation/widgets/upcoming_tab.dart';
+import 'package:hjamty/features/client_space/appointments/presentation/widgets/history_tab.dart';
+import 'package:hjamty/core/localization/translation_service.dart';
+import 'package:hjamty/features/auth/signIn.dart';
+import 'package:hjamty/features/client_space/main_layout/presentation/pages/client_main_layout.dart';
 
 class AppointmentsPage extends StatefulWidget {
   const AppointmentsPage({super.key});

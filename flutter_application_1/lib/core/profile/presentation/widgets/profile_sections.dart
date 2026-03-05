@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../pages/splash_screen.dart';
-import 'shared_widgets.dart';
+import 'package:hjamty/features/splash/presentation/pages/splash_screen.dart';
+import 'package:hjamty/core/widgets/shared_widgets.dart';
 
 // 1. Gallery Section
 class HaircutGallery extends StatelessWidget {

@@ -3,13 +3,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hjamty/features/client_space/products/presentation/pages/products_page.dart';
 
 // 1. N3aytou lel pages lkol
-import '../../../home/presentation/pages/client_home_page.dart';
-import '../../../appointments/presentation/pages/appointments_page.dart';
-import '../../../profile/presentation/pages/profile_page.dart';
+import 'package:hjamty/features/client_space/home/presentation/pages/client_home_page.dart';
+import 'package:hjamty/features/client_space/appointments/presentation/pages/appointments_page.dart';
+import 'package:hjamty/features/client_space/profile/presentation/pages/client_profile_page.dart';
 
 // 2. N3aytou lel SignIn w l'BottomNav
-import '../../../../auth/signIn.dart'; // 👈 Baddel l'chemin 7asb dossieretk
-import '../../../home/presentation/widgets/client_bottom_nav.dart';
+import 'package:hjamty/features/auth/signIn.dart'; // 👈 Baddel l'chemin 7asb dossieretk
+import 'package:hjamty/features/client_space/home/presentation/widgets/client_bottom_nav.dart';
 
 class ClientMainLayout extends StatefulWidget {
   final int initialIndex;

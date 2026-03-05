@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/constants/app_colors.dart';
-import '../../../../../core/localization/translation_service.dart';
+import 'package:hjamty/core/constants/app_colors.dart';
+import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:intl/intl.dart';
-import '../../../../../widgets/appointment_details_bottom_sheet.dart';
+import 'package:hjamty/features/client_space/appointments/presentation/widgets/appointment_details_bottom_sheet.dart';
 
 class NextRdvCard extends StatelessWidget {
   final Map<String, dynamic>? appointmentData;

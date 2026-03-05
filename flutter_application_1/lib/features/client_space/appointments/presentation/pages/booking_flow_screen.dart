@@ -3,12 +3,12 @@ import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:toastification/toastification.dart';
-import '../../../../../core/constants/app_colors.dart';
-import '../../../../../core/localization/translation_service.dart';
-import '../../../../../services/salon_service.dart';
-import '../../../../../services/appointment_service.dart';
-import '../../../../../services/auth_service.dart';
-import '../../../main_layout/presentation/pages/client_main_layout.dart';
+import 'package:hjamty/core/constants/app_colors.dart';
+import 'package:hjamty/core/localization/translation_service.dart';
+import 'package:hjamty/features/client_space/salon_profile/data/salon_service.dart';
+import 'package:hjamty/features/client_space/appointments/data/appointment_service.dart';
+import 'package:hjamty/features/auth/data/auth_service.dart';
+import 'package:hjamty/features/client_space/main_layout/presentation/pages/client_main_layout.dart';
 
 class BookingFlowScreen extends StatefulWidget {
   final int salonId;

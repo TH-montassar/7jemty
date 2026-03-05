@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/constants/app_colors.dart';
+import 'package:hjamty/core/constants/app_colors.dart';
 
-import '../../../../../core/services/notification_service.dart';
+import 'package:hjamty/core/services/notification_service.dart';
 import 'package:intl/intl.dart';
 
 class NotificationsPage extends StatefulWidget {

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../widgets/profile_data.dart';
-import '../widgets/profile_header.dart';
-import '../widgets/subscription_card.dart';
-import '../widgets/profile_sections.dart';
-import '../widgets/profile_modals.dart';
+import 'package:hjamty/core/profile/presentation/widgets/profile_data.dart';
+import 'package:hjamty/core/profile/presentation/widgets/profile_header.dart';
+import 'package:hjamty/features/patron_space/salon_management/presentation/widgets/subscription_card.dart';
+import 'package:hjamty/core/profile/presentation/widgets/profile_sections.dart';
+import 'package:hjamty/core/profile/presentation/widgets/profile_modals.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});

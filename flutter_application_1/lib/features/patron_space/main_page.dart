@@ -1,12 +1,12 @@
 import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:flutter/material.dart';
-import '../../pages/home_page.dart';
-import '../../pages/calendar_page.dart';
+import 'package:hjamty/features/patron_space/main_layout/presentation/pages/home_page.dart';
+import 'package:hjamty/features/patron_space/appointments/presentation/pages/calendar_page.dart';
 import 'salon_dashboard_screen.dart';
-import '../client_space/profile/presentation/pages/profile_page.dart';
-import '../../services/auth_service.dart';
-import '../../core/constants/app_colors.dart';
-import '../../core/widgets/notification_bell.dart';
+import 'package:hjamty/features/client_space/profile/presentation/pages/client_profile_page.dart';
+import 'package:hjamty/features/auth/data/auth_service.dart';
+import 'package:hjamty/core/constants/app_colors.dart';
+import 'package:hjamty/core/widgets/notification_bell.dart';
 
 class MainPage extends StatefulWidget {
   final int initialIndex;

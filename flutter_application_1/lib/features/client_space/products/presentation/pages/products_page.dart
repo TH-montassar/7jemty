@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/constants/app_colors.dart';
-import '../../../../../core/localization/translation_service.dart';
+import 'package:hjamty/core/constants/app_colors.dart';
+import 'package:hjamty/core/localization/translation_service.dart';
 // 1. 🚀 عملنا Import لصفحة تفاصيل المنتج وصفحة السلة
 import 'product_details_page.dart';
 import 'cart_page.dart';
