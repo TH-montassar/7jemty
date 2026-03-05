@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:toastification/toastification.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../services/appointment_service.dart';
+import '../../../../../widgets/appointment_details_bottom_sheet.dart';
 
 class EmployeeAgendaPage extends StatefulWidget {
   const EmployeeAgendaPage({super.key});
@@ -289,226 +290,232 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
       }
     }
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 15),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        border: Border.all(color: statusColor.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                time,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  color: AppColors.textDark,
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: statusColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      statusText,
-                      style: TextStyle(
-                        color: statusColor,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
+    return GestureDetector(
+      onTap: () {
+        showAppointmentDetailsBottomSheet(context: context, appointment: apt);
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 15),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+          border: Border.all(color: statusColor.withValues(alpha: 0.3)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  time,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: AppColors.textDark,
                   ),
-                  if (countdownText.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: statusColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                       child: Text(
-                        countdownText,
-                        style: const TextStyle(
-                          color: AppColors.actionRed,
-                          fontSize: 11,
+                        statusText,
+                        style: TextStyle(
+                          color: statusColor,
                           fontWeight: FontWeight.bold,
+                          fontSize: 12,
                         ),
                       ),
                     ),
+                    if (countdownText.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          countdownText,
+                          style: const TextStyle(
+                            color: AppColors.actionRed,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              clientName,
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              serviceName,
+              style: const TextStyle(color: Colors.grey, fontSize: 14),
+            ),
+
+            if (isPending || isConfirmed || isInProgress)
+              const SizedBox(height: 16),
+
+            if (isPending) // Accept or Decline buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () =>
+                          _updateStatus(apt['id'], 'DECLINED', index),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.actionRed,
+                        side: const BorderSide(color: AppColors.actionRed),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: Text(tr(context, 'reject_btn')),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () =>
+                          _updateStatus(apt['id'], 'CONFIRMED', index),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primaryBlue,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: const Text(
+                        "Ikbel",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ),
                 ],
               ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            clientName,
-            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            serviceName,
-            style: const TextStyle(color: Colors.grey, fontSize: 14),
-          ),
 
-          if (isPending || isConfirmed || isInProgress)
-            const SizedBox(height: 16),
-
-          if (isPending) // Accept or Decline buttons
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () =>
-                        _updateStatus(apt['id'], 'DECLINED', index),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.actionRed,
-                      side: const BorderSide(color: AppColors.actionRed),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: Text(tr(context, 'reject_btn')),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () =>
-                        _updateStatus(apt['id'], 'CONFIRMED', index),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryBlue,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    child: const Text(
-                      "Ikbel",
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
-          if (isConfirmed && isTimeReached) // Client arrived?
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () =>
-                        _updateStatus(apt['id'], 'CANCELLED', index),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.actionRed,
-                      side: const BorderSide(color: AppColors.actionRed),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    icon: const Icon(Icons.person_off, size: 18),
-                    label: const Text(
-                      "Majech",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () =>
-                        _updateStatus(apt['id'], 'IN_PROGRESS', index),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.purple,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    icon: const Icon(
-                      Icons.person_add_alt_1,
-                      color: Colors.white,
-                      size: 18,
-                    ),
-                    label: const Text(
-                      "Jek a?",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
-          if (isInProgress)
-            Column(
-              children: [
-                if (isTimeReached) ...[
-                  SizedBox(
-                    width: double.infinity,
+            if (isConfirmed && isTimeReached) // Client arrived?
+              Row(
+                children: [
+                  Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () => _showExtensionOptions(apt['id'], index),
+                      onPressed: () =>
+                          _updateStatus(apt['id'], 'CANCELLED', index),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.textDark,
-                        side: const BorderSide(color: Colors.grey),
+                        foregroundColor: AppColors.actionRed,
+                        side: const BorderSide(color: AppColors.actionRed),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      icon: const Icon(Icons.timer, color: Colors.grey),
+                      icon: const Icon(Icons.person_off, size: 18),
                       label: const Text(
-                        "Mzelt",
+                        "Majech",
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 12),
-                ],
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () =>
-                        _updateStatus(apt['id'], 'COMPLETED', index),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.successGreen,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () =>
+                          _updateStatus(apt['id'], 'IN_PROGRESS', index),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.purple,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
-                    ),
-                    icon: const Icon(Icons.check_circle, color: Colors.white),
-                    label: const Text(
-                      "Kmalt l'hjema ?",
-                      style: TextStyle(
+                      icon: const Icon(
+                        Icons.person_add_alt_1,
                         color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                        size: 18,
+                      ),
+                      label: const Text(
+                        "Jek a?",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
-        ],
+                ],
+              ),
+
+            if (isInProgress)
+              Column(
+                children: [
+                  if (isTimeReached) ...[
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () =>
+                            _showExtensionOptions(apt['id'], index),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.textDark,
+                          side: const BorderSide(color: Colors.grey),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        icon: const Icon(Icons.timer, color: Colors.grey),
+                        label: const Text(
+                          "Mzelt",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () =>
+                          _updateStatus(apt['id'], 'COMPLETED', index),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.successGreen,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      icon: const Icon(Icons.check_circle, color: Colors.white),
+                      label: const Text(
+                        "Kmalt l'hjema ?",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+          ],
+        ),
       ),
     );
   }

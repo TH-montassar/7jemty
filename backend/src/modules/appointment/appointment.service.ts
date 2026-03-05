@@ -547,6 +547,8 @@ export const getSalonAppointments = async (patronId: number) => {
         where: { salonId: salon.id },
         include: {
             client: { select: { fullName: true, phoneNumber: true, profile: { select: { avatarUrl: true } } } },
+            salon: { select: { name: true, address: true, coverImageUrl: true } },
+            barber: { select: { fullName: true, profile: { select: { avatarUrl: true } } } },
             services: { include: { service: true } }
         },
         orderBy: { appointmentDate: 'asc' }
@@ -557,6 +559,7 @@ export const getClientAppointments = async (clientId: number) => {
     return prisma.appointment.findMany({
         where: { clientId },
         include: {
+            client: { select: { fullName: true, phoneNumber: true } },
             salon: { select: { name: true, address: true, coverImageUrl: true } },
             barber: { select: { fullName: true, profile: { select: { avatarUrl: true } } } },
             services: { include: { service: true } }
@@ -570,8 +573,9 @@ export const getEmployeeAppointments = async (employeeId: number) => {
         where: { barberId: employeeId },
         include: {
             client: { select: { id: true, fullName: true, phoneNumber: true } },
-            services: { include: { service: true } },
-            salon: { select: { name: true, address: true } }
+            barber: { select: { fullName: true, profile: { select: { avatarUrl: true } } } },
+            salon: { select: { name: true, address: true } },
+            services: { include: { service: true } }
         },
         orderBy: { appointmentDate: 'desc' },
         take: 50
