@@ -1,9 +1,6 @@
 import 'dart:io';
 
 void main() {
-  var file = File('lib/core/localization/translation_service.dart');
-  var content = file.readAsStringSync();
-
   var keysTn = {
     'congrats': 'Mabrouk! 🎉',
     'save_success': 'Sauvegarde réussie',
@@ -120,25 +117,36 @@ void main() {
     'account_password_hint': 'Account password',
   };
 
-  void injectMap(String pattern, Map<String, String> items) {
+  void injectToFile(String path, String pattern, Map<String, String> items) {
+    var file = File(path);
+    if (!file.existsSync()) return;
+    var content = file.readAsStringSync();
     int idx = content.indexOf(pattern);
     if (idx != -1) {
-      int insertIdx = content.indexOf('}', idx);
+      int insertIdx = content.lastIndexOf('}');
+      if (insertIdx == -1) return;
       String newKeys = '';
       for (var k in items.keys) {
         if (!content.substring(idx, insertIdx).contains("'$k':")) {
-          newKeys += "      '$k': '${items[k]!.replaceAll("'", "\\'")}',\n";
+          newKeys += "  '$k': '${items[k]!.replaceAll("'", "\\'")}',\n";
         }
       }
       content =
           content.substring(0, insertIdx) +
           newKeys +
           content.substring(insertIdx);
+      file.writeAsStringSync(content);
     }
   }
 
-  injectMap("'tn': {", keysTn);
-  injectMap("'en': {", keysEn);
-
-  file.writeAsStringSync(content);
+  injectToFile(
+    'lib/core/localization/langs/tn.dart',
+    "const Map<String, String> tn = {",
+    keysTn,
+  );
+  injectToFile(
+    'lib/core/localization/langs/en.dart',
+    "const Map<String, String> en = {",
+    keysEn,
+  );
 }
