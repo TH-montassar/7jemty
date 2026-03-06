@@ -169,3 +169,52 @@ export const checkPhoneExists = async (phoneNumber: string) => {
     
     return { exists: false, role: null };
 };
+
+export const requestOtp = async (phoneNumber: string) => {
+    // Generate a 6-digit code
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
+
+    // Save to database
+    await prisma.otpCode.create({
+        data: {
+            phoneNumber,
+            code,
+            expiresAt,
+        }
+    });
+
+    // In a real production app, you would integrate an SMS provider here.
+    // For now, we simulate sending it.
+    console.log(`[SIMULATED SMS] Send to ${phoneNumber}: Your 7jemty verification code is ${code}`);
+
+    return { message: "Code OTP envoyé avec succès" };
+};
+
+export const verifyOtp = async (phoneNumber: string, submittedCode: string) => {
+    // Find the most recent unexpired OTP for this phone number
+    const otpRecord = await prisma.otpCode.findFirst({
+        where: {
+            phoneNumber,
+            expiresAt: { gt: new Date() }
+        },
+        orderBy: {
+            createdAt: 'desc'
+        }
+    });
+
+    if (!otpRecord) {
+        throw new Error("Aucun code OTP valide n'a été trouvé. Veuillez en demander un nouveau.");
+    }
+
+    if (otpRecord.code !== submittedCode) {
+        throw new Error("Code OTP incorrect.");
+    }
+
+    // Code is valid. Delete it so it can't be reused.
+    await prisma.otpCode.delete({
+        where: { id: otpRecord.id }
+    });
+
+    return { message: "Numéro vérifié avec succès" };
+};

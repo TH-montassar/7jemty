@@ -163,6 +163,50 @@ class AuthService {
     }
   }
 
+  static Future<bool> requestOtp(String phoneNumber) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/request-otp'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'phoneNumber': phoneNumber}),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        throw Exception(
+          data['message'] ?? 'Erreur lors de la demande du code',
+        );
+      }
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+
+  static Future<bool> verifyOtp(String phoneNumber, String code) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/verify-otp'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'phoneNumber': phoneNumber, 'code': code}),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        return true;
+      } else {
+        throw Exception(
+          data['message'] ?? 'Code invalide',
+        );
+      }
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+
   static Future<Map<String, dynamic>> loginUser({
     required String phoneNumber,
     required String password,

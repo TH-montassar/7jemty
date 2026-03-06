@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import * as authService from './auth.service.js';
-import { registerSchema, loginSchema } from './auth.schema.js';
+import { registerSchema, loginSchema, requestOtpSchema, verifyOtpSchema } from './auth.schema.js';
 
 export const register = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -59,5 +59,27 @@ export const checkPhone = async (req: Request, res: Response): Promise<void> => 
         res.status(200).json({ success: true, ...result });
     } catch (error: any) {
         res.status(400).json({ success: false, message: error.message });
+    }
+};
+
+export const requestOtp = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const validatedData = requestOtpSchema.parse(req.body);
+        const result = await authService.requestOtp(validatedData.phoneNumber);
+        res.status(200).json({ success: true, ...result });
+    } catch (error: any) {
+        const message = error.errors ? error.errors[0].message : error.message;
+        res.status(400).json({ success: false, message });
+    }
+};
+
+export const verifyOtp = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const validatedData = verifyOtpSchema.parse(req.body);
+        const result = await authService.verifyOtp(validatedData.phoneNumber, validatedData.code);
+        res.status(200).json({ success: true, ...result });
+    } catch (error: any) {
+        const message = error.errors ? error.errors[0].message : error.message;
+        res.status(400).json({ success: false, message });
     }
 };

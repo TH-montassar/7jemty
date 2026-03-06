@@ -15,3 +15,12 @@ export const loginSchema = z.object({
     phoneNumber: z.string().min(8, "Numéro de téléphone invalide"),
     password: z.string().min(6, "Mot de passe invalide"),
 });
+
+export const requestOtpSchema = z.object({
+    phoneNumber: z.string().min(8, "Numéro de téléphone invalide"),
+});
+
+export const verifyOtpSchema = z.object({
+    phoneNumber: z.string().min(8, "Numéro de téléphone invalide"),
+    code: z.string().length(6, "Le code doit contenir 6 chiffres"),
+});
