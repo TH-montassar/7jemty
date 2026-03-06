@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getAllUsersHandler, deleteUserHandler, getAllSalonsAdminHandler, updateSalonStatusHandler, deleteSalonHandler, updateUserHandler, updateSalonAdminHandler } from './admin.controller.js';
+import { getAllUsersHandler, deleteUserHandler, getAllSalonsAdminHandler, updateSalonStatusHandler, deleteSalonHandler, updateUserHandler, updateSalonAdminHandler, getSalonStatsHandler } from './admin.controller.js';
 import { protect, isAdmin } from '../../middlewares/auth.middleware.js';
 
 const router = Router();
@@ -14,5 +14,6 @@ router.get('/salons', getAllSalonsAdminHandler);
 router.patch('/salons/:id', updateSalonAdminHandler);
 router.patch('/salons/:id/status', updateSalonStatusHandler);
 router.delete('/salons/:id', deleteSalonHandler);
+router.get('/salons/:id/stats', getSalonStatsHandler);
 
 export default router;

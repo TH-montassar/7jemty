@@ -78,6 +78,7 @@ class _ManageUsersPageState extends State<ManageUsersPage> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView.builder(
+              padding: const EdgeInsets.only(bottom: 100),
               itemCount: _users.length,
               itemBuilder: (ctx, index) {
                 final user = _users[index];

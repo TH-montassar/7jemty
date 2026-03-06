@@ -1,6 +1,6 @@
 import type { Response } from 'express';
 import type { AuthRequest } from '../../middlewares/auth.middleware.js';
-import { getAllUsers, deleteUser, getAllSalonsAdmin, updateSalonStatus, deleteSalon, updateUser, updateSalonAdmin } from './admin.service.js';
+import { getAllUsers, deleteUser, getAllSalonsAdmin, updateSalonStatus, deleteSalon, updateUser, updateSalonAdmin, getSalonStatsAdmin } from './admin.service.js';
 
 export const getAllUsersHandler = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
@@ -67,6 +67,16 @@ export const updateSalonAdminHandler = async (req: AuthRequest, res: Response): 
         const id = parseInt(req.params.id as string);
         const updatedSalon = await updateSalonAdmin(id, req.body);
         res.status(200).json({ success: true, data: updatedSalon });
+    } catch (error: any) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+export const getSalonStatsHandler = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const id = parseInt(req.params.id as string);
+        const stats = await getSalonStatsAdmin(id);
+        res.status(200).json({ success: true, data: stats });
     } catch (error: any) {
         res.status(500).json({ success: false, message: error.message });
     }

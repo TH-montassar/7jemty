@@ -14,6 +14,7 @@ import 'package:hjamty/features/client_space/salon_profile/presentation/widgets/
 import 'package:toastification/toastification.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:hjamty/core/widgets/notification_bell.dart';
+import 'package:hjamty/features/auth/data/auth_service.dart';
 
 class SalonDashboardScreen extends StatefulWidget {
   final bool isPatron;
@@ -201,19 +202,39 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                 elevation: 0,
                 iconTheme: const IconThemeData(color: Colors.white),
                 actions: [
-                  if (widget.isPatron) const NotificationBell(),
-                  if (widget.isPatron)
-                    IconButton(
-                      icon: const Icon(Icons.settings, color: Colors.white),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const SalonScreenUnifiee(),
-                          ),
-                        ).then((value) => _fetchSalonData());
-                      },
-                    ),
+                  // Show for patron or admin
+                  FutureBuilder<Map<String, dynamic>>(
+                    future: AuthService.getMe(),
+                    builder: (context, snapshot) {
+                      final bool isAdmin =
+                          snapshot.hasData &&
+                          snapshot.data?['data']?['role'] == 'ADMIN';
+                      if (widget.isPatron || isAdmin) {
+                        return Row(
+                          children: [
+                            const NotificationBell(),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.settings,
+                                color: Colors.white,
+                              ),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => SalonScreenUnifiee(
+                                      salonId: widget.salonId,
+                                    ),
+                                  ),
+                                ).then((_) => _fetchSalonData());
+                              },
+                            ),
+                          ],
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
                 ],
                 flexibleSpace: FlexibleSpaceBar(
                   titlePadding: const EdgeInsets.only(left: 20, bottom: 16),

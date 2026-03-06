@@ -1,3 +1,4 @@
+import 'package:hjamty/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:hjamty/features/admin_space/data/admin_service.dart';
@@ -91,6 +92,7 @@ class _ManageSalonsPageState extends State<ManageSalonsPage> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView.builder(
+              padding: const EdgeInsets.only(bottom: 100),
               itemCount: _salons.length,
               itemBuilder: (ctx, index) {
                 final salon = _salons[index];
@@ -118,6 +120,18 @@ class _ManageSalonsPageState extends State<ManageSalonsPage> {
                         title: Text(salon['name'] ?? 'Unknown'),
                         subtitle: Text(salon['address'] ?? 'No address'),
                         trailing: _getStatusBadge(status),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => SalonDashboardScreen(
+                                isPatron:
+                                    true, // Allow admin to peek with full permissions
+                                salonId: salon['id'],
+                              ),
+                            ),
+                          );
+                        },
                       ),
                       Padding(
                         padding: const EdgeInsets.symmetric(
@@ -127,21 +141,15 @@ class _ManageSalonsPageState extends State<ManageSalonsPage> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
-                            TextButton.icon(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => SalonDashboardScreen(
-                                      isPatron:
-                                          true, // Allow admin to peek with full permissions
-                                      salonId: salon['id'],
-                                    ),
-                                  ),
-                                );
-                              },
-                              icon: const Icon(Icons.remove_red_eye),
-                              label: Text(tr(context, 'peek_view')),
+                            // Peek button removed, it's now accessible by tapping the card
+                            IconButton(
+                              icon: const Icon(
+                                Icons.bar_chart,
+                                color: Colors.purple,
+                              ),
+                              onPressed: () =>
+                                  _showStatsDialog(salon['id'], salon['name']),
+                              tooltip: 'Statistiques',
                             ),
                             IconButton(
                               icon: const Icon(Icons.edit, color: Colors.blue),
@@ -271,7 +279,7 @@ class _ManageSalonsPageState extends State<ManageSalonsPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withAlpha(26),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: color),
       ),
@@ -282,6 +290,137 @@ class _ManageSalonsPageState extends State<ManageSalonsPage> {
           fontSize: 12,
           fontWeight: FontWeight.bold,
         ),
+      ),
+    );
+  }
+
+  Future<void> _showStatsDialog(int salonId, String salonName) async {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return FutureBuilder<Map<String, dynamic>>(
+          future: AdminService.getSalonStats(salonId),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const SizedBox(
+                height: 300,
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+            if (snapshot.hasError) {
+              return SizedBox(
+                height: 300,
+                child: Center(
+                  child: Text(
+                    'Erreur: ${snapshot.error}',
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                ),
+              );
+            }
+
+            final stats = snapshot.data!;
+            final specialists = stats['specialistStats'] as List<dynamic>;
+
+            return Container(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Statistiques: $salonName',
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _buildStatCard(
+                        'Coupes',
+                        '${stats['totalAppointments']}',
+                        Icons.content_cut,
+                        AppColors.primaryBlue,
+                      ),
+                      _buildStatCard(
+                        'Revenus',
+                        '${stats['totalRevenue']} TND',
+                        Icons.attach_money,
+                        AppColors.actionRed,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    'Par Spécialiste',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 10),
+                  specialists.isEmpty
+                      ? const Text('Aucune donnée disponible.')
+                      : Expanded(
+                          child: ListView.builder(
+                            itemCount: specialists.length,
+                            itemBuilder: (context, i) {
+                              final spec = specialists[i];
+                              return ListTile(
+                                leading: const CircleAvatar(
+                                  child: Icon(Icons.person),
+                                ),
+                                title: Text(spec['name']),
+                                subtitle: Text('${spec['count']} coupes'),
+                                trailing: Text(
+                                  '${spec['revenue']} TND',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.actionRed,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildStatCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withAlpha(20),
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 30),
+          const SizedBox(height: 10),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          Text(title, style: TextStyle(color: Colors.grey.shade700)),
+        ],
       ),
     );
   }

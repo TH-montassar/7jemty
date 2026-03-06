@@ -27,9 +27,10 @@ export const updateSalonSchema = z.object({
 });
 
 export const createEmployeeAccountSchema = z.object({
-    phoneNumber: z.string().min(8, "Numéro de téléphone invalide"),
-    password: z.string().min(6, "Mot de passe yelzmou 6 caractéres au moins"),
-    name: z.string().min(2, "Nom invalide"),
+    salonId: z.number().optional(),
+    phoneNumber: z.string().min(8, "Numéro téléphone lazem 8 ar9am au minimum"),
+    password: z.string().min(6, "Mot de passe lazem 6 7rouf au minimum"),
+    name: z.string().min(2, "Nom lazem ykoun s7i7"),
     role: z.string().optional(),
     bio: z.string().optional(),
     description: z.string().optional(),
@@ -37,9 +38,10 @@ export const createEmployeeAccountSchema = z.object({
 });
 
 export const createServiceSchema = z.object({
-    name: z.string().min(2, "Esem e-service lezem fih 2 7rouf 3al a9al"),
-    price: z.number().positive("Prix lezem yakoun positif"),
-    durationMinutes: z.number().int().positive("La durée lezem takoun positive"),
+    salonId: z.number().optional(),
+    name: z.string().min(2, "Le nom du service est requis"),
+    price: z.number().positive("Le prix doit être positif"),
+    durationMinutes: z.number().int().positive("La durée doit être valide (en minutes)"),
     description: z.string().optional(),
-    imageUrl: z.string().url("URL mech s7i7a").optional().or(z.literal('')),
+    imageUrl: z.string().optional(),
 });

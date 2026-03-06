@@ -189,4 +189,30 @@ class AdminService {
       throw Exception('Erreur: $e');
     }
   }
+
+  static Future<Map<String, dynamic>> getSalonStats(int id) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token');
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/salons/$id/stats'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200 && data['success'] == true) {
+        return data['data'];
+      } else {
+        throw Exception(
+          data['message'] ?? 'Erreur lors de la récupération des statistiques',
+        );
+      }
+    } catch (e) {
+      throw Exception('Erreur: $e');
+    }
+  }
 }

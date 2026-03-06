@@ -1,6 +1,7 @@
 import { prisma } from '../../lib/db.js';
 import bcrypt from 'bcryptjs';
 import { Role } from '../../../generated/prisma/index.js';
+import { sendNotification } from '../notifications/notifications.service.js';
 
 export const createSalon = async (patronId: number, data: any) => {
     // 1. Nthabtou ken l'Patron hetha 3andou salon deja (bech ma yasna3ch 2 salons)
@@ -27,6 +28,30 @@ export const createSalon = async (patronId: number, data: any) => {
             patronId: patronId, // 👈 Narbtou l'salon bel Patron mta3ou
         },
     });
+
+    // Notify all ADMIN users
+    const admins = await prisma.user.findMany({
+        where: { role: Role.ADMIN },
+        include: { profile: true }
+    });
+
+    for (const admin of admins) {
+        await prisma.notification.create({
+            data: {
+                userId: admin.id,
+                title: "Nouveau salon",
+                body: `Le salon "${newSalon.name}" est en attente d'approbation.`
+            }
+        });
+        if (admin.profile?.fcmToken) {
+            await sendNotification(
+                admin.profile.fcmToken,
+                "Nouveau salon",
+                `Le salon "${newSalon.name}" est en attente d'approbation.`,
+                { type: 'NEW_SALON', salonId: newSalon.id.toString() }
+            );
+        }
+    }
 
     return newSalon;
 };
@@ -114,13 +139,17 @@ export const getSalonByPatronId = async (patronId: number) => {
 };
 
 export const createEmployeeAccount = async (patronId: number, data: any) => {
-    // 1. Nthabtou l'patron 3andou salon bech nzidoulou sona3
-    const salon = await prisma.salon.findFirst({
-        where: { patronId: patronId },
-    });
+    // 1. Nthabtou l'patron 3andou salon bech nzidoulou sona3 (if no salonId is provided)
+    let salonIdToUse = data.salonId;
+    if (!salonIdToUse) {
+        const salon = await prisma.salon.findFirst({
+            where: { patronId: patronId },
+        });
 
-    if (!salon) {
-        throw new Error("Lazem ykoun 3andek salon bech tzid personnel");
+        if (!salon) {
+            throw new Error("Lazem ykoun 3andek salon bech tzid personnel");
+        }
+        salonIdToUse = salon.id;
     }
 
     // 2. Nthabtou ken nomrou teflon mta3 employé mouch msta3mel 9bal
@@ -143,7 +172,7 @@ export const createEmployeeAccount = async (patronId: number, data: any) => {
             passwordHash: passwordHash,
             fullName: data.name,
             role: Role.EMPLOYEE,
-            workplaceSalonId: salon.id, // Nrabtouha direct b salon l patron
+            workplaceSalonId: salonIdToUse, // Nrabtouha direct b salon l patron
 
             // B. Nasn3ou l'Profile f wist l'User (Nested Writes)
             profile: {
@@ -161,7 +190,7 @@ export const createEmployeeAccount = async (patronId: number, data: any) => {
     return {
         id: newUser.id,
         userId: newUser.id,
-        salonId: salon.id,
+        salonId: salonIdToUse,
         name: newUser.fullName,
         role: data.role || 'Spécialiste',
         bio: data.bio || null,
@@ -217,17 +246,21 @@ export const getAllSalons = async (lat?: number, lng?: number, includeUnapproved
 };
 
 export const createService = async (patronId: number, data: any) => {
-    const salon = await prisma.salon.findFirst({
-        where: { patronId: patronId },
-    });
+    let salonIdToUse = data.salonId;
+    if (!salonIdToUse) {
+        const salon = await prisma.salon.findFirst({
+            where: { patronId: patronId },
+        });
 
-    if (!salon) {
-        throw new Error("Lazem ykoun 3andek salon bech tzid service");
+        if (!salon) {
+            throw new Error("Lazem ykoun 3andek salon bech tzid service");
+        }
+        salonIdToUse = salon.id;
     }
 
     const newService = await prisma.service.create({
         data: {
-            salonId: salon.id,
+            salonId: salonIdToUse,
             name: data.name,
             description: data.description || null,
             price: data.price,

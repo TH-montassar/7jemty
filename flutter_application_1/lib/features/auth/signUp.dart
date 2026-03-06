@@ -6,7 +6,7 @@ import 'package:toastification/toastification.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hjamty/features/patron_space/main_page.dart';
 import 'package:hjamty/features/patron_space/create_salon_screen.dart';
-import 'package:hjamty/features/admin_space/presentation/pages/admin_home_page.dart';
+import 'package:hjamty/features/admin_space/presentation/pages/admin_main_screen.dart';
 import 'package:hjamty/features/patron_space/employee/pages/presentation/employee_main_layout.dart';
 import 'package:hjamty/features/client_space/main_layout/presentation/pages/client_main_layout.dart';
 
@@ -113,7 +113,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         } else if (userRole == 'ADMIN') {
           Navigator.pushAndRemoveUntil(
             context,
-            MaterialPageRoute(builder: (context) => const AdminHomePage()),
+            MaterialPageRoute(builder: (context) => const AdminMainScreen()),
             (route) => false,
           );
         } else if (userRole == 'EMPLOYEE') {

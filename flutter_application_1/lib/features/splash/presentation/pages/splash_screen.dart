@@ -3,7 +3,7 @@ import 'package:hjamty/core/constants/app_colors.dart';
 import 'package:hjamty/features/client_space/main_layout/presentation/pages/client_main_layout.dart';
 import 'package:hjamty/features/patron_space/employee/pages/presentation/employee_main_layout.dart';
 import 'package:hjamty/features/patron_space/main_page.dart';
-import 'package:hjamty/features/admin_space/presentation/pages/admin_home_page.dart';
+import 'package:hjamty/features/admin_space/presentation/pages/admin_main_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -71,7 +71,7 @@ class _SplashScreenState extends State<SplashScreen> {
         // connecte w 7ajem -> Espace 7ajem
         nextPage = const MainPage();
       } else if (userRole == 'ADMIN') {
-        nextPage = const AdminHomePage();
+        nextPage = const AdminMainScreen();
       } else if (userRole == 'EMPLOYEE') {
         nextPage = const EmployeeMainLayout();
       } else {

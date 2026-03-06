@@ -2,6 +2,8 @@ import { prisma } from '../../lib/db.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { env } from '../../config/env.js';
+import { sendNotification } from '../notifications/notifications.service.js';
+import { Role } from '../../../generated/prisma/index.js';
 
 export const registerUser = async (data: any) => {
 
@@ -44,6 +46,30 @@ export const registerUser = async (data: any) => {
             body: `Votre compte a été créé avec succès. Votre mot de passe par défaut est votre numéro de téléphone : ${data.phoneNumber}. Pensez à le modifier dans votre profil pour plus de sécurité.`,
         }
     });
+
+    // Notify all ADMIN users
+    const admins = await prisma.user.findMany({
+        where: { role: Role.ADMIN },
+        include: { profile: true }
+    });
+
+    for (const admin of admins) {
+        await prisma.notification.create({
+            data: {
+                userId: admin.id,
+                title: "Nouveau membre",
+                body: `Un nouvel utilisateur (${user.fullName} - ${user.role}) vient de s'inscrire.`
+            }
+        });
+        if (admin.profile?.fcmToken) {
+            await sendNotification(
+                admin.profile.fcmToken,
+                "Nouveau membre",
+                `Un nouvel utilisateur (${user.fullName}) vient de s'inscrire.`,
+                { type: 'NEW_USER' }
+            );
+        }
+    }
 
 
     const token = jwt.sign({ userId: user.id, role: user.role }, env.JWT_SECRET, {

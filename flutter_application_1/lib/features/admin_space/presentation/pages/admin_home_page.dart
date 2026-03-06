@@ -2,19 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:hjamty/core/constants/app_colors.dart';
 import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:hjamty/features/admin_space/data/admin_service.dart';
-import 'manage_users_page.dart';
-import 'manage_salons_page.dart';
-import 'package:hjamty/features/client_space/profile/presentation/pages/client_profile_page.dart';
 import 'package:hjamty/core/widgets/notification_bell.dart';
+import 'package:intl/intl.dart';
 
-class AdminHomePage extends StatefulWidget {
-  const AdminHomePage({super.key});
+class AdminDashboardPage extends StatefulWidget {
+  const AdminDashboardPage({super.key});
 
   @override
-  State<AdminHomePage> createState() => _AdminHomePageState();
+  State<AdminDashboardPage> createState() => _AdminDashboardPageState();
 }
 
-class _AdminHomePageState extends State<AdminHomePage> {
+class _AdminDashboardPageState extends State<AdminDashboardPage> {
   bool _isLoading = true;
   int _totalUsers = 0;
   int _totalSalons = 0;
@@ -49,212 +47,211 @@ class _AdminHomePageState extends State<AdminHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bgColor,
-      appBar: AppBar(
-        title: Text(
-          tr(context, 'admin_dashboard'),
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: Colors.indigo.shade900,
-        elevation: 0,
-        actions: const [
-          Padding(
-            padding: EdgeInsets.only(right: 8.0),
-            child: NotificationBell(iconColor: Colors.white),
-          ),
-        ],
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    tr(context, 'system_overview'),
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textDark,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildStatCard(
-                          title: tr(context, 'total_users'),
-                          count: _totalUsers.toString(),
-                          icon: Icons.people,
-                          color: Colors.blue,
-                        ),
-                      ),
-                      const SizedBox(width: 15),
-                      Expanded(
-                        child: _buildStatCard(
-                          title: tr(context, 'total_salons'),
-                          count: _totalSalons.toString(),
-                          icon: Icons.store,
-                          color: Colors.green,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 15),
-                  _buildStatCard(
-                    title: tr(context, 'pending_approvals'),
-                    count: _pendingSalons.toString(),
-                    icon: Icons.pending_actions,
-                    color: Colors.orange,
-                    isWide: true,
-                  ),
-                  const SizedBox(height: 30),
-                  Text(
-                    tr(context, 'administrative_actions'),
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textDark,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  _buildMenuCard(
-                    title: tr(context, 'manage_users'),
-                    subtitle: tr(context, 'users_management_desc'),
-                    icon: Icons.manage_accounts,
-                    color: Colors.blue.shade700,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const ManageUsersPage(),
-                      ),
-                    ).then((_) => _loadStats()),
-                  ),
-                  const SizedBox(height: 15),
-                  _buildMenuCard(
-                    title: tr(context, 'manage_salons'),
-                    subtitle: tr(context, 'salons_management_desc'),
-                    icon: Icons.storefront,
-                    color: Colors.purple.shade700,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const ManageSalonsPage(),
-                      ),
-                    ).then((_) => _loadStats()),
-                  ),
-                  const SizedBox(height: 15),
-                  _buildMenuCard(
-                    title: tr(context, 'my_profile'),
-                    subtitle: tr(context, 'admin_profile_desc'),
-                    icon: Icons.person,
-                    color: Colors.teal.shade700,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const ProfilePage()),
-                    ),
-                  ),
-                ],
+      body: SafeArea(
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(
+                  20,
+                  20,
+                  20,
+                  100,
+                ), // Space for nav bar
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHeader(),
+                    const SizedBox(height: 30),
+                    _buildMainStatCard(),
+                    const SizedBox(height: 15),
+                    _buildRowStatsCards(),
+                  ],
+                ),
               ),
-            ),
-    );
-  }
-
-  Widget _buildStatCard({
-    required String title,
-    required String count,
-    required IconData icon,
-    required Color color,
-    bool isWide = false,
-  }) {
-    return Container(
-      width: isWide ? double.infinity : null,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: isWide
-            ? CrossAxisAlignment.start
-            : CrossAxisAlignment.center,
-        children: [
-          Icon(icon, color: color, size: 30),
-          const SizedBox(height: 10),
-          Text(
-            count,
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-          Text(title, style: const TextStyle(fontSize: 14, color: Colors.grey)),
-        ],
       ),
     );
   }
 
-  Widget _buildMenuCard({
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey.shade200),
-        ),
-        child: Row(
+  Widget _buildHeader() {
+    final today = DateFormat('EEEE d MMM yyyy').format(DateTime.now());
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: color),
+            Text(
+              today,
+              style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
             ),
-            const SizedBox(width: 20),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textDark,
-                    ),
-                  ),
-                  Text(
-                    subtitle,
-                    style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
-                  ),
-                ],
+            const SizedBox(height: 5),
+            Text(
+              tr(context, 'admin_dashboard'),
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
               ),
             ),
-            const Icon(Icons.chevron_right, color: Colors.grey),
           ],
         ),
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withAlpha(13), blurRadius: 10),
+                ],
+              ),
+              child: const Icon(Icons.search, color: Colors.black87, size: 20),
+            ),
+            const SizedBox(width: 10),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withAlpha(13), blurRadius: 10),
+                ],
+              ),
+              child: const NotificationBell(iconColor: Colors.black87),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMainStatCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: AppColors.primaryBlue, // Primary Blue instead of Dark Teal
+        borderRadius: BorderRadius.circular(30),
       ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.actionRed, // Rose red instead of Light green
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  tr(context, 'total_users'),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const Icon(Icons.people_alt, color: Colors.white70),
+            ],
+          ),
+          const SizedBox(height: 30),
+          Text(
+            _totalUsers.toString(),
+            style: const TextStyle(
+              fontSize: 48,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          const Text(
+            "Registered on platform",
+            style: TextStyle(color: Colors.white70),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRowStatsCards() {
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: AppColors.primaryBlue.withAlpha(
+                200,
+              ), // Slightly lighter blue instead of dark teal
+              borderRadius: BorderRadius.circular(25),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.store, color: Colors.white, size: 30),
+                const SizedBox(height: 15),
+                Text(
+                  _totalSalons.toString(),
+                  style: const TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                Text(
+                  tr(context, 'total_salons'),
+                  style: const TextStyle(color: Colors.white70),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 15),
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(25),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(13),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(
+                  Icons.pending_actions,
+                  color: Color(0xFF416979),
+                  size: 30,
+                ),
+                const SizedBox(height: 15),
+                Text(
+                  _pendingSalons.toString(),
+                  style: const TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                Text(
+                  tr(context, 'pending_approvals'),
+                  style: const TextStyle(color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

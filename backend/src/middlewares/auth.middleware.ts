@@ -36,12 +36,11 @@ export const protect = (req: AuthRequest, res: Response, next: NextFunction): vo
     }
 };
 
-// Middleware theni bech nthabtou ken l'user Patron
 export const isPatron = (req: AuthRequest, res: Response, next: NextFunction): void => {
-    if (req.user && req.user.role === 'PATRON') {
+    if (req.user && (req.user.role === 'PATRON' || req.user.role === 'ADMIN')) {
         next();
     } else {
-        res.status(403).json({ success: false, message: 'Accès refusé, réservé aux Patrons' });
+        res.status(403).json({ success: false, message: 'Accès refusé, réservé aux Patrons ou Admins' });
     }
 };
 

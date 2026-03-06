@@ -1,5 +1,5 @@
 import { prisma } from '../../lib/db.js';
-import { Role, ApprovalStatus } from '../../../generated/prisma/index.js';
+import { Role, ApprovalStatus, AppointmentStatus } from '../../../generated/prisma/index.js';
 
 export const getAllUsers = async () => {
     const users = await prisma.user.findMany({
@@ -43,21 +43,37 @@ export const updateUser = async (userId: number, data: { fullName?: string, phon
 };
 
 export const updateSalonAdmin = async (salonId: number, data: any) => {
-    return await prisma.salon.update({
+    const updatedSalon = await prisma.salon.update({
         where: { id: salonId },
         data: {
-            name: data.name,
-            description: data.description,
-            contactPhone: data.contactPhone,
-            address: data.address,
-            latitude: data.latitude,
-            longitude: data.longitude,
-            googleMapsUrl: data.googleMapsUrl,
-            websiteUrl: data.websiteUrl,
-            speciality: data.speciality,
-            approvalStatus: data.approvalStatus,
+            ...(data.name !== undefined && { name: data.name }),
+            ...(data.description !== undefined && { description: data.description }),
+            ...(data.contactPhone !== undefined && { contactPhone: data.contactPhone }),
+            ...(data.address !== undefined && { address: data.address }),
+            ...(data.latitude !== undefined && { latitude: data.latitude }),
+            ...(data.longitude !== undefined && { longitude: data.longitude }),
+            ...(data.googleMapsUrl !== undefined && { googleMapsUrl: data.googleMapsUrl }),
+            ...(data.websiteUrl !== undefined && { websiteUrl: data.websiteUrl }),
+            ...(data.speciality !== undefined && { speciality: data.speciality }),
+            ...(data.approvalStatus !== undefined && { approvalStatus: data.approvalStatus }),
+            ...(data.coverImageUrl !== undefined && { coverImageUrl: data.coverImageUrl }),
         }
     });
+
+    if (data.socialLinks !== undefined) {
+        await prisma.salonSocialLink.deleteMany({ where: { salonId } });
+        if (data.socialLinks.length > 0) {
+            await prisma.salonSocialLink.createMany({
+                data: data.socialLinks.map((link: { platform: string; url: string }) => ({
+                    salonId,
+                    platform: link.platform,
+                    url: link.url,
+                })),
+            });
+        }
+    }
+
+    return updatedSalon;
 };
 
 export const getAllSalonsAdmin = async () => {
@@ -86,4 +102,42 @@ export const deleteSalon = async (salonId: number) => {
     return await prisma.salon.delete({
         where: { id: salonId }
     });
+};
+
+export const getSalonStatsAdmin = async (salonId: number) => {
+    const appointments = await prisma.appointment.findMany({
+        where: {
+            salonId: salonId,
+            status: AppointmentStatus.COMPLETED
+        },
+        include: {
+            barber: true
+        }
+    });
+
+    let totalAppointments = appointments.length;
+    let totalRevenue = 0;
+    const specialistStats: Record<number, { name: string, count: number, revenue: number }> = {};
+
+    for (const appt of appointments) {
+        totalRevenue += appt.totalPrice;
+        const barberId = appt.barberId;
+        if (barberId) {
+            if (!specialistStats[barberId]) {
+                specialistStats[barberId] = {
+                    name: appt.barber?.fullName || 'Inconnu',
+                    count: 0,
+                    revenue: 0
+                };
+            }
+            specialistStats[barberId].count += 1;
+            specialistStats[barberId].revenue += appt.totalPrice;
+        }
+    }
+
+    return {
+        totalAppointments,
+        totalRevenue,
+        specialistStats: Object.values(specialistStats)
+    };
 };

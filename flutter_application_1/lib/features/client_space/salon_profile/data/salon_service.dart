@@ -58,6 +58,7 @@ class SalonService {
   }
 
   static Future<Map<String, dynamic>> updateSalonInfo({
+    int? salonId,
     String? name,
     String? description,
     String? contactPhone,
@@ -91,8 +92,12 @@ class SalonService {
       if (speciality != null) body['speciality'] = speciality;
       if (socialLinks != null) body['socialLinks'] = socialLinks;
 
-      final response = await http.put(
-        Uri.parse('$baseUrl/update'),
+      final url = salonId != null
+          ? ApiConfig.endpoint('/api/admin/salons/$salonId') // Use Admin Route
+          : '$baseUrl/update'; // Use Patron Route
+
+      final response = await (salonId != null ? http.patch : http.put)(
+        Uri.parse(url),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -148,6 +153,7 @@ class SalonService {
 
   // 📝 Fonction bech tzid employé we ta3melou compte User
   static Future<Map<String, dynamic>> createEmployeeAccount({
+    int? salonId,
     required String name,
     required String phoneNumber,
     required String password,
@@ -171,6 +177,7 @@ class SalonService {
           'Authorization': 'Bearer $token',
         },
         body: jsonEncode({
+          if (salonId != null) 'salonId': salonId,
           'name': name,
           'phoneNumber': phoneNumber,
           'password': password,
@@ -224,6 +231,7 @@ class SalonService {
 
   // 📝 Fonction bech tzid service l salon
   static Future<Map<String, dynamic>> createService({
+    int? salonId,
     required String name,
     required double price,
     required int durationMinutes,
@@ -245,6 +253,7 @@ class SalonService {
           'Authorization': 'Bearer $token',
         },
         body: jsonEncode({
+          if (salonId != null) 'salonId': salonId,
           'name': name,
           'price': price,
           'durationMinutes': durationMinutes,

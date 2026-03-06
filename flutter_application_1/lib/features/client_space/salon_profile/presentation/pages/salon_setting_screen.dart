@@ -13,11 +13,13 @@ import 'package:hjamty/core/localization/translation_service.dart';
 class SalonScreenUnifiee extends StatefulWidget {
   final int initialTabIndex;
   final bool openAddForm;
+  final int? salonId;
 
   const SalonScreenUnifiee({
     super.key,
     this.initialTabIndex = 0,
     this.openAddForm = false,
+    this.salonId,
   });
 
   @override
@@ -131,7 +133,9 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
   Future<void> _fetchSalonData() async {
     setState(() => _isLoading = true);
     try {
-      final response = await SalonService.getMySalon();
+      final response = widget.salonId != null
+          ? await SalonService.getSalonById(widget.salonId!)
+          : await SalonService.getMySalon();
       final data = response;
 
       if (!mounted) return;
@@ -176,6 +180,7 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
     setState(() => _isLoading = true);
     try {
       await SalonService.updateSalonInfo(
+        salonId: widget.salonId, // Pass the optional salonId here
         name: _nameController.text.trim(),
         description: _descController.text.trim(),
         contactPhone: _phoneController.text.trim(),
@@ -394,6 +399,7 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
       if (finalImageUrl.isEmpty) finalImageUrl = null;
 
       await SalonService.createService(
+        salonId: widget.salonId, // Added salonId
         name: _srvNameController.text.trim(),
         price: double.parse(_srvPriceController.text.trim()),
         durationMinutes: int.parse(_srvDurationController.text.trim()),
@@ -1460,6 +1466,7 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
       if (finalImageUrl.isEmpty) finalImageUrl = null;
 
       await SalonService.createEmployeeAccount(
+        salonId: widget.salonId, // Added salonId
         name: _empNameController.text.trim(),
         phoneNumber: _empPhoneController.text.trim(),
         password: _empPasswordController.text.trim(),

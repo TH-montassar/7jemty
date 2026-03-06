@@ -98,7 +98,7 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 180),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -149,7 +149,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
             // 5. Déconnexion
             const LogoutButton(),
-            const SizedBox(height: 50),
+            const SizedBox(height: 80),
           ],
         ),
       ),

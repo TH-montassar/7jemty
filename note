@@ -7,4 +7,4 @@ git reset --soft HEAD~1
 
 npx ts-node scripts/fast_forward.ts
 
-npm run create-admin -- "Admin Name" "12345678" "yourpassword"
+npm run create-admin -- "Admin" "12345679" "12345679"
