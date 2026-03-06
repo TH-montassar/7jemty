@@ -138,7 +138,7 @@ class AuthService {
     }
   }
 
-  static Future<bool> checkPhone(String phoneNumber) async {
+  static Future<Map<String, dynamic>> checkPhone(String phoneNumber) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/check-phone'),
@@ -149,7 +149,10 @@ class AuthService {
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
-        return data['exists'] ?? false;
+        return {
+          'exists': data['exists'] ?? false,
+          'role': data['role'],
+        };
       } else {
         throw Exception(
           data['message'] ?? 'Erreur lors de la vérification du numéro',

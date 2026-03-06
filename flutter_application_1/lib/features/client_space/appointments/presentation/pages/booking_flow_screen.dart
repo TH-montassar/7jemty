@@ -310,11 +310,26 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                         // Étape 1 : Vérifier si le numéro existe
                         setDialogState(() => dialogLoading = true);
                         try {
-                          final exists = await AuthService.checkPhone(
+                          final result = await AuthService.checkPhone(
                             phoneController.text,
                           );
+                          final exists = result['exists'] == true;
+                          final role = result['role'];
 
                           if (exists) {
+                            if (role != null && role != 'CLIENT') {
+                               setDialogState(() => dialogLoading = false);
+                               ScaffoldMessenger.of(context).showSnackBar(
+                                 const SnackBar(
+                                   content: Text(
+                                     "Ce numéro est réservé . Veuillez utiliser un autre numéro client.",
+                                   ),
+                                   backgroundColor: Colors.red,
+                                 ),
+                               );
+                               return;
+                            }
+                            
                             // Demander le mot de passe
                             setDialogState(() {
                               isPhoneChecked = true;

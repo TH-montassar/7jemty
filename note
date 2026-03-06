@@ -8,3 +8,6 @@ git reset --soft HEAD~1
 npx ts-node scripts/fast_forward.ts
 
 npm run create-admin -- "Admin" "12345679" "12345679"
+
+docker compose exec backend npm run prisma:mig
+docker compose exec backend npm run build

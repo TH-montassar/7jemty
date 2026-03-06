@@ -162,5 +162,10 @@ export const checkPhoneExists = async (phoneNumber: string) => {
     const user = await prisma.user.findUnique({
         where: { phoneNumber }
     });
-    return !!user;
+    
+    if (user) {
+        return { exists: true, role: user.role };
+    }
+    
+    return { exists: false, role: null };
 };
