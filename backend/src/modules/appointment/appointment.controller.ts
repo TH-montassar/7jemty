@@ -9,6 +9,9 @@ interface AuthRequest extends Request {
     };
 }
 
+import jwt from 'jsonwebtoken';
+import { env } from '../../config/env.js';
+
 export const updateStatus = async (req: AuthRequest, res: Response) => {
     try {
         const appointmentId = parseInt(req.params.id as string);
@@ -48,13 +51,27 @@ export const getAvailability = async (req: AuthRequest, res: Response) => {
             return res.status(400).json({ success: false, message: "salonId w date homa nécessaires" });
         }
 
+        let userId: number | undefined;
+        const authHeader = req.headers.authorization;
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            const token = authHeader.split(' ')[1];
+            if (token) {
+                try {
+                    const decoded = jwt.verify(token, env.JWT_SECRET) as { userId: number; role: string };
+                    userId = decoded.userId;
+                } catch {
+                    // Ignore invalid tokens for availability checks
+                }
+            }
+        }
+
         const parsedSalonId = parseInt(salonId as string);
         const parsedBarberId = barberId ? parseInt(barberId as string) : undefined;
         const parsedServiceIds = typeof serviceIds === 'string' && serviceIds.length > 0
             ? serviceIds.split(',').map((id) => parseInt(id, 10)).filter((id) => !isNaN(id))
             : [];
 
-        const availableSlots = await getBarberAvailability(parsedSalonId, date as string, parsedBarberId, parsedServiceIds);
+        const availableSlots = await getBarberAvailability(parsedSalonId, date as string, parsedBarberId, parsedServiceIds, userId);
 
         res.status(200).json({
             success: true,

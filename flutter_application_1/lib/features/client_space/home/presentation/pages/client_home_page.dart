@@ -242,17 +242,6 @@ class _ClientHomePageState extends State<ClientHomePage> {
           ),
         ),
       ),
-      // TODO: Remove this FloatingActionButton once FCM is fully integrated
-      floatingActionButton: _isLoggedIn
-          ? FloatingActionButton(
-              onPressed: () {},
-              backgroundColor: AppColors.primaryBlue,
-              child: const Icon(
-                Icons.notifications_active,
-                color: Colors.white,
-              ),
-            )
-          : null,
     );
   }
 

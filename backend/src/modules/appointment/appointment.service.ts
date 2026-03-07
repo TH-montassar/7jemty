@@ -147,7 +147,8 @@ export const getBarberAvailability = async (
     salonId: number,
     dateString: string,
     requestedBarberId?: number,
-    serviceIds?: number[]
+    serviceIds?: number[],
+    clientId_for_overlap_check?: number
 ) => {
     const date = new Date(dateString);
     const dayOfWeek = date.getDay();
@@ -216,12 +217,26 @@ export const getBarberAvailability = async (
         }
     });
 
+    let clientAppointments: any[] = [];
+    if (clientId_for_overlap_check) {
+        clientAppointments = await prisma.appointment.findMany({
+            where: {
+                clientId: clientId_for_overlap_check,
+                appointmentDate: { gte: dateStart, lt: dateEnd },
+                status: { in: ACTIVE_APPOINTMENT_STATUSES }
+            }
+        });
+    }
+
     return slots.map((slot) => {
         const slotStart = parseTime(slot, date);
         const slotEnd = new Date(slotStart);
         slotEnd.setMinutes(slotEnd.getMinutes() + totalDurationMinutes);
 
-        const isAvailable = !appointments.some((appt: any) => slotStart < appt.estimatedEndTime && slotEnd > appt.appointmentDate);
+        const isBarberBusy = appointments.some((appt: any) => slotStart < appt.estimatedEndTime && slotEnd > appt.appointmentDate);
+        const isClientBusy = clientAppointments.some((appt: any) => slotStart < appt.estimatedEndTime && slotEnd > appt.appointmentDate);
+
+        const isAvailable = !isBarberBusy && !isClientBusy;
         return { time: slot, available: isAvailable };
     });
 };
@@ -270,6 +285,21 @@ export const createClientAppointment = async (
     const availability = await getBarberAvailability(salonId, dateString, barberId, serviceIds);
     if (!availability.some((s: any) => s.time === timeString && s.available)) {
         throw new Error("Le coiffeur n'est plus disponible pour cet horaire.");
+    }
+
+    const overlappingClientAppointment = await prisma.appointment.findFirst({
+        where: {
+            clientId,
+            status: { in: ACTIVE_APPOINTMENT_STATUSES },
+            AND: [
+                { appointmentDate: { lt: estimatedEndTime } },
+                { estimatedEndTime: { gt: appointmentDate } }
+            ]
+        }
+    });
+
+    if (overlappingClientAppointment) {
+        throw new Error("Andek deja rendez-vous ekher fel wa9t hetha, ma tnajemch t3adi wehed jdid.");
     }
 
     const targetBarberId = targetType === 'PATRON' ? salon.patronId : barberId;
