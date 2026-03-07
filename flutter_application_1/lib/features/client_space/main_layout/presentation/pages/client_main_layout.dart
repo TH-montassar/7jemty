@@ -10,6 +10,7 @@ import 'package:hjamty/features/client_space/profile/presentation/pages/client_p
 // 2. N3aytou lel SignIn w l'BottomNav
 import 'package:hjamty/features/auth/signIn.dart'; // 👈 Baddel l'chemin 7asb dossieretk
 import 'package:hjamty/features/client_space/home/presentation/widgets/client_bottom_nav.dart';
+import 'package:hjamty/core/services/notification_service.dart';
 
 class ClientMainLayout extends StatefulWidget {
   final int initialIndex;
@@ -26,6 +27,7 @@ class _ClientMainLayoutState extends State<ClientMainLayout> {
   void initState() {
     super.initState();
     _selectedIndex = widget.initialIndex;
+    NotificationService.listenToNotificationsStream();
   }
 
   List<Widget> _pages = [

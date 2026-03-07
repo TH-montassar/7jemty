@@ -74,3 +74,56 @@ export const markNotificationAsRead = async (req: AuthRequest, res: Response) =>
         res.status(500).json({ message: 'Erreur lors de la mise à jour de la notification' });
     }
 };
+
+// --- REAL-TIME SSE SUPPORT --- //
+
+// Maps userId to a set of active Express Response streams
+const activeClients = new Map<number, Set<Response>>();
+
+export const streamNotifications = (req: AuthRequest, res: Response) => {
+    if (!req.user || !req.user.userId) {
+        res.status(401).json({ message: 'Non autorisé' });
+        return;
+    }
+
+    const userId = req.user.userId;
+
+    // Set headers required for Server-Sent Events (SSE)
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    // Flush headers to establish stream
+    res.flushHeaders?.();
+
+    if (!activeClients.has(userId)) {
+        activeClients.set(userId, new Set());
+    }
+    activeClients.get(userId)!.add(res);
+
+    // Keep connection alive with periodic pings to avoid timeout
+    const intervalId = setInterval(() => {
+        res.write(':\n\n'); // SSE comment to keep alive
+    }, 30000);
+
+    // Initial ping
+    res.write(`data: {"connected":true}\n\n`);
+
+    // Clean up when the client closes the connection
+    req.on('close', () => {
+        clearInterval(intervalId);
+        activeClients.get(userId)?.delete(res);
+        if (activeClients.get(userId)?.size === 0) {
+            activeClients.delete(userId);
+        }
+    });
+};
+
+export const broadcastNotificationToUser = (userId: number, notificationData: any) => {
+    const clients = activeClients.get(userId);
+    if (!clients) return;
+
+    // Broadcast the new notification stringified to all active sessions (web, mobile, etc) for this user.
+    clients.forEach(clientRes => {
+        clientRes.write(`data: ${JSON.stringify(notificationData)}\n\n`);
+    });
+};

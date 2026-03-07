@@ -4,6 +4,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'package:hjamty/core/services/notification_service.dart';
 import '../../../config/api_config.dart';
 
 class FcmService {
@@ -43,6 +44,8 @@ class FcmService {
         debugPrint('Got a message whilst in the foreground!');
         if (message.notification != null) {
           _showLocalNotification(message);
+          // Instantly update badge count reactively
+          NotificationService.incrementUnreadCount();
         }
       });
 

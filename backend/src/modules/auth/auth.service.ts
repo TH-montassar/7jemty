@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { env } from '../../config/env.js';
 import { sendNotification } from '../notifications/notifications.service.js';
+import { broadcastNotificationToUser } from '../notifications/notifications.controller.js';
 import { Role } from '../../../generated/prisma/index.js';
 
 export const registerUser = async (data: any) => {
@@ -39,13 +40,14 @@ export const registerUser = async (data: any) => {
     });
 
     // Create a welcome notification with the password instructions
-    await prisma.notification.create({
+    const welcomeNotif = await prisma.notification.create({
         data: {
             userId: user.id,
             title: "Bienvenue sur 7jemty ! 🎉",
             body: `Votre compte a été créé avec succès. Votre mot de passe par défaut est votre numéro de téléphone : ${data.phoneNumber}. Pensez à le modifier dans votre profil pour plus de sécurité.`,
         }
     });
+    broadcastNotificationToUser(user.id, welcomeNotif);
 
     // Notify all ADMIN users
     const admins = await prisma.user.findMany({
@@ -54,13 +56,14 @@ export const registerUser = async (data: any) => {
     });
 
     for (const admin of admins) {
-        await prisma.notification.create({
+        const adminNotif = await prisma.notification.create({
             data: {
                 userId: admin.id,
                 title: "Nouveau membre",
                 body: `Un nouvel utilisateur (${user.fullName} - ${user.role}) vient de s'inscrire.`
             }
         });
+        broadcastNotificationToUser(admin.id, adminNotif);
         if (admin.profile?.fcmToken) {
             await sendNotification(
                 admin.profile.fcmToken,

@@ -2,9 +2,13 @@ import 'dart:convert';
 import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart'; // For ValueNotifier
 import 'package:hjamty/config/api_config.dart';
 
 class NotificationService {
+  // Reactive state for unread notifications count
+  static final ValueNotifier<int> unreadCountNotifier = ValueNotifier<int>(0);
+
   static Future<List<dynamic>> getMyNotifications() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('jwt_token');
@@ -44,11 +48,59 @@ class NotificationService {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        return data['count'] ?? 0;
+        final count = data['count'] ?? 0;
+        unreadCountNotifier.value = count;
+        return count;
       }
       return 0;
     } catch (e) {
       return 0;
+    }
+  }
+
+  static void incrementUnreadCount() {
+    unreadCountNotifier.value += 1;
+  }
+
+  static http.StreamedResponse? _streamResponse;
+  static final http.Client _client = http.Client();
+
+  static void listenToNotificationsStream() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token');
+      if (token == null) return;
+
+      final request = http.Request('GET', Uri.parse('${ApiConfig.host}/api/notifications/stream'));
+      request.headers['Authorization'] = 'Bearer $token';
+      request.headers['Accept'] = 'text/event-stream';
+      request.headers['Cache-Control'] = 'no-cache';
+
+      _client.send(request).then((response) {
+        _streamResponse = response;
+        response.stream.transform(utf8.decoder).transform(const LineSplitter()).listen((line) {
+          if (line.startsWith('data: ')) {
+            final dataStr = line.substring(6);
+            if (dataStr.trim() == '{"connected":true}') return;
+            try {
+              final data = json.decode(dataStr);
+              if (data['id'] != null) {
+                incrementUnreadCount();
+              }
+            } catch (e) {
+              debugPrint('SSE Decode Error: $e');
+            }
+          }
+        }, onDone: () {
+          debugPrint('SSE Stream closed. Reconnecting in 5s...');
+          Future.delayed(const Duration(seconds: 5), () => listenToNotificationsStream());
+        }, onError: (e) {
+          debugPrint('SSE Stream error: $e. Reconnecting in 5s...');
+          Future.delayed(const Duration(seconds: 5), () => listenToNotificationsStream());
+        });
+      });
+    } catch (e) {
+      debugPrint('SSE Connection Error: $e');
     }
   }
 

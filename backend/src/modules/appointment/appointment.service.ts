@@ -1,5 +1,6 @@
 import { prisma } from '../../lib/db.js';
 import { sendNotification } from '../notifications/notifications.service.js';
+import { broadcastNotificationToUser } from '../notifications/notifications.controller.js';
 
 type UserRole = 'CLIENT' | 'EMPLOYEE' | 'PATRON' | 'ADMIN';
 type AppointmentStatusInput = 'PENDING' | 'CONFIRMED' | 'IN_PROGRESS' | 'ARRIVED' | 'COMPLETED' | 'CANCELLED' | 'DECLINED';
@@ -23,13 +24,16 @@ const notifyUsers = async (_payload: NotifyPayload) => {
 
         for (const user of users) {
             // 1. Create a persistent DB record
-            await prisma.notification.create({
+            const newDbNotification = await prisma.notification.create({
                 data: {
                     userId: user.id,
                     title: _payload.title,
                     body: _payload.body,
                 }
             });
+
+            // 1a. Emit event via SSE Real-Time Stream
+            broadcastNotificationToUser(user.id, newDbNotification);
 
             // 2. Transmit the physical Push Notification
             const token = user.profile?.fcmToken;

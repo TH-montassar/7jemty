@@ -18,8 +18,6 @@ class NotificationBell extends StatefulWidget {
 }
 
 class _NotificationBellState extends State<NotificationBell> {
-  int _unreadCount = 0;
-
   @override
   void initState() {
     super.initState();
@@ -28,12 +26,7 @@ class _NotificationBellState extends State<NotificationBell> {
 
   Future<void> _fetchUnreadCount() async {
     try {
-      final count = await NotificationService.getUnreadCount();
-      if (mounted) {
-        setState(() {
-          _unreadCount = count;
-        });
-      }
+      await NotificationService.getUnreadCount();
     } catch (e) {
       // Ignore errors for unread count
     }
@@ -52,26 +45,31 @@ class _NotificationBellState extends State<NotificationBell> {
         clipBehavior: Clip.none,
         children: [
           Icon(Icons.notifications_outlined, color: widget.iconColor, size: 28),
-          if (_unreadCount > 0)
-            Positioned(
-              right: 0,
-              top: 0,
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: widget.badgeColor,
-                  shape: BoxShape.circle,
-                ),
-                child: Text(
-                  _unreadCount > 99 ? '99+' : '$_unreadCount',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
+          ValueListenableBuilder<int>(
+            valueListenable: NotificationService.unreadCountNotifier,
+            builder: (context, unreadCount, child) {
+              if (unreadCount <= 0) return const SizedBox.shrink();
+              return Positioned(
+                right: 0,
+                top: 0,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: widget.badgeColor,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    unreadCount > 99 ? '99+' : '$unreadCount',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-              ),
-            ),
+              );
+            },
+          ),
         ],
       ),
     );
