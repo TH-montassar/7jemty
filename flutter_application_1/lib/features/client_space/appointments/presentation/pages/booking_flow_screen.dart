@@ -115,7 +115,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
         toastification.show(
           context: context,
           type: ToastificationType.error,
-          title: const Text('Erreur'),
+          title: Text(tr(context, 'error_title')),
           description: Text(tr(context, 'error_loading_salon_details')),
         );
       }
@@ -272,18 +272,24 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                   prefixIcon: const Icon(Icons.phone),
                 ),
               ),
-               if (isPhoneChecked) ...[
-                 const SizedBox(height: 15),
-                 TextField(
-                   controller: passwordController,
-                   obscureText: phoneExists,
-                   keyboardType: phoneExists ? TextInputType.text : TextInputType.number,
-                   decoration: InputDecoration(
-                     labelText: phoneExists ? tr(context, 'password') : 'Code SMS',
-                     prefixIcon: phoneExists ? const Icon(Icons.lock) : const Icon(Icons.sms),
-                   ),
-                 ),
-               ],
+              if (isPhoneChecked) ...[
+                const SizedBox(height: 15),
+                TextField(
+                  controller: passwordController,
+                  obscureText: phoneExists,
+                  keyboardType: phoneExists
+                      ? TextInputType.text
+                      : TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: phoneExists
+                        ? tr(context, 'password')
+                        : 'Code SMS',
+                    prefixIcon: phoneExists
+                        ? const Icon(Icons.lock)
+                        : const Icon(Icons.sms),
+                  ),
+                ),
+              ],
             ],
           ),
           actions: [
@@ -319,18 +325,18 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
 
                           if (exists) {
                             if (role != null && role != 'CLIENT') {
-                               setDialogState(() => dialogLoading = false);
-                               ScaffoldMessenger.of(context).showSnackBar(
-                                 const SnackBar(
-                                   content: Text(
-                                     "Ce numéro est réservé . Veuillez utiliser un autre numéro client.",
-                                   ),
-                                   backgroundColor: Colors.red,
-                                 ),
-                               );
-                               return;
+                              setDialogState(() => dialogLoading = false);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    "Ce numéro est réservé . Veuillez utiliser un autre numéro client.",
+                                  ),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                              return;
                             }
-                            
+
                             // Demander le mot de passe
                             setDialogState(() {
                               isPhoneChecked = true;
@@ -340,17 +346,17 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                           } else {
                             // Demander le code OTP
                             await AuthService.requestOtp(phoneController.text);
-                            
+
                             setDialogState(() {
                               isPhoneChecked = true;
                               phoneExists = false;
                               dialogLoading = false;
                             });
-                            
+
                             if (mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text("Un code vous a été envoyé par SMS."),
+                                SnackBar(
+                                  content: Text(tr(context, 'sms_code_sent')),
                                   backgroundColor: Colors.green,
                                 ),
                               );
@@ -377,20 +383,25 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                               setDialogState(() => dialogLoading = false);
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text(tr(context, 'password_must_be_6_chars')),
+                                  content: Text(
+                                    tr(context, 'password_must_be_6_chars'),
+                                  ),
                                   backgroundColor: Colors.red,
                                 ),
                               );
                               return;
                             }
-                            
+
                             final result = await AuthService.loginUser(
                               phoneNumber: phoneController.text,
                               password: passwordController.text,
                             );
 
                             final prefs = await SharedPreferences.getInstance();
-                            await prefs.setString('jwt_token', result['data']['token']);
+                            await prefs.setString(
+                              'jwt_token',
+                              result['data']['token'],
+                            );
 
                             await _checkCurrentUser();
                             if (mounted) {
@@ -402,26 +413,33 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                             if (passwordController.text.length != 6) {
                               setDialogState(() => dialogLoading = false);
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text("Le code doit contenir exactement 6 chiffres"),
+                                SnackBar(
+                                  content: Text(
+                                    tr(context, 'code_must_be_6_digits'),
+                                  ),
                                   backgroundColor: Colors.red,
                                 ),
                               );
                               return;
                             }
-                            
+
                             // 1. Vérifier OTP
-                            await AuthService.verifyOtp(phoneController.text, passwordController.text);
-                            
+                            await AuthService.verifyOtp(
+                              phoneController.text,
+                              passwordController.text,
+                            );
+
                             // 2. Si ça passe, on crée le compte avec l'OTP comme mot de passe et on se log.
                             final phone = phoneController.text;
                             final code = passwordController.text;
-                            final generatedName = "Client ${phone.substring(phone.length > 4 ? phone.length - 4 : 0)}";
+                            final generatedName =
+                                "Client ${phone.substring(phone.length > 4 ? phone.length - 4 : 0)}";
 
                             await AuthService.registerUser(
                               fullName: generatedName,
                               phoneNumber: phone,
-                              password: code, // Utiliser le code validé comme mot de passe initial
+                              password:
+                                  code, // Utiliser le code validé comme mot de passe initial
                             );
 
                             final result = await AuthService.loginUser(
@@ -430,26 +448,33 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                             );
 
                             final prefs = await SharedPreferences.getInstance();
-                            await prefs.setString('jwt_token', result['data']['token']);
+                            await prefs.setString(
+                              'jwt_token',
+                              result['data']['token'],
+                            );
 
                             await _checkCurrentUser();
                             if (mounted) {
-                               toastification.show(
-                                 context: context,
-                                 type: ToastificationType.success,
-                                 title: Text(tr(context, 'welcome_exclamation')),
-                                 description: Text("Votre compte a été vérifié et créé avec succès."),
-                                 autoCloseDuration: const Duration(seconds: 4),
-                               );
-                               Navigator.pop(context);
-                               _submitBooking();
+                              toastification.show(
+                                context: context,
+                                type: ToastificationType.success,
+                                title: Text(tr(context, 'welcome_exclamation')),
+                                description: Text(
+                                  tr(context, 'account_verified_success'),
+                                ),
+                                autoCloseDuration: const Duration(seconds: 4),
+                              );
+                              Navigator.pop(context);
+                              _submitBooking();
                             }
                           }
                         } catch (e) {
                           setDialogState(() => dialogLoading = false);
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text(e.toString().replaceAll('Exception: ', '')),
+                              content: Text(
+                                e.toString().replaceAll('Exception: ', ''),
+                              ),
                               backgroundColor: Colors.red,
                             ),
                           );

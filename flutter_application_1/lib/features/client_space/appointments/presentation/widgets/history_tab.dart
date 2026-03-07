@@ -301,9 +301,37 @@ class _HistoryTabState extends State<HistoryTab> {
 
   Widget _buildEmptyState() {
     return Center(
-      child: Text(
-        tr(context, 'no_history'),
-        style: const TextStyle(color: Colors.grey, fontSize: 16),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(30),
+            decoration: BoxDecoration(
+              color: AppColors.primaryBlue.withValues(alpha: 0.08),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.history_rounded,
+              size: 70,
+              color: AppColors.primaryBlue.withValues(alpha: 0.5),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            tr(context, 'No History'),
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textDark,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            "Your past appointments will appear here",
+            style: TextStyle(color: Colors.grey, fontSize: 15),
+          ),
+        ],
       ),
     );
   }
@@ -385,7 +413,10 @@ class _HistoryTabState extends State<HistoryTab> {
           // All Chip
           GestureDetector(
             onTap: () {
-              setState(() => _selectedStatus = 'All');
+              setState(() {
+                _selectedStatus = 'All';
+                _selectedDate = null;
+              });
               _applyFilters();
             },
             child: AnimatedContainer(

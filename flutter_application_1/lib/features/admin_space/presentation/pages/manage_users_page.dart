@@ -156,33 +156,41 @@ class _ManageUsersPageState extends State<ManageUsersPage> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Edit User & Profile'),
+          title: Text(tr(context, 'edit_user_profile')),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
                   controller: nameController,
-                  decoration: const InputDecoration(labelText: 'Full Name'),
+                  decoration: InputDecoration(
+                    labelText: tr(context, 'full_name_label'),
+                  ),
                 ),
                 TextField(
                   controller: phoneController,
-                  decoration: const InputDecoration(labelText: 'Phone'),
+                  decoration: InputDecoration(
+                    labelText: tr(context, 'phone_label'),
+                  ),
                   keyboardType: TextInputType.phone,
                 ),
                 TextField(
                   controller: emailController,
-                  decoration: const InputDecoration(labelText: 'Email'),
+                  decoration: InputDecoration(
+                    labelText: tr(context, 'email_label'),
+                  ),
                 ),
                 TextField(
                   controller: specialityController,
-                  decoration: const InputDecoration(
-                    labelText: 'Speciality Title',
+                  decoration: InputDecoration(
+                    labelText: tr(context, 'speciality_title_label'),
                   ),
                 ),
                 TextField(
                   controller: bioController,
-                  decoration: const InputDecoration(labelText: 'Bio'),
+                  decoration: InputDecoration(
+                    labelText: tr(context, 'bio_label'),
+                  ),
                   maxLines: 2,
                 ),
                 const SizedBox(height: 16),
@@ -199,7 +207,7 @@ class _ManageUsersPageState extends State<ManageUsersPage> {
                   },
                 ),
                 SwitchListTile(
-                  title: const Text('Verified'),
+                  title: Text(tr(context, 'verified_label')),
                   value: isVerified,
                   onChanged: (val) {
                     setDialogState(() => isVerified = val);

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hjamty/core/constants/app_colors.dart';
 // 👈 1. زيد هذي الفوق باش تنجم تعيطلها
+import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:hjamty/features/client_space/products/presentation/pages/product_details_page.dart';
 
 class ProductsTab extends StatelessWidget {
@@ -136,7 +137,13 @@ class ProductsTab extends StatelessWidget {
                             onTap: () {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text("${p['name']} ajouté! 🛒"),
+                                  content: Text(
+                                    tr(
+                                      context,
+                                      'product_added_to_cart',
+                                      args: [p['name']],
+                                    ),
+                                  ),
                                   backgroundColor: Colors.green,
                                   duration: const Duration(seconds: 2),
                                 ),

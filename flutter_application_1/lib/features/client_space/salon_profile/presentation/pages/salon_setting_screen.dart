@@ -1228,7 +1228,7 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                               ? Colors.white
                               : AppColors.textDark,
                         ),
-                        label: const Text("URL"),
+                        label: Text(tr(context, 'url_label')),
                       ),
                       const SizedBox(width: 8),
                       ElevatedButton.icon(
@@ -1611,7 +1611,7 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                               ? Colors.white
                               : AppColors.textDark,
                         ),
-                        label: const Text("URL"),
+                        label: Text(tr(context, 'url_label')),
                       ),
                       const SizedBox(width: 8),
                       ElevatedButton.icon(
@@ -2045,7 +2045,7 @@ class _SocialLinkAdderState extends State<_SocialLinkAdder> {
             controller: _urlController,
             keyboardType: TextInputType.url,
             decoration: InputDecoration(
-              hintText: "https://...",
+              hintText: tr(context, 'url_hint'),
               filled: true,
               fillColor: Colors.grey.shade50,
               border: OutlineInputBorder(

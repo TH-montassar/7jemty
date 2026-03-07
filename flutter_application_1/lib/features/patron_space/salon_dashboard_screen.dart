@@ -427,13 +427,15 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
       toastification.show(
         context: context,
         type: ToastificationType.success,
-        title: Text('Statut mis à jour: $status'),
+        title: Text(tr(context, 'status_updated', args: [status])),
+        backgroundColor: Colors.green,
       );
     } catch (e) {
       toastification.show(
         context: context,
         type: ToastificationType.error,
-        title: const Text('Erreur lors de la mise à jour'),
+        title: Text(tr(context, 'error_updating_status')),
+        backgroundColor: Colors.red,
         description: Text(e.toString()),
       );
     }

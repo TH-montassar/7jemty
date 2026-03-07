@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hjamty/core/constants/app_colors.dart';
 import 'package:hjamty/features/client_space/profile/presentation/widgets/client_profile_header.dart';
-import 'package:hjamty/features/client_space/profile/presentation/widgets/loyalty_cards_section.dart';
 import 'package:hjamty/features/client_space/profile/presentation/widgets/profile_menus.dart';
 
 import 'package:hjamty/core/localization/translation_service.dart';
@@ -18,7 +17,6 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   bool _isLoading = true;
   bool _isLoggedIn = false;
-  String? _userRole;
   Map<String, dynamic>? _userData;
 
   @override
@@ -36,7 +34,6 @@ class _ProfilePageState extends State<ProfilePage> {
         if (mounted) {
           setState(() {
             _isLoggedIn = false;
-            _userRole = null;
             _isLoading = false;
           });
         }
@@ -49,7 +46,6 @@ class _ProfilePageState extends State<ProfilePage> {
         setState(() {
           _isLoggedIn = true;
           _userData = result['data'];
-          _userRole = _userData?['role'];
           _isLoading = false;
         });
       }
@@ -80,8 +76,6 @@ class _ProfilePageState extends State<ProfilePage> {
       );
     }
 
-    final isClient = _userRole == 'CLIENT';
-
     return Scaffold(
       backgroundColor: AppColors.bgColor,
       appBar: AppBar(
@@ -105,21 +99,6 @@ class _ProfilePageState extends State<ProfilePage> {
             // 1. Header: Photo, Nom, Email
             ProfileHeader(userData: _userData, onUpdate: _checkLoginStatus),
             const SizedBox(height: 30),
-
-            // 2. Cartes Salons (Tampons) - Only for Clients
-            if (isClient) ...[
-              Text(
-                tr(context, 'loyalty_cards'),
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textDark,
-                ),
-              ),
-              const SizedBox(height: 15),
-              const LoyaltyCardsSection(),
-              const SizedBox(height: 30),
-            ],
 
             // 3. Mes Activités (Commandes & Favoris)
             Text(

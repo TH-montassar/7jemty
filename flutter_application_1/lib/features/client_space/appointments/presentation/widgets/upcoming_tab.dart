@@ -108,7 +108,9 @@ class _UpcomingTabState extends State<UpcomingTab> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Erreur: $e'),
+          content: Text(
+            tr(context, 'error_with_message', args: [e.toString()]),
+          ),
           backgroundColor: AppColors.actionRed,
         ),
       );
@@ -352,6 +354,37 @@ class _UpcomingTabState extends State<UpcomingTab> {
                               Row(
                                 children: [
                                   Expanded(
+                                    child: ElevatedButton.icon(
+                                      onPressed: () {
+                                        // Implement navigation to salon location if Google Maps URL is available -> MVP Phase
+                                      },
+                                      icon: const Icon(
+                                        Icons.map_outlined,
+                                        size: 18,
+                                      ),
+                                      label: Text(
+                                        tr(context, 'directions'),
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: AppColors.primaryBlue,
+                                        foregroundColor: Colors.white,
+                                        elevation: 0,
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 12,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 15),
+                                  Expanded(
                                     child: OutlinedButton.icon(
                                       onPressed: canCancel
                                           ? () => _showCancelWarningDialog(
@@ -401,37 +434,6 @@ class _UpcomingTabState extends State<UpcomingTab> {
                                         color: Colors.grey,
                                       ),
                                     ),
-                                  const SizedBox(width: 15),
-                                  Expanded(
-                                    child: ElevatedButton.icon(
-                                      onPressed: () {
-                                        // Implement navigation to salon location if Google Maps URL is available -> MVP Phase
-                                      },
-                                      icon: const Icon(
-                                        Icons.map_outlined,
-                                        size: 18,
-                                      ),
-                                      label: Text(
-                                        tr(context, 'directions'),
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: AppColors.primaryBlue,
-                                        foregroundColor: Colors.white,
-                                        elevation: 0,
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 12,
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            10,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
                                 ],
                               ),
                             ],
@@ -448,9 +450,37 @@ class _UpcomingTabState extends State<UpcomingTab> {
 
   Widget _buildEmptyState() {
     return Center(
-      child: Text(
-        tr(context, 'no_appointments'),
-        style: const TextStyle(color: Colors.grey, fontSize: 16),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(30),
+            decoration: BoxDecoration(
+              color: AppColors.primaryBlue.withValues(alpha: 0.08),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.event_busy_rounded,
+              size: 70,
+              color: AppColors.primaryBlue.withValues(alpha: 0.5),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            tr(context, 'No Appointments'),
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textDark,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            "Your scheduled appointments will appear here.",
+            style: TextStyle(color: Colors.grey, fontSize: 15),
+          ),
+        ],
       ),
     );
   }
@@ -532,7 +562,10 @@ class _UpcomingTabState extends State<UpcomingTab> {
           // All Chip
           GestureDetector(
             onTap: () {
-              setState(() => _selectedStatus = 'All');
+              setState(() {
+                _selectedStatus = 'All';
+                _selectedDate = null;
+              });
               _applyFilters();
             },
             child: AnimatedContainer(

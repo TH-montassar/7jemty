@@ -208,31 +208,41 @@ class _ManageSalonsPageState extends State<ManageSalonsPage> {
     final updated = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Edit Salon Info'),
+        title: Text(tr(context, 'edit_salon_info')),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: nameController,
-                decoration: const InputDecoration(labelText: 'Salon Name'),
+                decoration: InputDecoration(
+                  labelText: tr(context, 'salon_name_label'),
+                ),
               ),
               TextField(
                 controller: specialityController,
-                decoration: const InputDecoration(labelText: 'Speciality'),
+                decoration: InputDecoration(
+                  labelText: tr(context, 'speciality_label'),
+                ),
               ),
               TextField(
                 controller: phoneController,
-                decoration: const InputDecoration(labelText: 'Contact Phone'),
+                decoration: InputDecoration(
+                  labelText: tr(context, 'contact_phone_label'),
+                ),
                 keyboardType: TextInputType.phone,
               ),
               TextField(
                 controller: addressController,
-                decoration: const InputDecoration(labelText: 'Address'),
+                decoration: InputDecoration(
+                  labelText: tr(context, 'address_label'),
+                ),
               ),
               TextField(
                 controller: descController,
-                decoration: const InputDecoration(labelText: 'Description'),
+                decoration: InputDecoration(
+                  labelText: tr(context, 'description_label'),
+                ),
                 maxLines: 3,
               ),
             ],
@@ -363,7 +373,7 @@ class _ManageSalonsPageState extends State<ManageSalonsPage> {
                   ),
                   const SizedBox(height: 10),
                   specialists.isEmpty
-                      ? const Text('Aucune donnée disponible.')
+                      ? Text(tr(context, 'no_data_available'))
                       : Expanded(
                           child: ListView.builder(
                             itemCount: specialists.length,
@@ -374,7 +384,13 @@ class _ManageSalonsPageState extends State<ManageSalonsPage> {
                                   child: Icon(Icons.person),
                                 ),
                                 title: Text(spec['name']),
-                                subtitle: Text('${spec['count']} coupes'),
+                                subtitle: Text(
+                                  tr(
+                                    context,
+                                    'coupes_count',
+                                    args: [spec['count'].toString()],
+                                  ),
+                                ),
                                 trailing: Text(
                                   '${spec['revenue']} TND',
                                   style: TextStyle(
