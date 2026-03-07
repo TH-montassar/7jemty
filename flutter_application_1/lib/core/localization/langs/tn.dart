@@ -28,9 +28,15 @@ const Map<String, String> tn = {
   'status_cancelled': 'Tbatel',
   'status_in_progress': 'Fi wosst',
   'status_pending': 'Mazel',
+  'status_declined': 'Morfoudh',
   'time_passed': 'L\'wa9t r7el',
   'time_remaining_hours_min': 'Mazal {0}h {1}min',
   'time_remaining_min': 'Mazal {0}min',
+
+  // Filters
+  'all': 'Lkol',
+  'filter_by_date': 'Filtri b tari5',
+  'clear_filters': 'Nadhaf les filtres',
 
   // Booking
   'book_appointment': 'A7jez RDV',

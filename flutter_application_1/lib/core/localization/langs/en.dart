@@ -32,6 +32,12 @@ const Map<String, String> en = {
   'status_in_progress': 'In Progress',
   'status_completed': 'Completed',
   'status_cancelled': 'Cancelled',
+  'status_declined': 'Declined',
+
+  // Filters
+  'all': 'All',
+  'filter_by_date': 'Filter by date',
+  'clear_filters': 'Clear filters',
 
   // Appointment Details Bottom Sheet
   'appointment_details_title': 'Appointment Details',
