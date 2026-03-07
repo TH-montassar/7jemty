@@ -151,10 +151,7 @@ class _ManageSalonsPageState extends State<ManageSalonsPage> {
                                   _showStatsDialog(salon['id'], salon['name']),
                               tooltip: 'Statistiques',
                             ),
-                            IconButton(
-                              icon: const Icon(Icons.edit, color: Colors.blue),
-                              onPressed: () => _editSalon(salon),
-                            ),
+
                             const Spacer(),
                             if (status == 'PENDING')
                               ElevatedButton(
@@ -194,90 +191,6 @@ class _ManageSalonsPageState extends State<ManageSalonsPage> {
               },
             ),
     );
-  }
-
-  Future<void> _editSalon(Map<String, dynamic> salon) async {
-    final nameController = TextEditingController(text: salon['name']);
-    final addressController = TextEditingController(text: salon['address']);
-    final phoneController = TextEditingController(text: salon['contactPhone']);
-    final descController = TextEditingController(text: salon['description']);
-    final specialityController = TextEditingController(
-      text: salon['speciality'],
-    );
-
-    final updated = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(tr(context, 'edit_salon_info')),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: InputDecoration(
-                  labelText: tr(context, 'salon_name_label'),
-                ),
-              ),
-              TextField(
-                controller: specialityController,
-                decoration: InputDecoration(
-                  labelText: tr(context, 'speciality_label'),
-                ),
-              ),
-              TextField(
-                controller: phoneController,
-                decoration: InputDecoration(
-                  labelText: tr(context, 'contact_phone_label'),
-                ),
-                keyboardType: TextInputType.phone,
-              ),
-              TextField(
-                controller: addressController,
-                decoration: InputDecoration(
-                  labelText: tr(context, 'address_label'),
-                ),
-              ),
-              TextField(
-                controller: descController,
-                decoration: InputDecoration(
-                  labelText: tr(context, 'description_label'),
-                ),
-                maxLines: 3,
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(tr(context, 'cancel')),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(tr(context, 'save_btn')),
-          ),
-        ],
-      ),
-    );
-
-    if (updated == true) {
-      try {
-        await AdminService.updateSalon(salon['id'], {
-          'name': nameController.text,
-          'speciality': specialityController.text,
-          'contactPhone': phoneController.text,
-          'address': addressController.text,
-          'description': descController.text,
-        });
-        _fetchSalons();
-      } catch (e) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.toString())));
-      }
-    }
   }
 
   Widget _getStatusBadge(String status) {
