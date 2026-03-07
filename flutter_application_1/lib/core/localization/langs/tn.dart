@@ -15,6 +15,8 @@ const Map<String, String> tn = {
   'top_categories': 'Chnowa tawa?',
   'near_you': '9rab lik',
   'top_rated': 'A7sen les Salons 👑',
+  'all_salons': 'Kol Salounet',
+  'explore': 'Iktachef',
 
   // Appointments
   'my_appointments': 'Rendez-vous Mte3i',

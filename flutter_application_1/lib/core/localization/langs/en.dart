@@ -19,6 +19,8 @@ const Map<String, String> en = {
   'top_categories': 'Quick Categories',
   'near_you': 'Near You',
   'top_rated': 'Top Rated Salons 👑',
+  'all_salons': 'All Salons',
+  'explore': 'Explore',
   'who_are_you_today': 'Who are you today?',
   'welcome_to_7ajemty': 'Welcome to 7ajemty',
 

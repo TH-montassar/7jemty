@@ -19,9 +19,44 @@ class _SearchPageState extends State<SearchPage> {
   List<dynamic> _searchResults = [];
   bool _hasSearched = false;
 
+  // Initial State Data
+  List<dynamic> _allSalons = [];
+  bool _isLoadingAllSalons = true;
+
   // Filter variables
   String _selectedFilter = 'All';
   final List<String> _filters = ['All', 'Top Rated', 'Open Now', 'Offers'];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchAllSalons();
+  }
+
+  Future<void> _fetchAllSalons() async {
+    try {
+      final salons = await SalonService.getAllSalons();
+      if (mounted) {
+        setState(() {
+          _allSalons = salons;
+          _isLoadingAllSalons = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingAllSalons = false;
+          _allSalons = [];
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(tr(context, 'error_title') + ': ' + e.toString()),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -254,49 +289,44 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   Widget _buildBodyContent() {
-    if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: AppColors.primaryBlue),
-      );
-    }
+    if (_hasSearched) {
+      if (_isLoading) {
+        return const Center(
+          child: CircularProgressIndicator(color: AppColors.primaryBlue),
+        );
+      }
 
-    if (_hasSearched && _searchResults.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                shape: BoxShape.circle,
+      if (_searchResults.isEmpty) {
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.search_off_rounded,
+                  size: 60,
+                  color: Colors.grey.shade400,
+                ),
               ),
-              child: Icon(
-                Icons.search_off_rounded,
-                size: 60,
-                color: Colors.grey.shade400,
+              const SizedBox(height: 24),
+              Text(
+                tr(context, 'no_results_found'),
+                style: const TextStyle(
+                  color: AppColors.textDark,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              tr(context, 'no_results_found'),
-              style: const TextStyle(
-                color: AppColors.textDark,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              "Try searching for something else.",
-              style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
-            ),
-          ],
-        ),
-      );
-    }
+            ],
+          ),
+        );
+      }
 
-    if (_searchResults.isNotEmpty) {
       return ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: _searchResults.length,
@@ -307,91 +337,40 @@ class _SearchPageState extends State<SearchPage> {
       );
     }
 
-    // Modern empty/initial state
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 32),
-          const Text(
-            "Popular Searches",
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textDark,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: [
-              _buildPopularChip("Haircut", Icons.content_cut),
-              _buildPopularChip("Massage", Icons.spa),
-              _buildPopularChip("Nails", Icons.back_hand),
-              _buildPopularChip("Facial", Icons.face),
-            ],
-          ),
-          const Spacer(),
-          Center(
-            child: Column(
-              children: [
-                Icon(
-                  Icons.search_rounded,
-                  size: 80,
-                  color: Colors.grey.shade200,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  tr(context, 'search_empty_state'),
-                  style: TextStyle(color: Colors.grey.shade400, fontSize: 13),
-                ),
-                const SizedBox(height: 40),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+    // --- Not Searched Yet State (Default) ---
+    if (_isLoadingAllSalons) {
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primaryBlue),
+      );
+    }
 
-  Widget _buildPopularChip(String label, IconData icon) {
-    return GestureDetector(
-      onTap: () {
-        _searchController.text = label;
-        _onSearchChanged(label);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade200),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.02),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
+    if (_allSalons.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 16, color: AppColors.primaryBlue),
-            const SizedBox(width: 8),
+            Icon(
+              Icons.storefront_rounded,
+              size: 80,
+              color: Colors.grey.shade200,
+            ),
+            const SizedBox(height: 16),
             Text(
-              label,
-              style: const TextStyle(
-                color: AppColors.textDark,
-                fontWeight: FontWeight.w500,
-                fontSize: 14,
-              ),
+              tr(context, 'no_salon_found'),
+              style: TextStyle(color: Colors.grey.shade400, fontSize: 13),
             ),
           ],
         ),
-      ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: _allSalons.length,
+      itemBuilder: (context, index) {
+        final salon = _allSalons[index];
+        return _buildResultCard(salon);
+      },
     );
   }
 

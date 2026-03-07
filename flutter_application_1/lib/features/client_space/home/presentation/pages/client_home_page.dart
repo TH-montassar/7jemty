@@ -11,6 +11,7 @@ import 'package:hjamty/features/client_space/home/presentation/widgets/quick_cat
 import 'package:hjamty/features/client_space/home/presentation/widgets/near_you_list.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hjamty/features/client_space/search/presentation/pages/search_page.dart';
 
 class ClientHomePage extends StatefulWidget {
   const ClientHomePage({super.key});
@@ -141,6 +142,50 @@ class _ClientHomePageState extends State<ClientHomePage> {
     }
   }
 
+  Widget _buildSectionHeader({
+    required String title,
+    IconData? icon,
+    VoidCallback? onSeeAll,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Row(
+          children: [
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textDark,
+              ),
+            ),
+            if (icon != null) ...[
+              const SizedBox(width: 5),
+              Icon(icon, color: Colors.grey, size: 20),
+            ],
+          ],
+        ),
+        if (onSeeAll != null)
+          TextButton(
+            onPressed: onSeeAll,
+            style: TextButton.styleFrom(
+              padding: EdgeInsets.zero,
+              minimumSize: const Size(50, 30),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: Text(
+              tr(context, 'see_all_btn'),
+              style: const TextStyle(
+                color: AppColors.primaryBlue,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -178,60 +223,45 @@ class _ClientHomePageState extends State<ClientHomePage> {
                             const SizedBox(height: 25),
                           ],
 
-                          Text(
-                            tr(context, 'top_categories'),
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.textDark,
-                            ),
+                          _buildSectionHeader(
+                            title: tr(context, 'top_categories'),
                           ),
                           const SizedBox(height: 15),
                           const QuickCategories(),
 
                           const SizedBox(height: 30),
-                          Row(
-                            children: [
-                              Text(
-                                tr(context, 'near_you'),
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.textDark,
+                          _buildSectionHeader(
+                            title: tr(context, 'near_you'),
+                            icon: Icons.location_on,
+                            onSeeAll: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const SearchPage(),
                                 ),
-                              ),
-                              const Icon(
-                                Icons.location_on,
-                                color: Colors.grey,
-                                size: 20,
-                              ),
-                            ],
+                              );
+                            },
                           ),
                           const SizedBox(height: 15),
                           const NearYouList(),
 
                           const SizedBox(height: 30),
-                          Row(
-                            children: [
-                              Text(
-                                tr(context, 'top_rated'),
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.textDark,
+                          _buildSectionHeader(
+                            title: tr(context, 'top_rated'),
+                            icon: Icons.star_border,
+                            onSeeAll: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const SearchPage(),
                                 ),
-                              ),
-                              const SizedBox(width: 5),
-                              const Icon(
-                                Icons.star_border,
-                                color: Colors.grey,
-                                size: 20,
-                              ),
-                            ],
+                              );
+                            },
                           ),
                           const SizedBox(height: 15),
                           const TopRatedList(),
-                          const SizedBox(height: 20),
+
+                          const SizedBox(height: 30),
                         ],
                       ),
                     ),
