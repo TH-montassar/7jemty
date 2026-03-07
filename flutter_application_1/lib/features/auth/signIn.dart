@@ -113,6 +113,16 @@ class _SignInScreenState extends State<SignInScreen> {
                       hintText: tr(context, 'phone_number_label'),
                       icon: Icons.phone_android_outlined,
                       keyboardType: TextInputType.phone,
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return tr(context, 'field_required');
+                        }
+                        if (value.trim().length != 8 ||
+                            int.tryParse(value.trim()) == null) {
+                          return tr(context, 'phone must be 8 digits');
+                        }
+                        return null;
+                      },
                     ),
                     const SizedBox(height: 20),
 
@@ -128,6 +138,15 @@ class _SignInScreenState extends State<SignInScreen> {
                         setState(() {
                           _obscurePassword = !_obscurePassword;
                         });
+                      },
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return tr(context, 'field_required');
+                        }
+                        if (value.length < 6) {
+                          return tr(context, 'password must be 6 chars');
+                        }
+                        return null;
                       },
                     ),
                     const SizedBox(height: 15),
@@ -341,6 +360,7 @@ class _SignInScreenState extends State<SignInScreen> {
     bool isPassword = false,
     bool obscureText = false,
     VoidCallback? onTogglePassword,
+    String? Function(String?)? validator,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -380,12 +400,14 @@ class _SignInScreenState extends State<SignInScreen> {
           fillColor: Colors.transparent,
           contentPadding: const EdgeInsets.symmetric(vertical: 20),
         ),
-        validator: (value) {
-          if (value == null || value.isEmpty) {
-            return tr(context, 'field_required');
-          }
-          return null;
-        },
+        validator:
+            validator ??
+            (value) {
+              if (value == null || value.isEmpty) {
+                return tr(context, 'field_required');
+              }
+              return null;
+            },
       ),
     );
   }

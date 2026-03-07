@@ -245,6 +245,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       hintText: tr(context, 'phone_number_label'),
                       icon: Icons.phone_android_outlined,
                       keyboardType: TextInputType.phone,
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return tr(context, 'field_required');
+                        }
+                        if (value.trim().length != 8 ||
+                            int.tryParse(value.trim()) == null) {
+                          return tr(context, 'phone_must_be_8_digits');
+                        }
+                        return null;
+                      },
                     ),
                     const SizedBox(height: 20),
 
@@ -260,6 +270,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         setState(() {
                           _obscurePassword = !_obscurePassword;
                         });
+                      },
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return tr(context, 'field_required');
+                        }
+                        if (value.length < 6) {
+                          return tr(context, 'password_must_be_6_chars');
+                        }
+                        return null;
                       },
                     ),
                     const SizedBox(height: 20),
@@ -277,6 +296,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         setState(() {
                           _obscureConfirmPassword = !_obscureConfirmPassword;
                         });
+                      },
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return tr(context, 'field_required');
+                        }
+                        if (value.length < 6) {
+                          return tr(context, 'password_must_be_6_chars');
+                        }
+                        return null;
                       },
                     ),
                     const SizedBox(height: 20),
@@ -418,6 +446,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     bool isPassword = false,
     bool obscureText = false,
     VoidCallback? onTogglePassword,
+    String? Function(String?)? validator,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -457,12 +486,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
           fillColor: Colors.transparent,
           contentPadding: const EdgeInsets.symmetric(vertical: 20),
         ),
-        validator: (value) {
-          if (value == null || value.trim().isEmpty) {
-            return tr(context, 'field_required');
-          }
-          return null;
-        },
+        validator:
+            validator ??
+            (value) {
+              if (value == null || value.trim().isEmpty) {
+                return tr(context, 'field_required');
+              }
+              return null;
+            },
       ),
     );
   }

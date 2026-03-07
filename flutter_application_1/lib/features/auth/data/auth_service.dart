@@ -28,6 +28,27 @@ class ProgressMultipartRequest extends http.MultipartRequest {
   }
 }
 
+String _extractErrorMessage(dynamic messageData, String defaultMessage) {
+  if (messageData == null) return defaultMessage;
+  // If it's a string, it might be a JSON array string from Zod
+  if (messageData is String) {
+    if (messageData.trim().startsWith('[') &&
+        messageData.trim().endsWith(']')) {
+      try {
+        final parsed = jsonDecode(messageData);
+        if (parsed is List && parsed.isNotEmpty) {
+          final firstErr = parsed[0];
+          if (firstErr is Map && firstErr.containsKey('message')) {
+            return firstErr['message'].toString();
+          }
+        }
+      } catch (_) {}
+    }
+    return messageData;
+  }
+  return messageData.toString();
+}
+
 class AuthService {
   static String get baseUrl => ApiConfig.endpoint('/api/auth');
 
@@ -54,7 +75,10 @@ class AuthService {
         return data; // returns { success: true, data: user }
       } else {
         throw Exception(
-          data['message'] ?? 'Erreur lors de la récupération du profil',
+          _extractErrorMessage(
+            data['message'],
+            'Erreur lors de la récupération du profil',
+          ),
         );
       }
     } catch (e) {
@@ -98,7 +122,10 @@ class AuthService {
         return data;
       } else {
         throw Exception(
-          data['message'] ?? 'Erreur lors de la mise à jour du profil',
+          _extractErrorMessage(
+            data['message'],
+            'Erreur lors de la mise à jour du profil',
+          ),
         );
       }
     } catch (e) {
@@ -131,7 +158,9 @@ class AuthService {
         return data;
       } else {
         // الـ Zod ولا الـ Service رجعو Error (مثلا النومرو مستعمل)
-        throw Exception(data['message'] ?? '8alta fi tsjil');
+        throw Exception(
+          _extractErrorMessage(data['message'], '8alta fi tsjil'),
+        );
       }
     } catch (e) {
       throw Exception(e.toString());
@@ -149,13 +178,13 @@ class AuthService {
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
-        return {
-          'exists': data['exists'] ?? false,
-          'role': data['role'],
-        };
+        return {'exists': data['exists'] ?? false, 'role': data['role']};
       } else {
         throw Exception(
-          data['message'] ?? 'Erreur lors de la vérification du numéro',
+          _extractErrorMessage(
+            data['message'],
+            'Erreur lors de la vérification du numéro',
+          ),
         );
       }
     } catch (e) {
@@ -177,7 +206,10 @@ class AuthService {
         return true;
       } else {
         throw Exception(
-          data['message'] ?? 'Erreur lors de la demande du code',
+          _extractErrorMessage(
+            data['message'],
+            'Erreur lors de la demande du code',
+          ),
         );
       }
     } catch (e) {
@@ -198,9 +230,7 @@ class AuthService {
       if (response.statusCode == 200 && data['success'] == true) {
         return true;
       } else {
-        throw Exception(
-          data['message'] ?? 'Code invalide',
-        );
+        throw Exception(_extractErrorMessage(data['message'], 'Code invalide'));
       }
     } catch (e) {
       throw Exception(e.toString());
@@ -225,7 +255,9 @@ class AuthService {
         return data;
       } else {
         // الـ Backend رجع Error (mot de passe ghalet / user mouch mawjoud)
-        throw Exception(data['message'] ?? 'Erreur lors de la connexion');
+        throw Exception(
+          _extractErrorMessage(data['message'], 'Erreur lors de la connexion'),
+        );
       }
     } catch (e) {
       throw Exception(e.toString());
@@ -286,7 +318,9 @@ class AuthService {
       if (response.statusCode == 200 && data['success'] == true) {
         return data['url'] as String;
       } else {
-        throw Exception(data['message'] ?? 'Erreur lors de l\'upload');
+        throw Exception(
+          _extractErrorMessage(data['message'], 'Erreur lors de l\'upload'),
+        );
       }
     } catch (e) {
       throw Exception('Upload failed: $e');
