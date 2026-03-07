@@ -9,6 +9,7 @@ import 'package:hjamty/features/client_space/salon_profile/presentation/widgets/
 import 'package:hjamty/features/client_space/salon_profile/data/salon_service.dart';
 import 'package:hjamty/features/client_space/appointments/presentation/pages/booking_flow_screen.dart';
 import 'package:hjamty/core/localization/translation_service.dart';
+import 'package:hjamty/features/client_space/salon_profile/presentation/widgets/about_tab.dart';
 
 class SalonProfilePage extends StatefulWidget {
   final int salonId;
@@ -81,7 +82,7 @@ class _SalonProfilePageState extends State<SalonProfilePage> {
           final salonData = snapshot.data!;
 
           return DefaultTabController(
-            length: 4,
+            length: 5,
             child: NestedScrollView(
               headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
                 return <Widget>[
@@ -109,7 +110,7 @@ class _SalonProfilePageState extends State<SalonProfilePage> {
                             fit: BoxFit.cover,
                           ),
                           // Overlay أكحل خفيف
-                          Container(color: Colors.black.withOpacity(0.3)),
+                          Container(color: Colors.black.withAlpha(77)),
                         ],
                       ),
                     ),
@@ -133,6 +134,7 @@ class _SalonProfilePageState extends State<SalonProfilePage> {
                           fontWeight: FontWeight.bold,
                         ),
                         tabs: [
+                          Tab(text: tr(context, 'about_tab')),
                           Tab(text: tr(context, 'tab_services')),
                           Tab(text: tr(context, 'products')),
                           Tab(text: tr(context, 'portfolio')),
@@ -145,8 +147,9 @@ class _SalonProfilePageState extends State<SalonProfilePage> {
               },
 
               // 4. محتوى الـ Tabs
-              body: const TabBarView(
+              body: TabBarView(
                 children: [
+                  AboutTab(salonData: salonData),
                   ServicesTab(),
                   ProductsTab(),
                   PortfolioTab(),

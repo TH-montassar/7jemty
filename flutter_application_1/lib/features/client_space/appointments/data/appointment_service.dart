@@ -169,6 +169,50 @@ class AppointmentService {
     }
   }
 
+  static Future<List<String>> getAvailableDates({
+    required int salonId,
+    required String startDate,
+    required String endDate,
+    int? barberId,
+    List<int>? serviceIds,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('jwt_token');
+
+    final queryParams = {
+      'salonId': salonId.toString(),
+      'startDate': startDate,
+      'endDate': endDate,
+    };
+
+    if (barberId != null) {
+      queryParams['barberId'] = barberId.toString();
+    }
+
+    if (serviceIds != null && serviceIds.isNotEmpty) {
+      queryParams['serviceIds'] = serviceIds.join(',');
+    }
+
+    final uri = Uri.parse(
+      '$baseUrl/available-dates',
+    ).replace(queryParameters: queryParams);
+
+    final response = await http.get(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+      },
+    );
+
+    final data = jsonDecode(response.body);
+    if (response.statusCode == 200) {
+      return List<String>.from(data['data'] ?? []);
+    } else {
+      throw Exception(data['message'] ?? 'Erreur available-dates');
+    }
+  }
+
   static Future<Map<String, dynamic>> createAppointment({
     required int salonId,
     required int barberId,

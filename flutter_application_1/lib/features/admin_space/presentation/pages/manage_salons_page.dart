@@ -205,6 +205,16 @@ class _ManageSalonsPageState extends State<ManageSalonsPage> {
       text: salon['speciality'],
     );
 
+    final latController = TextEditingController(
+      text: salon['latitude']?.toString() ?? '',
+    );
+    final lngController = TextEditingController(
+      text: salon['longitude']?.toString() ?? '',
+    );
+    final googleMapsUrlController = TextEditingController(
+      text: salon['googleMapsUrl'] ?? '',
+    );
+
     final updated = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -238,6 +248,44 @@ class _ManageSalonsPageState extends State<ManageSalonsPage> {
                   labelText: tr(context, 'address_label'),
                 ),
               ),
+              const Divider(height: 32),
+              const Text(
+                'Géolocalisation',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              TextField(
+                controller: googleMapsUrlController,
+                decoration: const InputDecoration(
+                  labelText: 'Lien Google Maps',
+                  hintText: 'https://maps.app.goo.gl/...',
+                ),
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: latController,
+                      decoration: const InputDecoration(labelText: 'Latitude'),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                        signed: true,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: TextField(
+                      controller: lngController,
+                      decoration: const InputDecoration(labelText: 'Longitude'),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                        signed: true,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
               TextField(
                 controller: descController,
                 decoration: InputDecoration(
@@ -269,6 +317,9 @@ class _ManageSalonsPageState extends State<ManageSalonsPage> {
           'contactPhone': phoneController.text,
           'address': addressController.text,
           'description': descController.text,
+          'googleMapsUrl': googleMapsUrlController.text,
+          'latitude': double.tryParse(latController.text),
+          'longitude': double.tryParse(lngController.text),
         });
         _fetchSalons();
       } catch (e) {

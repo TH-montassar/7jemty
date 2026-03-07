@@ -165,11 +165,11 @@ export const checkPhoneExists = async (phoneNumber: string) => {
     const user = await prisma.user.findUnique({
         where: { phoneNumber }
     });
-    
+
     if (user) {
         return { exists: true, role: user.role };
     }
-    
+
     return { exists: false, role: null };
 };
 
@@ -189,7 +189,7 @@ export const requestOtp = async (phoneNumber: string) => {
 
     // In a real production app, you would integrate an SMS provider here.
     // For now, we simulate sending it.
-    console.log(`[SIMULATED SMS] Send to ${phoneNumber}: Your 7jemty verification code is ${code}`);
+    console.log(`[SIMULATED SMS] Send to ${phoneNumber}: Your  7jemty password  is ${code}`);
 
     return { message: "Code OTP envoyé avec succès" };
 };

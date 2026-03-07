@@ -245,6 +245,52 @@ export const getBarberAvailability = async (
     });
 };
 
+export const getAvailableDatesForRange = async (
+    salonId: number,
+    startDateStr: string,
+    endDateStr: string,
+    requestedBarberId?: number,
+    serviceIds?: number[],
+    clientId_for_overlap_check?: number
+) => {
+    const start = new Date(startDateStr);
+    const end = new Date(endDateStr);
+
+    // Limit to max 31 days to prevent overload
+    if ((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24) > 31) {
+        throw new Error("La plage de dates ne peut pas dépasser 31 jours.");
+    }
+
+    const dateStrings: string[] = [];
+    let current = new Date(start);
+
+    while (current <= end) {
+        dateStrings.push(current.toISOString().split('T')[0] as string);
+        current.setDate(current.getDate() + 1);
+    }
+
+    // Process all dates in parallel
+    const availabilityResults = await Promise.all(
+        dateStrings.map(async (dateString) => {
+            const slots = await getBarberAvailability(
+                salonId,
+                dateString,
+                requestedBarberId,
+                serviceIds,
+                clientId_for_overlap_check
+            );
+            return {
+                dateString,
+                hasAvailability: slots.some((s: any) => s.available)
+            };
+        })
+    );
+
+    return availabilityResults
+        .filter(result => result.hasAvailability)
+        .map(result => result.dateString);
+};
+
 export const createClientAppointment = async (
     clientId: number,
     salonId: number,

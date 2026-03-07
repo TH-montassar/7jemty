@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { updateStatus, getAvailability, createAppointment, getSalonAppointmentsController, getClientAppointmentsController, getEmployeeAppointmentsController, extendAppointmentController, getUnreviewedAppointmentsController, submitReviewController } from './appointment.controller.js';
+import { updateStatus, getAvailability, getAvailableDatesController, createAppointment, getSalonAppointmentsController, getClientAppointmentsController, getEmployeeAppointmentsController, extendAppointmentController, getUnreviewedAppointmentsController, submitReviewController } from './appointment.controller.js';
 import { protect } from '../../middlewares/auth.middleware.js';
 
 const router = Router();
@@ -15,6 +15,9 @@ router.post('/:id/review', protect, submitReviewController);
 
 // Endpoint pour vérifier les disponibilités
 router.get('/availability', getAvailability);
+
+// Endpoint pour vérifier les jours disponibles sur une plage de dates
+router.get('/available-dates', getAvailableDatesController);
 
 // Endpoint pour récupérer les rendez-vous non évalués du client
 router.get('/unreviewed', protect, getUnreviewedAppointmentsController);
