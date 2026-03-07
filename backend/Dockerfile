@@ -16,6 +16,7 @@ RUN npx prisma generate
 
 # Expose the API port (defaulting to 3000, adjust if your server uses a different port)
 EXPOSE 3000
-
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 # Run the development server
-CMD ["/entrypoint.sh"]
+CMD ["sh", "/entrypoint.sh"]

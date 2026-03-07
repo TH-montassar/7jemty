@@ -11,3 +11,14 @@ npm run create-admin -- "Admin" "12345679" "12345679"
 
 docker compose exec backend npm run prisma:mig
 docker compose exec backend npm run build
+
+
+
+
+
+
+docker compose down
+docker compose build --no-cache backend
+docker compose up
+
+docker compose up --build
