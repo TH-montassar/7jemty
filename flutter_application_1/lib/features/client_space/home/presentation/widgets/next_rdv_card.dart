@@ -116,9 +116,9 @@ class NextRdvCard extends StatelessWidget {
                       SnackBar(content: Text(tr(context, 'opening_map'))),
                     );
                   },
-                  child: const Text(
-                    "Chouf fil map 🗺️",
-                    style: TextStyle(
+                  child: Text(
+                    tr(context, 'see_on_map'),
+                    style: const TextStyle(
                       color: AppColors.primaryBlue,
                       fontWeight: FontWeight.bold,
                       fontSize: 12,
@@ -224,7 +224,7 @@ class NextRdvCard extends StatelessWidget {
                 const SizedBox(width: 5),
                 Expanded(
                   child: Text(
-                    "Professionnel: $barberName",
+                    tr(context, 'professional_label', args: [barberName]),
                     style: const TextStyle(color: Colors.grey, fontSize: 14),
                     overflow: TextOverflow.ellipsis,
                   ),

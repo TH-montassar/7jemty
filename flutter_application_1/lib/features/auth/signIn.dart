@@ -90,27 +90,27 @@ class _SignInScreenState extends State<SignInScreen> {
                     const SizedBox(height: 30),
 
                     // Titre
-                    const Text(
-                      "Connecti",
+                    Text(
+                      tr(context, 'sign_in_title'),
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
                         color: AppColors.textDark,
                       ),
                     ),
                     const SizedBox(height: 10),
-                    const Text(
-                      "Marhba bik marra okhra !",
+                    Text(
+                      tr(context, 'welcome_back'),
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 14, color: Colors.grey),
+                      style: const TextStyle(fontSize: 14, color: Colors.grey),
                     ),
                     const SizedBox(height: 40),
 
                     // Numéro de téléphone
                     _buildTextField(
                       controller: _phoneController,
-                      hintText: "Numrou Tlifoun",
+                      hintText: tr(context, 'phone_number_label'),
                       icon: Icons.phone_android_outlined,
                       keyboardType: TextInputType.phone,
                     ),
@@ -118,7 +118,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
                     // Mot de passe
                     _buildTextField(
-                      hintText: "Mot de passe",
+                      hintText: tr(context, 'password_short'),
                       controller: _passwordController,
                       icon: Icons.lock_outline,
                       keyboardType: TextInputType.visiblePassword,
@@ -137,8 +137,8 @@ class _SignInScreenState extends State<SignInScreen> {
                       alignment: Alignment.centerRight,
                       child: TextButton(
                         onPressed: () {},
-                        child: const Text(
-                          "Nsitt l'mot de passe ?",
+                        child: Text(
+                          tr(context, 'forgot_password'),
                           style: TextStyle(
                             color: AppColors.primaryBlue,
                             fontWeight: FontWeight.w600,
@@ -278,9 +278,9 @@ class _SignInScreenState extends State<SignInScreen> {
                                 strokeWidth: 3,
                               ),
                             )
-                          : const Text(
-                              "Connecti",
-                              style: TextStyle(
+                          : Text(
+                              tr(context, 'sign_in_title'),
+                              style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                                 letterSpacing: 1.2,
@@ -293,9 +293,12 @@ class _SignInScreenState extends State<SignInScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text(
-                          "Ma aandekch compte ? ",
-                          style: TextStyle(color: Colors.grey, fontSize: 14),
+                        Text(
+                          "${tr(context, 'no_account_yet')} ",
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 14,
+                          ),
                         ),
                         GestureDetector(
                           onTap: () {
@@ -307,8 +310,8 @@ class _SignInScreenState extends State<SignInScreen> {
                               ),
                             );
                           },
-                          child: const Text(
-                            "Aamel compte",
+                          child: Text(
+                            tr(context, 'create_account'),
                             style: TextStyle(
                               color: AppColors.primaryBlue,
                               fontWeight: FontWeight.bold,
@@ -379,7 +382,7 @@ class _SignInScreenState extends State<SignInScreen> {
         ),
         validator: (value) {
           if (value == null || value.isEmpty) {
-            return 'Hedha lezem taamrou';
+            return tr(context, 'field_required');
           }
           return null;
         },

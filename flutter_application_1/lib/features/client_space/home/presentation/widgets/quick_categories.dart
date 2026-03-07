@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hjamty/core/constants/app_colors.dart';
+import 'package:hjamty/core/localization/translation_service.dart';
 
 class QuickCategories extends StatefulWidget {
   const QuickCategories({super.key});
@@ -11,16 +12,16 @@ class QuickCategories extends StatefulWidget {
 class _QuickCategoriesState extends State<QuickCategories> {
   int _selectedIndex = 0;
 
-  // 💡 هذي ليستة الخدمات الصحيحة
-  final List<Map<String, dynamic>> _categories = [
-    {'title': 'Hjema', 'icon': Icons.content_cut},
-    {'title': 'Lihya', 'icon': Icons.face},
-    {'title': 'Soin Visage', 'icon': Icons.spa_outlined},
-    {'title': 'Sghar', 'icon': Icons.child_care},
-  ];
-
   @override
   Widget build(BuildContext context) {
+    // 💡 هذي ليستة الخدمات الصحيحة
+    final List<Map<String, dynamic>> _categories = [
+      {'title': tr(context, 'category_haircut'), 'icon': Icons.content_cut},
+      {'title': tr(context, 'category_beard'), 'icon': Icons.face},
+      {'title': tr(context, 'category_facial'), 'icon': Icons.spa_outlined},
+      {'title': tr(context, 'category_kids'), 'icon': Icons.child_care},
+    ];
+
     return SizedBox(
       height: 45,
       child: ListView.builder(

@@ -296,9 +296,9 @@ class _ClientHomePageState extends State<ClientHomePage> {
                     size: 60,
                   ),
                   const SizedBox(height: 16),
-                  const Text(
-                    "Sa77a L'7jema!",
-                    style: TextStyle(
+                  Text(
+                    tr(context, 'review_modal_title'),
+                    style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
                       color: AppColors.textDark,
@@ -306,14 +306,21 @@ class _ClientHomePageState extends State<ClientHomePage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    "Rendez-vous mte3ek maa $barberName fi salon '$salonName' kmal.",
+                    tr(
+                      context,
+                      'review_modal_desc',
+                      args: [barberName, salonName],
+                    ),
                     textAlign: TextAlign.center,
                     style: const TextStyle(color: Colors.grey, fontSize: 14),
                   ),
                   const SizedBox(height: 24),
-                  const Text(
-                    "3jebtek l7jema?",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  Text(
+                    tr(context, 'review_modal_question'),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Row(
@@ -341,7 +348,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
                     maxLines: 3,
                     enabled: !_isSubmitting,
                     decoration: InputDecoration(
-                      hintText: "Khali commentaire (optionnel)...",
+                      hintText: tr(context, 'review_comment_hint'),
                       hintStyle: TextStyle(color: Colors.grey.shade400),
                       filled: true,
                       fillColor: Colors.grey.shade100,
@@ -407,9 +414,9 @@ class _ClientHomePageState extends State<ClientHomePage> {
                                 strokeWidth: 2,
                               ),
                             )
-                          : const Text(
-                              "Abaath l'avis",
-                              style: TextStyle(
+                          : Text(
+                              tr(context, 'submit_review_btn'),
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
@@ -422,9 +429,9 @@ class _ClientHomePageState extends State<ClientHomePage> {
                     onPressed: _isSubmitting
                         ? null
                         : () => Navigator.pop(context),
-                    child: const Text(
-                      "Fout",
-                      style: TextStyle(color: Colors.grey),
+                    child: Text(
+                      tr(context, 'skip_btn'),
+                      style: const TextStyle(color: Colors.grey),
                     ),
                   ),
                 ],

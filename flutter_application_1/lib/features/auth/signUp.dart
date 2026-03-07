@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hjamty/core/constants/app_colors.dart';
+import 'package:hjamty/core/localization/translation_service.dart';
 import 'signIn.dart';
 import 'package:hjamty/features/auth/data/auth_service.dart';
 import 'package:toastification/toastification.dart';
@@ -34,10 +35,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Future<void> _handleRegister() async {
     if (_passwordController.text != _confirmPasswordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Mot de passe mouch kif kif',
-            style: TextStyle(color: AppColors.bgColor),
+            tr(context, 'passwords_do_not_match'),
+            style: const TextStyle(color: AppColors.bgColor),
           ),
           backgroundColor: AppColors.actionRed,
         ),
@@ -80,8 +81,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
         ),
         description: Text(
           _isPatron
-              ? 'Mabrouk! Compte Salon mte3ek thal. Marhba bik ya Patron! ✂️'
-              : 'Marhba bik ${_nameController.text.trim()} fi 7jemty!',
+              ? tr(context, 'welcome_patron')
+              : tr(
+                  context,
+                  'welcome_client',
+                  args: [_nameController.text.trim()],
+                ),
           style: const TextStyle(color: Colors.white),
         ),
         primaryColor: AppColors.successGreen, // لونك المزيان
@@ -208,27 +213,27 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     const SizedBox(height: 30),
 
                     // Titre
-                    const Text(
-                      "Aamel compte",
+                    Text(
+                      tr(context, 'sign_up_title'),
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
                         color: AppColors.textDark,
                       ),
                     ),
                     const SizedBox(height: 10),
-                    const Text(
-                      "Idkhol l 7jemty w temtaa b les services mteana.",
+                    Text(
+                      tr(context, 'join_7jemty_enjoy_services'),
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 14, color: Colors.grey),
+                      style: const TextStyle(fontSize: 14, color: Colors.grey),
                     ),
                     const SizedBox(height: 40),
 
                     // Nom Complet
                     _buildTextField(
                       controller: _nameController, // ربطنا الـ Controller
-                      hintText: "Esmek l'kemel",
+                      hintText: tr(context, 'full_name'),
                       icon: Icons.person_outline,
                       keyboardType: TextInputType.name,
                     ),
@@ -237,7 +242,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     // Numéro de téléphone
                     _buildTextField(
                       controller: _phoneController, // ربطنا الـ Controller
-                      hintText: "Numrou Tlifoun",
+                      hintText: tr(context, 'phone_number_label'),
                       icon: Icons.phone_android_outlined,
                       keyboardType: TextInputType.phone,
                     ),
@@ -246,7 +251,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     // Mot de passe
                     _buildTextField(
                       controller: _passwordController, // ربطنا الـ Controller
-                      hintText: "Mot de passe",
+                      hintText: tr(context, 'password_short'),
                       icon: Icons.lock_outline,
                       keyboardType: TextInputType.visiblePassword,
                       isPassword: true,
@@ -263,7 +268,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     _buildTextField(
                       controller:
                           _confirmPasswordController, // ربطنا الـ Controller
-                      hintText: "Aawed l'mot de passe",
+                      hintText: tr(context, 'confirm_password_hint'),
                       icon: Icons.lock_outline,
                       keyboardType: TextInputType.visiblePassword,
                       isPassword: true,
@@ -295,16 +300,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         ],
                       ),
                       child: CheckboxListTile(
-                        title: const Text(
-                          "Ena moulé salon (Patron)",
-                          style: TextStyle(
+                        title: Text(
+                          tr(context, 'i_am_salon_owner'),
+                          style: const TextStyle(
                             fontWeight: FontWeight.w500,
                             fontSize: 14,
                           ),
                         ),
-                        subtitle: const Text(
-                          "Cochi hethi ken theb tzid salon mte3ek",
-                          style: TextStyle(fontSize: 12, color: Colors.grey),
+                        subtitle: Text(
+                          tr(context, 'check_this_to_add_salon'),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
                         ),
                         value: _isPatron,
                         activeColor: AppColors.primaryBlue,
@@ -349,9 +357,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 strokeWidth: 2,
                               ),
                             )
-                          : const Text(
-                              "Aamel compte",
-                              style: TextStyle(
+                          : Text(
+                              tr(context, 'create_account'),
+                              style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                                 letterSpacing: 1.2,
@@ -364,9 +372,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text(
-                          "Aandek compte deja ? ",
-                          style: TextStyle(color: Colors.grey, fontSize: 14),
+                        Text(
+                          "${tr(context, 'already_have_account')} ",
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 14,
+                          ),
                         ),
                         GestureDetector(
                           onTap: () {
@@ -377,8 +388,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               ),
                             );
                           },
-                          child: const Text(
-                            "Connecter",
+                          child: Text(
+                            tr(context, 'connect_action'),
                             style: TextStyle(
                               color: AppColors.primaryBlue,
                               fontWeight: FontWeight.bold,
@@ -448,7 +459,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         ),
         validator: (value) {
           if (value == null || value.trim().isEmpty) {
-            return 'Hedha lezem taamrou';
+            return tr(context, 'field_required');
           }
           return null;
         },

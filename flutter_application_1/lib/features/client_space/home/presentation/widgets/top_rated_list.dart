@@ -3,6 +3,7 @@ import 'package:hjamty/features/patron_space/salon_dashboard_screen.dart';
 import 'package:hjamty/core/constants/app_colors.dart';
 import 'package:hjamty/features/client_space/salon_profile/data/salon_service.dart';
 import 'package:hjamty/core/utils/cloudinary_utils.dart';
+import 'package:hjamty/core/localization/translation_service.dart';
 
 class TopRatedList extends StatefulWidget {
   const TopRatedList({super.key});
@@ -176,7 +177,7 @@ class _TopRatedListState extends State<TopRatedList> {
                           ),
                           const SizedBox(height: 5),
                           Text(
-                            salon['price'] ?? 'A partir de...',
+                            salon['price'] ?? tr(context, 'starting_from'),
                             style: const TextStyle(
                               color: Colors.grey,
                               fontSize: 12,
@@ -210,8 +211,8 @@ class _TopRatedListState extends State<TopRatedList> {
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        child: const Text(
-                          "Resservi",
+                        child: Text(
+                          tr(context, 'reserve_btn'),
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 13,

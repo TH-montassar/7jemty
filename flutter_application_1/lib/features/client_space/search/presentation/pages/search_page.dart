@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:hjamty/core/constants/app_colors.dart';
 import 'package:hjamty/features/client_space/salon_profile/data/salon_service.dart';
 import 'package:hjamty/features/patron_space/salon_dashboard_screen.dart';
+import 'package:hjamty/core/localization/translation_service.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -94,7 +95,7 @@ class _SearchPageState extends State<SearchPage> {
                     autofocus: true,
                     onChanged: _onSearchChanged,
                     decoration: InputDecoration(
-                      hintText: "Lawej aala salon, service...",
+                      hintText: tr(context, 'search_hint'),
                       border: InputBorder.none,
                       hintStyle: TextStyle(
                         color: Colors.grey.shade400,
@@ -143,7 +144,7 @@ class _SearchPageState extends State<SearchPage> {
             Icon(Icons.search_off, size: 60, color: Colors.grey.shade300),
             const SizedBox(height: 20),
             Text(
-              "Ma l9inech ntija...",
+              tr(context, 'no_results_found'),
               style: TextStyle(color: Colors.grey.shade400, fontSize: 13),
             ),
           ],
@@ -190,7 +191,7 @@ class _SearchPageState extends State<SearchPage> {
                 ),
               ),
               title: Text(
-                salon['name'] ?? 'Nom du salon',
+                salon['name'] ?? tr(context, 'salon_name_default'),
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
@@ -198,7 +199,7 @@ class _SearchPageState extends State<SearchPage> {
                 ),
               ),
               subtitle: Text(
-                salon['address'] ?? 'Adresse non disponible',
+                salon['address'] ?? tr(context, 'address_unavailable'),
                 style: const TextStyle(color: Colors.grey, fontSize: 12),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -233,7 +234,7 @@ class _SearchPageState extends State<SearchPage> {
           Icon(Icons.search, size: 60, color: Colors.grey.shade300),
           const SizedBox(height: 20),
           Text(
-            "Lawj 3la 7ajjem wala service...",
+            tr(context, 'search_empty_state'),
             style: TextStyle(color: Colors.grey.shade400, fontSize: 13),
           ),
         ],

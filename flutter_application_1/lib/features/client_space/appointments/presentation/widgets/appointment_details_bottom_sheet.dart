@@ -175,7 +175,7 @@ class _AppointmentDetailsSheet extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    "Détails du Rendez-vous",
+                    tr(context, 'appointment_details_title'),
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -208,9 +208,9 @@ class _AppointmentDetailsSheet extends StatelessWidget {
             // Date & Time
             _buildInfoRow(
               icon: Icons.calendar_today_rounded,
-              title: "Date et Heure",
+              title: tr(context, 'date_and_time'),
               value: formattedDate,
-              subtitle: "Fin estimée: $formattedEndTime",
+              subtitle: tr(context, 'estimated_end', args: [formattedEndTime]),
               iconColor: AppColors.primaryBlue,
             ),
             const Divider(height: 32),
@@ -219,7 +219,7 @@ class _AppointmentDetailsSheet extends StatelessWidget {
             if (showClientDetails) ...[
               _buildInfoRow(
                 icon: Icons.person_outline,
-                title: "Client",
+                title: tr(context, 'client_label'),
                 value: clientName,
                 subtitle: clientPhone.isNotEmpty ? "Tél: $clientPhone" : null,
                 iconColor: Colors.purple,
@@ -229,7 +229,7 @@ class _AppointmentDetailsSheet extends StatelessWidget {
             if (showBarberDetails) ...[
               _buildInfoRow(
                 icon: Icons.content_cut,
-                title: "Spécialiste",
+                title: tr(context, 'specialist_label'),
                 value: barberName,
                 iconColor: Colors.deepOrange,
               ),
@@ -237,7 +237,7 @@ class _AppointmentDetailsSheet extends StatelessWidget {
             ],
             _buildInfoRow(
               icon: Icons.storefront_outlined,
-              title: "Salon",
+              title: tr(context, 'salon_label'),
               value: salonName,
               subtitle: salonAddress.isNotEmpty ? salonAddress : null,
               iconColor: Colors.teal,
@@ -245,9 +245,9 @@ class _AppointmentDetailsSheet extends StatelessWidget {
             const Divider(height: 32),
 
             // Services Breakdown
-            const Text(
-              "Services",
-              style: TextStyle(
+            Text(
+              tr(context, 'services_label'),
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
                 color: Colors.grey,
@@ -255,9 +255,9 @@ class _AppointmentDetailsSheet extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             if (servicesList.isEmpty)
-              const Text(
-                "Aucun service sélectionné",
-                style: TextStyle(
+              Text(
+                tr(context, 'no_service_selected'),
+                style: const TextStyle(
                   color: Colors.grey,
                   fontStyle: FontStyle.italic,
                 ),
@@ -302,9 +302,9 @@ class _AppointmentDetailsSheet extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  "Total:",
-                  style: TextStyle(
+                Text(
+                  tr(context, 'total_label'),
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textDark,
@@ -334,9 +334,9 @@ class _AppointmentDetailsSheet extends StatelessWidget {
                   ),
                   elevation: 0,
                 ),
-                child: const Text(
-                  "Fermer",
-                  style: TextStyle(
+                child: Text(
+                  tr(context, 'close_btn'),
+                  style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
