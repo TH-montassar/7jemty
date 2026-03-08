@@ -13,6 +13,7 @@ import 'package:hjamty/features/client_space/salon_profile/presentation/widgets/
 import 'package:toastification/toastification.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:hjamty/features/auth/signIn.dart';
 
 class SalonProfilePage extends StatefulWidget {
   final int salonId;
@@ -42,7 +43,7 @@ class _SalonProfilePageState extends State<SalonProfilePage> {
     final role = prefs.getString('user_role');
     if (mounted) {
       setState(() {
-        _isClient = role == 'CLIENT';
+        _isClient = role == 'CLIENT' || role == null;
       });
     }
   }
@@ -61,6 +62,19 @@ class _SalonProfilePageState extends State<SalonProfilePage> {
   }
 
   Future<void> _toggleFavorite() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('jwt_token');
+
+    if (token == null || token.isEmpty) {
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const SignInScreen()),
+        );
+      }
+      return;
+    }
+
     setState(() {
       _isFavorite = !_isFavorite;
       _isLoadingFavorite = true;

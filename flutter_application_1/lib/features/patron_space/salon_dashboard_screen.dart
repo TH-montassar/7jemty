@@ -17,6 +17,8 @@ import '../../features/client_space/salon_profile/presentation/widgets/salon_inf
 import '../../features/client_space/salon_profile/presentation/widgets/about_tab.dart';
 import 'package:hjamty/core/widgets/notification_bell.dart';
 import 'package:hjamty/features/auth/data/auth_service.dart';
+import 'package:hjamty/features/auth/signIn.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SalonDashboardScreen extends StatefulWidget {
   final bool isPatron;
@@ -109,6 +111,18 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
 
   Future<void> _toggleFavorite() async {
     if (_salonData == null || _salonData!['id'] == null) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('jwt_token');
+
+    if (token == null || token.isEmpty) {
+      if (!mounted) return;
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const SignInScreen()),
+      );
+      return;
+    }
 
     // Optimistic UI update
     setState(() {

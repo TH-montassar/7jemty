@@ -326,6 +326,9 @@ const Map<String, String> tn = {
   'admin_profile_desc': 'Riguel el information personelle mte3ek',
   'orders_remaining': 'Mazzalou {0} commandes',
   'favorite_salons_count': '{0} salonet',
+  'favorites_empty_title': 'Mazel ma aandek hata salon favoris',
+  'favorites_empty_subtitle':
+      'Ki ta3mel like l salon, taw tal9ahom l houni b sor3a.',
 
   // Appointment Details Bottom Sheet
   'appointment_details_title': 'Détails du Rendez-vous',

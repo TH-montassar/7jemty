@@ -4,6 +4,7 @@ import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:hjamty/features/client_space/salon_profile/data/salon_service.dart';
 import 'package:hjamty/features/patron_space/salon_dashboard_screen.dart';
 import 'package:hjamty/core/utils/cloudinary_utils.dart';
+import 'package:hjamty/features/client_space/search/presentation/pages/search_page.dart';
 
 class FavoriteSalonsPage extends StatefulWidget {
   const FavoriteSalonsPage({super.key});
@@ -25,6 +26,107 @@ class _FavoriteSalonsPageState extends State<FavoriteSalonsPage> {
     setState(() {
       _favoriteSalonsFuture = SalonService.getFavoriteSalons();
     });
+  }
+
+  Widget _buildEmptyState() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return RefreshIndicator(
+          onRefresh: () async => _fetchFavorites(),
+          color: AppColors.primaryBlue,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 92,
+                        height: 92,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.primaryBlue.withValues(alpha: 0.08),
+                        ),
+                        child: const Icon(
+                          Icons.favorite_border_rounded,
+                          size: 42,
+                          color: AppColors.primaryBlue,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        tr(context, 'favorites_empty_title'),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textDark,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        tr(context, 'favorites_empty_subtitle'),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 14,
+                          height: 1.4,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const SearchPage(),
+                              ),
+                            ).then((_) => _fetchFavorites());
+                          },
+                          icon: const Icon(Icons.explore_outlined, size: 18),
+                          label: Text(tr(context, 'explore')),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryBlue,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            elevation: 0,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      TextButton.icon(
+                        onPressed: _fetchFavorites,
+                        icon: const Icon(
+                          Icons.refresh_rounded,
+                          color: AppColors.primaryBlue,
+                          size: 18,
+                        ),
+                        label: Text(
+                          tr(context, 'reload_btn'),
+                          style: const TextStyle(
+                            color: AppColors.primaryBlue,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -58,23 +160,7 @@ class _FavoriteSalonsPageState extends State<FavoriteSalonsPage> {
               ),
             );
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.favorite_border,
-                    size: 80,
-                    color: Colors.grey.shade400,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    tr(context, 'no_data_found'),
-                    style: TextStyle(fontSize: 18, color: Colors.grey.shade600),
-                  ),
-                ],
-              ),
-            );
+            return _buildEmptyState();
           }
 
           final salons = snapshot.data!;
