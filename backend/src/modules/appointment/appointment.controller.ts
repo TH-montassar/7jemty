@@ -82,6 +82,53 @@ export const getAvailability = async (req: AuthRequest, res: Response) => {
     }
 };
 
+export const getAvailableDatesController = async (req: AuthRequest, res: Response) => {
+    try {
+        const { salonId, barberId, serviceIds, startDate, endDate } = req.query;
+
+        if (!salonId || !startDate || !endDate) {
+            return res.status(400).json({ success: false, message: "salonId, startDate w endDate homa nécessaires" });
+        }
+
+        let userId: number | undefined;
+        const authHeader = req.headers.authorization;
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            const token = authHeader.split(' ')[1];
+            if (token) {
+                try {
+                    const decoded = jwt.verify(token, env.JWT_SECRET) as { userId: number; role: string };
+                    userId = decoded.userId;
+                } catch {
+                    // Ignore invalid tokens for availability checks
+                }
+            }
+        }
+
+        const parsedSalonId = parseInt(salonId as string);
+        const parsedBarberId = barberId ? parseInt(barberId as string) : undefined;
+        const parsedServiceIds = typeof serviceIds === 'string' && serviceIds.length > 0
+            ? serviceIds.split(',').map((id) => parseInt(id, 10)).filter((id) => !isNaN(id))
+            : [];
+
+        const { getAvailableDatesForRange } = await import('./appointment.service.js');
+        const availableDates = await getAvailableDatesForRange(
+            parsedSalonId,
+            startDate as string,
+            endDate as string,
+            parsedBarberId,
+            parsedServiceIds,
+            userId
+        );
+
+        res.status(200).json({
+            success: true,
+            data: availableDates
+        });
+    } catch (error: any) {
+        res.status(400).json({ success: false, message: error.message || "Famma mochkla fel available-dates" });
+    }
+};
+
 export const createAppointment = async (req: AuthRequest, res: Response) => {
     try {
         const parsedSchema = createAppointmentSchema.safeParse(req.body);

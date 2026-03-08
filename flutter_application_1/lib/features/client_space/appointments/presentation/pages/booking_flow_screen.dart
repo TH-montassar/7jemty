@@ -39,9 +39,9 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
   String? _selectedTime;
 
   // Date management
-  late List<DateTime> _dates;
-  late DateTime _startDate;
+  List<DateTime> _dates = [];
   late ScrollController _dateScrollController;
+  bool _isFetchingDates = true;
 
   @override
   void initState() {
@@ -50,11 +50,6 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
       if (mounted) setState(() {});
     });
 
-    _startDate = DateTime.now();
-    _dates = List.generate(
-      30,
-      (index) => _startDate.add(Duration(days: index)),
-    );
     _dateScrollController = ScrollController();
 
     _checkCurrentUser();
@@ -111,7 +106,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
         _isLoading = false;
       });
 
-      _fetchAvailability(); // Fetch initial availability for the current day
+      _fetchAvailableDates(); // Fetch available dates
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -125,7 +120,78 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
     }
   }
 
+  Future<void> _fetchAvailableDates() async {
+    setState(() => _isFetchingDates = true);
+
+    try {
+      final startDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
+      final endDate = DateFormat(
+        'yyyy-MM-dd',
+      ).format(DateTime.now().add(const Duration(days: 30)));
+
+      final availableDateStrings = await AppointmentService.getAvailableDates(
+        salonId: widget.salonId,
+        startDate: startDate,
+        endDate: endDate,
+        barberId: _selectedBarberId,
+        serviceIds: _selectedServiceIds,
+      );
+
+      final newDates = availableDateStrings
+          .map((d) => DateTime.parse(d))
+          .toList();
+
+      if (mounted) {
+        setState(() {
+          DateTime? previouslySelectedDate;
+          if (_dates.isNotEmpty &&
+              _selectedDateIndex >= 0 &&
+              _selectedDateIndex < _dates.length) {
+            previouslySelectedDate = _dates[_selectedDateIndex];
+          }
+
+          _dates = newDates;
+          _isFetchingDates = false;
+
+          if (_dates.isEmpty) {
+            _selectedDateIndex = -1;
+            _availableSlots = [];
+          } else {
+            int newIndex = 0;
+            if (previouslySelectedDate != null) {
+              final p = previouslySelectedDate;
+              final foundIndex = _dates.indexWhere(
+                (d) => d.year == p.year && d.month == p.month && d.day == p.day,
+              );
+              if (foundIndex != -1) newIndex = foundIndex;
+            }
+            _selectedDateIndex = newIndex;
+            _fetchAvailability();
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isFetchingDates = false;
+          _dates = [];
+          _availableSlots = [];
+        });
+      }
+    }
+  }
+
   Future<void> _fetchAvailability() async {
+    if (_dates.isEmpty ||
+        _selectedDateIndex < 0 ||
+        _selectedDateIndex >= _dates.length) {
+      setState(() {
+        _isCheckingAvailability = false;
+        _availableSlots = [];
+      });
+      return;
+    }
+
     if (_selectedServiceIds.isEmpty && _services.isNotEmpty) {
       // It's better to fetch availability without serviceIds strictly blocking,
       // since the backend only strictly needs salonId and date.
@@ -607,7 +673,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                               _selectedServiceIds.remove(svc['id']);
                             }
                           });
-                          _fetchAvailability(); // Re-fetch to apply duration limits
+                          _fetchAvailableDates(); // Re-fetch to apply duration limits
                         },
                       ),
                     ),
@@ -633,7 +699,28 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                       ),
                     ],
                   ),
-                  _buildDateSelection(),
+                  _isFetchingDates
+                      ? const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 20),
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              color: AppColors.primaryBlue,
+                            ),
+                          ),
+                        )
+                      : (_dates.isEmpty
+                            ? Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 20,
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    tr(context, 'no_slots_available'),
+                                    style: const TextStyle(color: Colors.grey),
+                                  ),
+                                ),
+                              )
+                            : _buildDateSelection()),
                   const SizedBox(height: 15),
 
                   // --- Time Slots Section ---
@@ -702,7 +789,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
           return GestureDetector(
             onTap: () {
               setState(() => _selectedBarberId = p['id']);
-              _fetchAvailability(); // Re-fetch availability for the specific barber
+              _fetchAvailableDates(); // Re-fetch availability for the specific barber
             },
             child: Container(
               margin: const EdgeInsets.only(right: 20),
@@ -876,11 +963,17 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
   }
 
   Future<void> _openCalendarPicker() async {
+    if (_dates.isEmpty) return;
     final pickedDate = await showDatePicker(
       context: context,
-      initialDate: _dates[_selectedDateIndex],
+      initialDate: _dates[_selectedDateIndex >= 0 ? _selectedDateIndex : 0],
       firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
+      lastDate: DateTime.now().add(const Duration(days: 30)),
+      selectableDayPredicate: (DateTime day) {
+        return _dates.any(
+          (d) => d.year == day.year && d.month == day.month && d.day == day.day,
+        );
+      },
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -911,14 +1004,6 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeInOut,
           );
-        } else {
-          _startDate = pickedDate;
-          _dates = List.generate(
-            30,
-            (index) => _startDate.add(Duration(days: index)),
-          );
-          _selectedDateIndex = 0;
-          _dateScrollController.jumpTo(0);
         }
       });
       _fetchAvailability();

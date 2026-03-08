@@ -11,78 +11,162 @@ class SalonInfoSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: Colors.white,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  salonData['name'] ?? 'Salon',
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textDark,
-                  ),
+          // Category Pill
+          if (salonData['speciality'] != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              margin: const EdgeInsets.only(bottom: 10),
+              decoration: BoxDecoration(
+                color: AppColors.primaryBlue,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                salonData['speciality'].toString().toUpperCase(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.1,
                 ),
               ),
+            ),
+
+          // Salon Name
+          Text(
+            salonData['name'] ?? 'Salon',
+            style: const TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w900,
+              color: AppColors.textDark,
+              height: 1.1,
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Rating, Reviews, Distance Row
+          Row(
+            children: [
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 5,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  color: Colors.amber,
+                  borderRadius: BorderRadius.circular(15),
                 ),
-                child: Text(
-                  tr(context, 'open_status'),
-                  style: TextStyle(
-                    color: Colors.green,
-                    fontWeight: FontWeight.bold,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.star, color: Colors.black, size: 14),
+                    const SizedBox(width: 4),
+                    Text(
+                      salonData['rating']?.toString() ?? '5.0',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                '${salonData['reviews']?.length ?? 1} avis',
+                style: const TextStyle(
+                  color: Colors.grey,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(width: 10),
+              const Text(
+                '•',
+                style: TextStyle(color: Colors.grey, fontSize: 14),
+              ),
+              const SizedBox(width: 10),
+              const Text(
+                '3.5 km', // Hardcoded distance as in screenshot
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          GestureDetector(
-            onTap: () {
-              // TODO: Ouvre GPS
-            },
-            child: Row(
-              children: [
-                Icon(Icons.location_on, color: AppColors.primaryBlue, size: 18),
-                SizedBox(width: 5),
-                Text(
-                  salonData['address'] ?? tr(context, 'address_ariana'),
-                  style: const TextStyle(
-                    color: Colors.grey,
-                    fontSize: 14,
-                    decoration: TextDecoration.underline,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 15),
+
+          const Divider(height: 40, color: Color(0xFFF5F5F5)),
+
+          // Address & Status
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(Icons.star, color: Colors.amber, size: 20),
-              SizedBox(width: 5),
-              Text(
-                salonData['rating']?.toString() ?? '0.0',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.location_on_outlined,
+                          color: AppColors.primaryBlue,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            salonData['address'] ??
+                                tr(context, 'address_ariana'),
+                            style: const TextStyle(
+                              color: AppColors.textDark,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.access_time,
+                          color: AppColors.primaryBlue,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          tr(context, 'open_until', args: ['8:00 PM']),
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(width: 5),
-              Text(
-                '(${salonData['reviews']?.length ?? 0} avis)',
-                style: const TextStyle(color: Colors.grey, fontSize: 14),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 7,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.green.withAlpha(26),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  tr(context, 'open_status').toUpperCase(),
+                  style: const TextStyle(
+                    color: Colors.green,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 11,
+                  ),
+                ),
               ),
             ],
           ),
