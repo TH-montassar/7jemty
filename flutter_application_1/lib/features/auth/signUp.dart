@@ -181,12 +181,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      backgroundColor: AppColors.bgColor,
+      backgroundColor: const Color(0xFFF5F7FA), // The cooler pro background
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textDark),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textDark),
           onPressed: () {
             Navigator.pushReplacement(
               context,
@@ -198,6 +198,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       body: SafeArea(
         child: SelectionArea(
           child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: Form(
@@ -205,7 +206,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const SizedBox(height: 60), // Increased to avoid overlap
+                    const SizedBox(height: 40), // Increased to avoid overlap
                     // Logo
                     Center(
                       child: Image.asset('assets/images/logo.png', height: 120),
@@ -217,16 +218,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       tr(context, 'sign_up_title'),
                       textAlign: TextAlign.center,
                       style: const TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 32,
+                        fontWeight: FontWeight.w800,
                         color: AppColors.textDark,
+                        letterSpacing: -0.5,
                       ),
                     ),
                     const SizedBox(height: 10),
                     Text(
                       tr(context, 'join_7jemty_enjoy_services'),
                       textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 14, color: Colors.grey),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        color: Colors.black54,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                     const SizedBox(height: 40),
 
@@ -234,7 +240,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     _buildTextField(
                       controller: _nameController, // ربطنا الـ Controller
                       hintText: tr(context, 'full_name'),
-                      icon: Icons.person_outline,
+                      icon: Icons.person_outline_rounded,
                       keyboardType: TextInputType.name,
                     ),
                     const SizedBox(height: 20),
@@ -243,7 +249,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     _buildTextField(
                       controller: _phoneController, // ربطنا الـ Controller
                       hintText: tr(context, 'phone_number_label'),
-                      icon: Icons.phone_android_outlined,
+                      icon: Icons.phone_android_rounded,
                       keyboardType: TextInputType.phone,
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
@@ -262,7 +268,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     _buildTextField(
                       controller: _passwordController, // ربطنا الـ Controller
                       hintText: tr(context, 'password_short'),
-                      icon: Icons.lock_outline,
+                      icon: Icons.lock_outline_rounded,
                       keyboardType: TextInputType.visiblePassword,
                       isPassword: true,
                       obscureText: _obscurePassword,
@@ -288,7 +294,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       controller:
                           _confirmPasswordController, // ربطنا الـ Controller
                       hintText: tr(context, 'confirm_password_hint'),
-                      icon: Icons.lock_outline,
+                      icon: Icons.lock_outline_rounded,
                       keyboardType: TextInputType.visiblePassword,
                       isPassword: true,
                       obscureText: _obscureConfirmPassword,
@@ -313,7 +319,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     Container(
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                           color: _isPatron
                               ? AppColors.primaryBlue
@@ -321,32 +327,35 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.grey.withAlpha(13),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
+                            color: Colors.black.withOpacity(0.04), // Soft pro shadow
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
                           ),
                         ],
                       ),
                       child: CheckboxListTile(
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         title: Text(
                           tr(context, 'i_am_salon_owner'),
                           style: const TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 15,
+                            color: AppColors.textDark,
                           ),
                         ),
                         subtitle: Text(
                           tr(context, 'check_this_to_add_salon'),
                           style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey,
+                            fontSize: 13,
+                            color: Colors.black54,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                         value: _isPatron,
                         activeColor: AppColors.primaryBlue,
                         checkColor: Colors.white,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4),
+                          borderRadius: BorderRadius.circular(6),
                         ),
                         onChanged: (bool? value) {
                           setState(() {
@@ -355,46 +364,57 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         },
                       ),
                     ),
-                    const SizedBox(height: 30),
+                    const SizedBox(height: 32),
 
                     // Bouton Inscription
-                    ElevatedButton(
-                      onPressed: _isLoading
-                          ? null
-                          : () {
-                              if (_formKey.currentState!.validate()) {
-                                _handleRegister(); // 👈 نعيطو للفانكشن هوني
-                              }
-                            },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primaryBlue,
-                        disabledBackgroundColor: Colors.grey.shade400,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: _isLoading ? 0 : 2,
+                    Container(
+                      decoration: BoxDecoration(
+                        boxShadow: _isLoading ? [] : [
+                          BoxShadow(
+                            color: AppColors.primaryBlue.withOpacity(0.2),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
                       ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              height: 24,
-                              width: 24,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
+                      child: ElevatedButton(
+                        onPressed: _isLoading
+                            ? null
+                            : () {
+                                if (_formKey.currentState!.validate()) {
+                                  _handleRegister(); // 👈 نعيطو للفانكشن هوني
+                                }
+                              },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primaryBlue,
+                          disabledBackgroundColor: Colors.grey.shade400,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 18),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 3,
+                                ),
+                              )
+                            : Text(
+                                tr(context, 'create_account'),
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 1.2,
+                                ),
                               ),
-                            )
-                          : Text(
-                              tr(context, 'create_account'),
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1.2,
-                              ),
-                            ),
+                      ),
                     ),
-                    const SizedBox(height: 30),
+                    const SizedBox(height: 32),
 
                     // Lien vers Connexion
                     Row(
@@ -403,8 +423,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         Text(
                           "${tr(context, 'already_have_account')} ",
                           style: const TextStyle(
-                            color: Colors.grey,
-                            fontSize: 14,
+                            color: Colors.black54,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                         GestureDetector(
@@ -418,10 +439,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           },
                           child: Text(
                             tr(context, 'connect_action'),
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: AppColors.primaryBlue,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 15,
                             ),
                           ),
                         ),
@@ -451,12 +472,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withAlpha(13),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(0.04), // Soft pro shadow
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -464,27 +485,28 @@ class _SignUpScreenState extends State<SignUpScreen> {
         controller: controller, // 👈 ربطناه هوني
         obscureText: obscureText,
         keyboardType: keyboardType,
-        style: const TextStyle(fontWeight: FontWeight.w500),
+        style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.textDark),
         decoration: InputDecoration(
           hintText: hintText,
-          hintStyle: const TextStyle(color: Colors.grey),
-          prefixIcon: Icon(icon, color: AppColors.primaryBlue),
+          hintStyle: const TextStyle(color: Colors.black38, fontWeight: FontWeight.w500),
+          prefixIcon: Icon(icon, color: AppColors.primaryBlue, size: 22),
           suffixIcon: isPassword
               ? IconButton(
                   icon: Icon(
-                    obscureText ? Icons.visibility_off : Icons.visibility,
-                    color: Colors.grey,
+                    obscureText ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                    color: Colors.black38,
+                    size: 22,
                   ),
                   onPressed: onTogglePassword,
                 )
               : null,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(20),
             borderSide: BorderSide.none,
           ),
           filled: true,
           fillColor: Colors.transparent,
-          contentPadding: const EdgeInsets.symmetric(vertical: 20),
+          contentPadding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
         ),
         validator:
             validator ??

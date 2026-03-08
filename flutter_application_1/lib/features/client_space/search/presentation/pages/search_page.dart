@@ -108,7 +108,7 @@ class _SearchPageState extends State<SearchPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: const Color(0xFFF5F7FA),
       body: SafeArea(
         child: Column(
           children: [
@@ -128,9 +128,9 @@ class _SearchPageState extends State<SearchPage> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -138,7 +138,7 @@ class _SearchPageState extends State<SearchPage> {
         children: [
           IconButton(
             icon: const Icon(
-              Icons.arrow_back_ios_new,
+              Icons.arrow_back_ios_new_rounded,
               color: AppColors.textDark,
               size: 20,
             ),
@@ -149,16 +149,16 @@ class _SearchPageState extends State<SearchPage> {
           const SizedBox(width: 16),
           Expanded(
             child: Container(
-              height: 48,
+              height: 50,
               decoration: BoxDecoration(
                 color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.shade200),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: Colors.transparent),
               ),
               child: Row(
                 children: [
-                  const SizedBox(width: 12),
-                  Icon(Icons.search, color: Colors.grey.shade500, size: 22),
+                  const SizedBox(width: 16),
+                  Icon(Icons.search_rounded, color: Colors.grey.shade500, size: 22),
                   const SizedBox(width: 8),
                   Expanded(
                     child: TextField(
@@ -185,7 +185,7 @@ class _SearchPageState extends State<SearchPage> {
                   if (_searchController.text.isNotEmpty)
                     IconButton(
                       icon: const Icon(
-                        Icons.close,
+                        Icons.close_rounded,
                         color: Colors.grey,
                         size: 20,
                       ),
@@ -214,7 +214,6 @@ class _SearchPageState extends State<SearchPage> {
       height: 54,
       decoration: const BoxDecoration(
         color: Colors.white,
-        border: Border(bottom: BorderSide(color: Color(0xFFEEEEEE))),
       ),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
@@ -237,7 +236,7 @@ class _SearchPageState extends State<SearchPage> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
                 color: isSelected ? AppColors.textDark : Colors.white,
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(24),
                 border: Border.all(
                   color: isSelected ? AppColors.textDark : Colors.grey.shade300,
                   width: 1,
@@ -266,15 +265,15 @@ class _SearchPageState extends State<SearchPage> {
                     style: TextStyle(
                       color: isSelected ? Colors.white : AppColors.textDark,
                       fontWeight: isSelected
-                          ? FontWeight.w600
-                          : FontWeight.w500,
+                          ? FontWeight.w700
+                          : FontWeight.w600,
                       fontSize: 13,
                     ),
                   ),
                   if (filter != 'All' && filter != 'Top Rated') ...[
                     const SizedBox(width: 4),
                     Icon(
-                      Icons.keyboard_arrow_down,
+                      Icons.keyboard_arrow_down_rounded,
                       size: 16,
                       color: isSelected ? Colors.white : AppColors.textDark,
                     ),
@@ -375,162 +374,167 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   Widget _buildResultCard(dynamic salon) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) =>
-                SalonDashboardScreen(isPatron: false, salonId: salon['id']),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.transparent),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 25,
+            offset: const Offset(0, 10),
           ),
-        );
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.grey.shade100),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 15,
-              offset: const Offset(0, 5),
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Image.network(
-                  salon['image'] ?? 'https://via.placeholder.com/150',
-                  width: 90,
-                  height: 90,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      width: 90,
-                      height: 90,
-                      color: Colors.grey.shade100,
-                      child: const Icon(
-                        Icons.storefront_rounded,
-                        color: Colors.grey,
-                        size: 30,
-                      ),
-                    );
-                  },
-                ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(24),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    SalonDashboardScreen(isPatron: false, salonId: salon['id']),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            salon['name'] ?? tr(context, 'salon_name_default'),
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 17,
-                              color: AppColors.textDark,
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Image.network(
+                    salon['image'] ?? 'https://via.placeholder.com/150',
+                    width: 90,
+                    height: 90,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        width: 90,
+                        height: 90,
+                        color: Colors.grey.shade100,
+                        child: const Icon(
+                          Icons.storefront_rounded,
+                          color: Colors.grey,
+                          size: 30,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              salon['name'] ?? tr(context, 'salon_name_default'),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 18,
+                                color: AppColors.textDark,
+                                letterSpacing: -0.3,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.amber.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: const Row(
-                            children: [
-                              Icon(
-                                Icons.star_rounded,
-                                color: Colors.amber,
-                                size: 14,
-                              ),
-                              SizedBox(width: 3),
-                              Text(
-                                "4.8",
-                                style: TextStyle(
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.amber.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Row(
+                              children: [
+                                Icon(
+                                  Icons.star_rounded,
                                   color: Colors.amber,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
+                                  size: 14,
                                 ),
-                              ),
-                            ],
+                                SizedBox(width: 3),
+                                Text(
+                                  "4.8",
+                                  style: TextStyle(
+                                    color: Colors.amber,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.location_on,
-                          size: 14,
-                          color: Colors.grey.shade400,
-                        ),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            salon['address'] ??
-                                tr(context, 'address_unavailable'),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.location_on_rounded,
+                            size: 14,
+                            color: Colors.grey.shade400,
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              salon['address'] ??
+                                  tr(context, 'address_unavailable'),
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 13,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Divider(color: Colors.grey.shade100, height: 1),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Text(
+                            "Starting from ",
                             style: TextStyle(
-                              color: Colors.grey.shade600,
+                              color: Colors.grey.shade500,
+                              fontSize: 12,
+                            ),
+                          ),
+                          const Text(
+                            "20 TND",
+                            style: TextStyle(
+                              color: AppColors.primaryBlue,
+                              fontWeight: FontWeight.bold,
                               fontSize: 13,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Divider(color: Colors.grey.shade100, height: 1),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Text(
-                          "Starting from ",
-                          style: TextStyle(
-                            color: Colors.grey.shade500,
-                            fontSize: 12,
-                          ),
-                        ),
-                        const Text(
-                          "20 TND",
-                          style: TextStyle(
+                          const Spacer(),
+                          const Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            size: 14,
                             color: AppColors.primaryBlue,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
                           ),
-                        ),
-                        const Spacer(),
-                        const Icon(
-                          Icons.arrow_forward_rounded,
-                          size: 18,
-                          color: AppColors.primaryBlue,
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
