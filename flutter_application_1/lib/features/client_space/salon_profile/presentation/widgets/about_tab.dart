@@ -1,12 +1,11 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart' as gmaps;
+import 'package:flutter_map/flutter_map.dart';
 import 'package:hjamty/core/constants/app_colors.dart';
 import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:http/http.dart' as http;
+import 'package:latlong2/latlong.dart' as ll;
 import 'package:url_launcher/url_launcher.dart';
 
 class AboutTab extends StatefulWidget {
@@ -22,38 +21,12 @@ class _AboutTabState extends State<AboutTab> {
   double? _lat;
   double? _lng;
   bool _isLoadingMap = true;
-  gmaps.GoogleMapController? _mapController;
+  final MapController _mapController = MapController();
 
   @override
   void initState() {
     super.initState();
     _initializeCoordinates();
-  }
-
-  @override
-  void dispose() {
-    _mapController?.dispose();
-    super.dispose();
-  }
-
-  void _setCoordinates(double lat, double lng) {
-    if (!mounted) return;
-
-    setState(() {
-      _lat = lat;
-      _lng = lng;
-      _isLoadingMap = false;
-    });
-
-    _moveCameraIfReady();
-  }
-
-  void _moveCameraIfReady() {
-    if (_mapController == null || _lat == null || _lng == null) return;
-
-    _mapController!.animateCamera(
-      gmaps.CameraUpdate.newLatLngZoom(gmaps.LatLng(_lat!, _lng!), 16.5),
-    );
   }
 
   void _initializeCoordinates() {
@@ -70,7 +43,11 @@ class _AboutTabState extends State<AboutTab> {
     }
 
     if (parsedLat != null && parsedLng != null) {
-      _setCoordinates(parsedLat, parsedLng);
+      setState(() {
+        _lat = parsedLat;
+        _lng = parsedLng;
+        _isLoadingMap = false;
+      });
     } else if (googleMapsUrl != null && googleMapsUrl.isNotEmpty) {
       if (googleMapsUrl.contains('maps.app.goo.gl') ||
           googleMapsUrl.contains('goo.gl/maps')) {
@@ -78,7 +55,11 @@ class _AboutTabState extends State<AboutTab> {
       } else {
         final coords = _extractCoordsFromUrl(googleMapsUrl);
         if (coords != null) {
-          _setCoordinates(coords.latitude, coords.longitude);
+          setState(() {
+            _lat = coords.latitude;
+            _lng = coords.longitude;
+            _isLoadingMap = false;
+          });
         } else {
           _geocodeAddress();
         }
@@ -89,39 +70,40 @@ class _AboutTabState extends State<AboutTab> {
   }
 
   Future<void> _resolveShortenedUrl(String shortUrl) async {
-    final client = http.Client();
     try {
       final request = http.Request('GET', Uri.parse(shortUrl))
         ..followRedirects = true;
-      final response = await client.send(request);
+      final response = await http.Client().send(request);
       final finalUrl =
           response.headers['location'] ??
           response.request?.url.toString() ??
           shortUrl;
 
       final coords = _extractCoordsFromUrl(finalUrl);
-      if (coords != null) {
-        _setCoordinates(coords.latitude, coords.longitude);
+      if (coords != null && mounted) {
+        setState(() {
+          _lat = coords.latitude;
+          _lng = coords.longitude;
+          _isLoadingMap = false;
+        });
+        _mapController.move(coords, 16.5);
         return;
       }
     } catch (e) {
       debugPrint('Error resolving shortened URL: $e');
-    } finally {
-      client.close();
     }
-
     _geocodeAddress();
   }
 
-  gmaps.LatLng? _extractCoordsFromUrl(String url) {
+  ll.LatLng? _extractCoordsFromUrl(String url) {
     try {
       final decodedUrl = Uri.decodeComponent(url);
 
-      // Pattern 5: !3dlat!4dlng (Google Place/Business data - most accurate)
+      // Pattern 5: !3dlat!4dlng (Google Place/Business data - MOST ACCURATE)
       final regExp5 = RegExp(r'!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)');
       final match5 = regExp5.firstMatch(decodedUrl);
       if (match5 != null) {
-        return gmaps.LatLng(
+        return ll.LatLng(
           double.parse(match5.group(1)!),
           double.parse(match5.group(2)!),
         );
@@ -131,7 +113,7 @@ class _AboutTabState extends State<AboutTab> {
       final regExp1 = RegExp(r'@(-?\d+\.\d+),(-?\d+\.\d+)');
       final match1 = regExp1.firstMatch(decodedUrl);
       if (match1 != null) {
-        return gmaps.LatLng(
+        return ll.LatLng(
           double.parse(match1.group(1)!),
           double.parse(match1.group(2)!),
         );
@@ -141,7 +123,7 @@ class _AboutTabState extends State<AboutTab> {
       final regExp2 = RegExp(r'[?&](query|q)=(-?\d+\.\d+),\s*(-?\d+\.\d+)');
       final match2 = regExp2.firstMatch(decodedUrl);
       if (match2 != null) {
-        return gmaps.LatLng(
+        return ll.LatLng(
           double.parse(match2.group(2)!),
           double.parse(match2.group(3)!),
         );
@@ -151,18 +133,18 @@ class _AboutTabState extends State<AboutTab> {
       final regExp3 = RegExp(r'/maps/search/(-?\d+\.\d+),\s*(-?\d+\.\d+)');
       final match3 = regExp3.firstMatch(decodedUrl);
       if (match3 != null) {
-        return gmaps.LatLng(
+        return ll.LatLng(
           double.parse(match3.group(1)!),
           double.parse(match3.group(2)!),
         );
       }
 
-      // Pattern 4: any lat,lng in the URL (last resort)
+      // Pattern 4: any lat,lng in the URL (Last resort)
       final regExp4 = RegExp(r'(-?\d+\.\d+),\s*(-?\d+\.\d+)');
       final matches = regExp4.allMatches(decodedUrl);
       if (matches.isNotEmpty) {
         final lastMatch = matches.last;
-        return gmaps.LatLng(
+        return ll.LatLng(
           double.parse(lastMatch.group(1)!),
           double.parse(lastMatch.group(2)!),
         );
@@ -170,13 +152,11 @@ class _AboutTabState extends State<AboutTab> {
     } catch (e) {
       debugPrint('Error extracting coords from URL: $e');
     }
-
     return null;
   }
 
   Future<void> _geocodeAddress() async {
     final String address = widget.salonData['address'] ?? 'Tunis, Tunisia';
-
     try {
       final response = await http.get(
         Uri.parse(
@@ -190,7 +170,15 @@ class _AboutTabState extends State<AboutTab> {
         if (data.isNotEmpty) {
           final double newLat = double.parse(data[0]['lat']);
           final double newLng = double.parse(data[0]['lon']);
-          _setCoordinates(newLat, newLng);
+          if (mounted) {
+            setState(() {
+              _lat = newLat;
+              _lng = newLng;
+              _isLoadingMap = false;
+            });
+            // Move map to new location
+            _mapController.move(ll.LatLng(newLat, newLng), 16.5);
+          }
           return;
         }
       }
@@ -199,7 +187,13 @@ class _AboutTabState extends State<AboutTab> {
     }
 
     // Fallback to default if geocoding fails
-    _setCoordinates(36.85, 9.19); // Beja
+    if (mounted) {
+      setState(() {
+        _lat = 36.85; // Default Beja
+        _lng = 9.19;
+        _isLoadingMap = false;
+      });
+    }
   }
 
   Future<void> _makePhoneCall(String phoneNumber) async {
@@ -220,10 +214,10 @@ class _AboutTabState extends State<AboutTab> {
       uri = Uri.parse(googleMapsUrl);
     } else if (latVal != null && lngVal != null) {
       uri = Uri.parse(
-        'https://www.google.com/maps/search/?api=1&query=$latVal,$lngVal',
+        "https://www.google.com/maps/search/?api=1&query=$latVal,$lngVal",
       );
     } else {
-      uri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$query');
+      uri = Uri.parse("https://www.google.com/maps/search/?api=1&query=$query");
     }
 
     if (await canLaunchUrl(uri)) {
@@ -273,27 +267,7 @@ class _AboutTabState extends State<AboutTab> {
         ),
         const SizedBox(height: 30),
 
-        // 2. About section
-        Text(
-          tr(context, 'about_title'),
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: AppColors.primaryBlue,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          description,
-          style: TextStyle(
-            fontSize: 15,
-            color: Colors.grey.shade600,
-            height: 1.5,
-          ),
-        ),
-        const SizedBox(height: 30),
-
-        // 3. Location section
+        // 2. Location section
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -331,31 +305,38 @@ class _AboutTabState extends State<AboutTab> {
             child: Stack(
               children: [
                 if (_lat != null && _lng != null)
-                  gmaps.GoogleMap(
-                    initialCameraPosition: gmaps.CameraPosition(
-                      target: gmaps.LatLng(_lat!, _lng!),
-                      zoom: 16.5,
+                  FlutterMap(
+                    mapController: _mapController,
+                    options: MapOptions(
+                      initialCenter: ll.LatLng(_lat!, _lng!),
+                      initialZoom: 16.5,
+                      interactionOptions: const InteractionOptions(
+                        flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+                      ),
                     ),
-                    onMapCreated: (controller) {
-                      _mapController = controller;
-                      _moveCameraIfReady();
-                    },
-                    mapType: gmaps.MapType.normal,
-                    myLocationButtonEnabled: false,
-                    zoomControlsEnabled: false,
-                    rotateGesturesEnabled: false,
-                    mapToolbarEnabled: false,
-                    markers: {
-                      gmaps.Marker(
-                        markerId: const gmaps.MarkerId('salon_location'),
-                        position: gmaps.LatLng(_lat!, _lng!),
+                    children: [
+                      TileLayer(
+                        urlTemplate:
+                            'https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',
+                        subdomains: const ['mt0', 'mt1', 'mt2', 'mt3'],
+                        userAgentPackageName: 'com.hjamty.app',
                       ),
-                    },
-                    gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
-                      Factory<OneSequenceGestureRecognizer>(
-                        () => EagerGestureRecognizer(),
+                      MarkerLayer(
+                        markers: [
+                          Marker(
+                            point: ll.LatLng(_lat!, _lng!),
+                            width: 40,
+                            height: 40,
+                            alignment: Alignment.bottomCenter,
+                            child: const Icon(
+                              Icons.location_on,
+                              color: Colors.red,
+                              size: 40,
+                            ),
+                          ),
+                        ],
                       ),
-                    },
+                    ],
                   ),
                 if (_isLoadingMap)
                   const Center(
@@ -409,6 +390,26 @@ class _AboutTabState extends State<AboutTab> {
                 ),
               ],
             ),
+          ),
+        ),
+        const SizedBox(height: 30),
+
+        // 3. À Propos Section
+        Text(
+          tr(context, 'about_title'),
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: AppColors.primaryBlue,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          description,
+          style: TextStyle(
+            fontSize: 15,
+            color: Colors.grey.shade600,
+            height: 1.5,
           ),
         ),
         const SizedBox(height: 100), // Padding for bottom FAB

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart'; // 👈 Bech njibou l'Token
 
@@ -379,7 +380,12 @@ class SalonService {
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200 && data['success'] == true) {
-        return data['data'];
+        final salonData = data['data'] as Map<String, dynamic>;
+        final reviews = salonData['reviews'];
+        debugPrint(
+          '[SalonService.getSalonById] id=$id, reviews type: ${reviews.runtimeType}, count: ${reviews is List ? reviews.length : "N/A"}',
+        );
+        return salonData;
       } else {
         throw Exception(
           data['message'] ?? 'Erreur lors de la récupération du salon',

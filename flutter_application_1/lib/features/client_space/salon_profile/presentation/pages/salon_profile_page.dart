@@ -168,6 +168,9 @@ class _SalonProfilePageState extends State<SalonProfilePage> {
           }
 
           final salonData = snapshot.data!;
+          debugPrint(
+            '[SalonProfilePage] Loaded: ${salonData['name']}, reviews: ${(salonData['reviews'] as List?)?.length ?? 'null'}',
+          );
 
           return DefaultTabController(
             length: 5,
@@ -316,7 +319,7 @@ class _SalonProfilePageState extends State<SalonProfilePage> {
                   ServicesTab(salonData: salonData),
                   ProductsTab(),
                   PortfolioTab(),
-                  ReviewsTab(),
+                  ReviewsTab(salonData: salonData),
                 ],
               ),
             ),
