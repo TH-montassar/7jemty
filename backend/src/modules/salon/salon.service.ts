@@ -1,7 +1,20 @@
 import { prisma } from '../../lib/db.js';
 import bcrypt from 'bcryptjs';
-import { Role } from '../../../generated/prisma/index.js';
+import { AppointmentStatus, Role } from '../../../generated/prisma/index.js';
 import { sendNotification } from '../notifications/notifications.service.js';
+
+const getSalonIdByPatronId = async (patronId: number): Promise<number> => {
+    const salon = await prisma.salon.findFirst({
+        where: { patronId },
+        select: { id: true }
+    });
+
+    if (!salon) {
+        throw new Error("Lazem ykoun 3andek salon bech tmodifi les specialistes");
+    }
+
+    return salon.id;
+};
 
 export const createSalon = async (patronId: number, data: any) => {
     // 1. Nthabtou ken l'Patron hetha 3andou salon deja (bech ma yasna3ch 2 salons)
@@ -144,6 +157,7 @@ export const getSalonByPatronId = async (patronId: number) => {
         userId: emp.id,
         salonId: salon.id,
         name: emp.fullName,
+        phoneNumber: emp.phoneNumber,
         role: emp.profile?.specialityTitle || 'Spécialiste',
         bio: emp.profile?.bio || null,
         description: emp.profile?.description || null,
@@ -208,12 +222,138 @@ export const createEmployeeAccount = async (patronId: number, data: any) => {
         userId: newUser.id,
         salonId: salonIdToUse,
         name: newUser.fullName,
+        phoneNumber: newUser.phoneNumber,
         role: data.role || 'Spécialiste',
         bio: data.bio || null,
         description: data.description || null,
         imageUrl: data.imageUrl || null,
         createdAt: newUser.createdAt
     };
+};
+
+export const updateEmployeeAccount = async (patronId: number, employeeId: number, data: any) => {
+    const salonId = await getSalonIdByPatronId(patronId);
+
+    const employee = await prisma.user.findFirst({
+        where: {
+            id: employeeId,
+            role: Role.EMPLOYEE,
+            workplaceSalonId: salonId
+        },
+        include: { profile: true }
+    });
+
+    if (!employee) {
+        throw new Error("Specialiste introuvable ou mouch mta3 salonek");
+    }
+
+    if (data.phoneNumber !== undefined && data.phoneNumber !== employee.phoneNumber) {
+        const existingUser = await prisma.user.findUnique({
+            where: { phoneNumber: data.phoneNumber }
+        });
+
+        if (existingUser && existingUser.id !== employeeId) {
+            throw new Error("Nomrou hetha mawjoud deja fi system");
+        }
+    }
+
+    const shouldUpdateProfile = data.role !== undefined ||
+        data.bio !== undefined ||
+        data.description !== undefined ||
+        data.imageUrl !== undefined;
+
+    let newPasswordHash: string | undefined;
+    if (typeof data.password === 'string' && data.password.trim() !== '') {
+        const salt = await bcrypt.genSalt(10);
+        newPasswordHash = await bcrypt.hash(data.password, salt);
+    }
+
+    const updatedEmployee = await prisma.user.update({
+        where: { id: employeeId },
+        data: {
+            ...(data.name !== undefined && { fullName: data.name }),
+            ...(data.phoneNumber !== undefined && { phoneNumber: data.phoneNumber }),
+            ...(newPasswordHash !== undefined && { passwordHash: newPasswordHash }),
+            ...(shouldUpdateProfile && {
+                profile: {
+                    upsert: {
+                        update: {
+                            ...(data.role !== undefined && { specialityTitle: data.role }),
+                            ...(data.bio !== undefined && { bio: data.bio }),
+                            ...(data.description !== undefined && { description: data.description }),
+                            ...(data.imageUrl !== undefined && { avatarUrl: data.imageUrl })
+                        },
+                        create: {
+                            specialityTitle: data.role ?? 'Spécialiste',
+                            bio: data.bio ?? null,
+                            description: data.description ?? null,
+                            avatarUrl: data.imageUrl ?? null
+                        }
+                    }
+                }
+            })
+        },
+        include: { profile: true }
+    });
+
+    return {
+        id: updatedEmployee.id,
+        userId: updatedEmployee.id,
+        salonId,
+        name: updatedEmployee.fullName,
+        phoneNumber: updatedEmployee.phoneNumber,
+        role: updatedEmployee.profile?.specialityTitle || 'Spécialiste',
+        bio: updatedEmployee.profile?.bio || null,
+        description: updatedEmployee.profile?.description || null,
+        imageUrl: updatedEmployee.profile?.avatarUrl || null,
+        createdAt: updatedEmployee.createdAt
+    };
+};
+
+export const removeEmployeeFromSalon = async (patronId: number, employeeId: number) => {
+    const salonId = await getSalonIdByPatronId(patronId);
+
+    const employee = await prisma.user.findFirst({
+        where: {
+            id: employeeId,
+            role: Role.EMPLOYEE,
+            workplaceSalonId: salonId
+        },
+        select: { id: true }
+    });
+
+    if (!employee) {
+        throw new Error("Specialiste introuvable ou mouch mta3 salonek");
+    }
+
+    const activeAppointmentsCount = await prisma.appointment.count({
+        where: {
+            salonId,
+            barberId: employeeId,
+            status: {
+                in: [
+                    AppointmentStatus.PENDING,
+                    AppointmentStatus.CONFIRMED,
+                    AppointmentStatus.IN_PROGRESS,
+                    AppointmentStatus.ARRIVED
+                ]
+            }
+        }
+    });
+
+    if (activeAppointmentsCount > 0) {
+        throw new Error("Specialiste 3andou rendez-vous actifs. Badelhom 9bal suppression.");
+    }
+
+    await prisma.user.update({
+        where: { id: employeeId },
+        data: {
+            workplaceSalonId: null,
+            role: Role.CLIENT
+        }
+    });
+
+    return { id: employeeId, removed: true };
 };
 
 export const getAllSalons = async (lat?: number, lng?: number, includeUnapproved: boolean = false) => {
@@ -304,6 +444,59 @@ export const getServices = async (patronId: number) => {
     return services;
 };
 
+export const updateService = async (patronId: number, serviceId: number, data: any) => {
+    const service = await prisma.service.findFirst({
+        where: {
+            id: serviceId,
+            salon: { patronId }
+        }
+    });
+
+    if (!service) {
+        throw new Error("Service introuvable ou mouch mta3 salonek");
+    }
+
+    const updatedService = await prisma.service.update({
+        where: { id: serviceId },
+        data: {
+            ...(data.name !== undefined && { name: data.name }),
+            ...(data.price !== undefined && { price: data.price }),
+            ...(data.durationMinutes !== undefined && { durationMinutes: data.durationMinutes }),
+            ...(data.description !== undefined && { description: data.description }),
+            ...(data.imageUrl !== undefined && { imageUrl: data.imageUrl })
+        }
+    });
+
+    return updatedService;
+};
+
+export const deleteService = async (patronId: number, serviceId: number) => {
+    const service = await prisma.service.findFirst({
+        where: {
+            id: serviceId,
+            salon: { patronId }
+        }
+    });
+
+    if (!service) {
+        throw new Error("Service introuvable ou mouch mta3 salonek");
+    }
+
+    const linkedAppointmentsCount = await prisma.appointmentService.count({
+        where: { serviceId }
+    });
+
+    if (linkedAppointmentsCount > 0) {
+        throw new Error("Service mawjoud fi rendez-vous. Ma ynajemch yitfaskh.");
+    }
+
+    await prisma.service.delete({
+        where: { id: serviceId }
+    });
+
+    return { id: serviceId, deleted: true };
+};
+
 export const getSalonById = async (id: number) => {
     const salon = await prisma.salon.findUnique({
         where: { id },
@@ -340,6 +533,7 @@ export const getSalonById = async (id: number) => {
         userId: emp.id,
         salonId: salon.id,
         name: emp.fullName,
+        phoneNumber: emp.phoneNumber,
         role: emp.profile?.specialityTitle || 'Spécialiste',
         bio: emp.profile?.bio || null,
         description: emp.profile?.description || null,
