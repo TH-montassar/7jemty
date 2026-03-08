@@ -15,6 +15,7 @@ import 'package:hjamty/features/client_space/salon_profile/presentation/widgets/
 import 'package:toastification/toastification.dart';
 import '../../features/client_space/salon_profile/presentation/widgets/salon_info_section.dart';
 import '../../features/client_space/salon_profile/presentation/widgets/about_tab.dart';
+import 'package:hjamty/features/client_space/salon_profile/presentation/widgets/reviews_tab.dart';
 import 'package:hjamty/core/widgets/notification_bell.dart';
 import 'package:hjamty/features/auth/data/auth_service.dart';
 import 'package:hjamty/features/auth/signIn.dart';
@@ -1279,12 +1280,16 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
   }
 
   Widget _buildAvisTab() {
-    return Center(
-      child: Text(
-        tr(context, 'no_reviews_yet'),
-        style: const TextStyle(color: Colors.grey),
-      ),
-    );
+    if (_salonData == null) {
+      return Center(
+        child: Text(
+          tr(context, 'no_reviews_yet'),
+          style: const TextStyle(color: Colors.grey),
+        ),
+      );
+    }
+
+    return ReviewsTab(salonData: _salonData!);
   }
 
   Widget _buildWorkingTimesTab() {
@@ -1511,3 +1516,4 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
     );
   }
 }
+

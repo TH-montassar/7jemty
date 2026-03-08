@@ -30,7 +30,8 @@ class SalonModel {
       image:
           json['image'] ??
           'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=500&q=80',
-      rating: json['rating'] ?? '4.5',
+      rating: json['rating'] ?? '0.0',
     );
   }
 }
+

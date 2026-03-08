@@ -14,8 +14,11 @@ class ReviewsTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final List reviews = salonData['reviews'] ?? [];
-    final String avgRating = salonData['rating']?.toString() ?? "4.5";
     final int reviewsCount = reviews.length;
+    final String avgRating = reviewsCount == 0
+        ? "0.0"
+        : (salonData['rating']?.toString() ?? "0.0");
+    final double avgRatingValue = double.tryParse(avgRating) ?? 0.0;
 
     // ignore: avoid_print
     debugPrint('[ReviewsTab] salonData keys: ${salonData.keys.toList()}');
@@ -49,7 +52,7 @@ class ReviewsTab extends StatelessWidget {
                     5,
                     (index) => Icon(
                       Icons.star,
-                      color: index < double.parse(avgRating).floor()
+                      color: index < avgRatingValue.floor()
                           ? Colors.amber
                           : Colors.grey.shade300,
                       size: 20,
