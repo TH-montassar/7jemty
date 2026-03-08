@@ -77,60 +77,71 @@ class _ProfilePageState extends State<ProfilePage> {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.bgColor,
+      backgroundColor: const Color(0xFFF5F7FA), // A slightly cooler, "pro" grey background
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFFF5F7FA), // Match scaffold background
+        surfaceTintColor: Colors.transparent,
         elevation: 0,
-        centerTitle: true,
+        centerTitle: false, // Left-align for a more modern, dashboard feel
+        titleSpacing: 24,
         automaticallyImplyLeading: false,
         title: Text(
           tr(context, 'my_profile'),
           style: const TextStyle(
             color: AppColors.textDark,
-            fontWeight: FontWeight.bold,
+            fontSize: 28,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.5,
           ),
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 180),
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(20, 10, 20, 120),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // 1. Header: Photo, Nom, Email
             ProfileHeader(userData: _userData, onUpdate: _checkLoginStatus),
-            const SizedBox(height: 30),
+            const SizedBox(height: 32),
 
             // 3. Mes Activités (Commandes & Favoris)
             if (_userData != null && _userData!['role'] == 'CLIENT') ...[
-              Text(
-                tr(context, 'my_activities'),
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textDark,
+              Padding(
+                padding: const EdgeInsets.only(left: 4, bottom: 12),
+                child: Text(
+                  tr(context, 'my_activities'),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black54,
+                    letterSpacing: 0.5,
+                  ),
                 ),
               ),
-              const SizedBox(height: 15),
               const ActivityMenu(),
-              const SizedBox(height: 30),
+              const SizedBox(height: 32),
             ],
 
             // 4. Paramètres
-            Text(
-              tr(context, 'settings'),
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textDark,
+            Padding(
+              padding: const EdgeInsets.only(left: 4, bottom: 12),
+              child: Text(
+                tr(context, 'settings'),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black54,
+                  letterSpacing: 0.5,
+                ),
               ),
             ),
-            const SizedBox(height: 15),
             const SettingsMenu(),
-            const SizedBox(height: 30),
+            const SizedBox(height: 32),
 
             // 5. Déconnexion
             const LogoutButton(),
-            const SizedBox(height: 80),
+            const SizedBox(height: 40),
           ],
         ),
       ),
