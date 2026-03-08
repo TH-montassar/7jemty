@@ -23,9 +23,10 @@ class _QuickCategoriesState extends State<QuickCategories> {
     ];
 
     return SizedBox(
-      height: 45,
+      height: 50,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
         itemCount: _categories.length,
         itemBuilder: (context, index) {
           final isSelected = _selectedIndex == index;
@@ -35,42 +36,46 @@ class _QuickCategoriesState extends State<QuickCategories> {
               // TODO: نزيدو اللوجيك باش نفيلتريو الصالونات اللوطة
             },
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              margin: const EdgeInsets.only(right: 12),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeInOut,
+              margin: const EdgeInsets.only(right: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 24),
               decoration: BoxDecoration(
                 color: isSelected ? AppColors.primaryBlue : Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isSelected
-                      ? AppColors.primaryBlue
-                      : Colors.grey.shade300,
-                ),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: Colors.transparent),
                 boxShadow: isSelected
                     ? [
                         BoxShadow(
                           color: AppColors.primaryBlue.withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 3),
+                          blurRadius: 15,
+                          offset: const Offset(0, 6),
                         ),
                       ]
-                    : [],
+                    : [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.04),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
               ),
               child: Row(
                 children: [
                   Icon(
                     _categories[index]['icon'],
-                    color: isSelected ? Colors.white : AppColors.textDark,
-                    size: 18,
+                    color: isSelected ? Colors.white : Colors.black87,
+                    size: 20,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 10),
                   Text(
                     _categories[index]['title'],
                     style: TextStyle(
-                      color: isSelected ? Colors.white : AppColors.textDark,
+                      color: isSelected ? Colors.white : Colors.black87,
+                      fontSize: 15,
                       fontWeight: isSelected
-                          ? FontWeight.bold
-                          : FontWeight.w500,
+                          ? FontWeight.w700
+                          : FontWeight.w600,
                     ),
                   ),
                 ],

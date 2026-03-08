@@ -155,14 +155,15 @@ class _ClientHomePageState extends State<ClientHomePage> {
             Text(
               title,
               style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
                 color: AppColors.textDark,
+                letterSpacing: -0.5,
               ),
             ),
             if (icon != null) ...[
-              const SizedBox(width: 5),
-              Icon(icon, color: Colors.grey, size: 20),
+              const SizedBox(width: 6),
+              Icon(icon, color: Colors.black45, size: 22),
             ],
           ],
         ),
@@ -170,15 +171,16 @@ class _ClientHomePageState extends State<ClientHomePage> {
           TextButton(
             onPressed: onSeeAll,
             style: TextButton.styleFrom(
-              padding: EdgeInsets.zero,
-              minimumSize: const Size(50, 30),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              minimumSize: Size.zero,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
             child: Text(
               tr(context, 'see_all_btn'),
               style: const TextStyle(
                 color: AppColors.primaryBlue,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
+                fontSize: 14,
               ),
             ),
           ),
@@ -194,9 +196,9 @@ class _ClientHomePageState extends State<ClientHomePage> {
       body: SafeArea(
         bottom: false,
         child: Container(
-          color:
-              AppColors.bgColor, // Below the header, background is light gray
+          color: const Color(0xFFF5F7FA), // A slightly cooler, "pro" grey background
           child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
             child: Column(
               children: [
                 // 1. الهيدر
@@ -204,12 +206,12 @@ class _ClientHomePageState extends State<ClientHomePage> {
 
                 // 2. المحتوى
                 Transform.translate(
-                  offset: const Offset(0, -20),
+                  offset: const Offset(0, -24),
                   child: Container(
                     decoration: const BoxDecoration(
-                      color: AppColors.bgColor,
+                      color: Color(0xFFF5F7FA),
                       borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(25),
+                        top: Radius.circular(32),
                       ),
                     ),
                     child: Padding(
