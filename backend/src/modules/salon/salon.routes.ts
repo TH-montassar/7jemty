@@ -11,6 +11,8 @@ import {
     getSalonByIdHandler,
     createServiceHandler,
     getServicesHandler,
+    updateServiceHandler,
+    deleteServiceHandler,
     searchSalonHandler,
     toggleFavoriteSalonHandler,
     getFavoriteSalonsHandler,
@@ -30,6 +32,8 @@ router.patch('/employee/:employeeId', protect, isPatron, updateEmployeeAccountHa
 router.delete('/employee/:employeeId', protect, isPatron, deleteEmployeeAccountHandler);
 router.post('/service/create', protect, isPatron, createServiceHandler);
 router.get('/services', protect, isPatron, getServicesHandler);
+router.patch('/service/:serviceId', protect, isPatron, updateServiceHandler);
+router.delete('/service/:serviceId', protect, isPatron, deleteServiceHandler);
 router.get('/search', searchSalonHandler);
 router.get('/favorites/all', protect, getFavoriteSalonsHandler);
 router.get('/:id', getSalonByIdHandler);

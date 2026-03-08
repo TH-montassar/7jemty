@@ -444,6 +444,59 @@ export const getServices = async (patronId: number) => {
     return services;
 };
 
+export const updateService = async (patronId: number, serviceId: number, data: any) => {
+    const service = await prisma.service.findFirst({
+        where: {
+            id: serviceId,
+            salon: { patronId }
+        }
+    });
+
+    if (!service) {
+        throw new Error("Service introuvable ou mouch mta3 salonek");
+    }
+
+    const updatedService = await prisma.service.update({
+        where: { id: serviceId },
+        data: {
+            ...(data.name !== undefined && { name: data.name }),
+            ...(data.price !== undefined && { price: data.price }),
+            ...(data.durationMinutes !== undefined && { durationMinutes: data.durationMinutes }),
+            ...(data.description !== undefined && { description: data.description }),
+            ...(data.imageUrl !== undefined && { imageUrl: data.imageUrl })
+        }
+    });
+
+    return updatedService;
+};
+
+export const deleteService = async (patronId: number, serviceId: number) => {
+    const service = await prisma.service.findFirst({
+        where: {
+            id: serviceId,
+            salon: { patronId }
+        }
+    });
+
+    if (!service) {
+        throw new Error("Service introuvable ou mouch mta3 salonek");
+    }
+
+    const linkedAppointmentsCount = await prisma.appointmentService.count({
+        where: { serviceId }
+    });
+
+    if (linkedAppointmentsCount > 0) {
+        throw new Error("Service mawjoud fi rendez-vous. Ma ynajemch yitfaskh.");
+    }
+
+    await prisma.service.delete({
+        where: { id: serviceId }
+    });
+
+    return { id: serviceId, deleted: true };
+};
+
 export const getSalonById = async (id: number) => {
     const salon = await prisma.salon.findUnique({
         where: { id },

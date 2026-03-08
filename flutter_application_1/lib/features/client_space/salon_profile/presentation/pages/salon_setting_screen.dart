@@ -57,6 +57,7 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
   final TextEditingController _srvDurationController = TextEditingController();
   final TextEditingController _srvUrlController = TextEditingController();
   bool _isAddingService = false;
+  int? _editingServiceId;
   bool _isSrvUrlMode = true;
 
   // ---------------------------------------------------------------------------
@@ -485,12 +486,7 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
         title: Text(tr(context, 'service_added')),
         autoCloseDuration: const Duration(seconds: 3),
       );
-
-      _srvNameController.clear();
-      _srvPriceController.clear();
-      _srvDurationController.clear();
-      _srvDescController.clear();
-      _srvUrlController.clear();
+      _resetServiceForm();
       setState(() {
         _isAddingService = false;
       });
@@ -503,6 +499,166 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
         type: ToastificationType.error,
         title: Text(tr(context, 'error_title')),
         description: Text(e.toString()),
+        autoCloseDuration: const Duration(seconds: 4),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _resetServiceForm() {
+    _srvNameController.clear();
+    _srvPriceController.clear();
+    _srvDurationController.clear();
+    _srvDescController.clear();
+    _srvUrlController.clear();
+    _isSrvUrlMode = true;
+    _editingServiceId = null;
+  }
+
+  void _toggleServiceForm() {
+    setState(() {
+      if (_isAddingService) {
+        _isAddingService = false;
+        _resetServiceForm();
+        return;
+      }
+
+      _resetServiceForm();
+      _isAddingService = true;
+    });
+  }
+
+  void _openEditServiceForm(Map<String, dynamic> service) {
+    final serviceId = (service['id'] as num?)?.toInt();
+    if (serviceId == null) return;
+
+    setState(() {
+      _isAddingService = true;
+      _editingServiceId = serviceId;
+      _srvNameController.text = service['name']?.toString() ?? '';
+      _srvPriceController.text = service['price']?.toString() ?? '';
+      _srvDurationController.text =
+          service['durationMinutes']?.toString() ?? '';
+      _srvDescController.text = service['description']?.toString() ?? '';
+      _srvUrlController.text = service['imageUrl']?.toString() ?? '';
+      _isSrvUrlMode = true;
+    });
+  }
+
+  Future<void> _handleUpdateService() async {
+    if (_editingServiceId == null) return;
+
+    if (_srvNameController.text.isEmpty ||
+        _srvPriceController.text.isEmpty ||
+        _srvDurationController.text.isEmpty) {
+      toastification.show(
+        context: context,
+        type: ToastificationType.warning,
+        title: Text(tr(context, 'missing_info')),
+        description: Text(tr(context, 'name_price_time_required')),
+        autoCloseDuration: const Duration(seconds: 3),
+      );
+      return;
+    }
+
+    try {
+      FocusScope.of(context).unfocus();
+      setState(() => _isLoading = true);
+
+      String? finalImageUrl = _srvUrlController.text.trim();
+      if (finalImageUrl.isEmpty) finalImageUrl = null;
+
+      await SalonService.updateService(
+        serviceId: _editingServiceId!,
+        name: _srvNameController.text.trim(),
+        price: double.parse(_srvPriceController.text.trim()),
+        durationMinutes: int.parse(_srvDurationController.text.trim()),
+        description: _srvDescController.text.trim().isEmpty
+            ? null
+            : _srvDescController.text.trim(),
+        imageUrl: finalImageUrl,
+      );
+
+      if (!mounted) return;
+      toastification.show(
+        context: context,
+        type: ToastificationType.success,
+        title: Text(tr(context, 'service_updated')),
+        autoCloseDuration: const Duration(seconds: 3),
+      );
+
+      _resetServiceForm();
+      setState(() => _isAddingService = false);
+      await _fetchSalonData();
+    } catch (e) {
+      if (!mounted) return;
+      toastification.show(
+        context: context,
+        type: ToastificationType.error,
+        title: Text(tr(context, 'error_title')),
+        description: Text(e.toString().replaceAll('Exception: ', '')),
+        autoCloseDuration: const Duration(seconds: 4),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _handleDeleteService({
+    required int serviceId,
+    required String serviceName,
+  }) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(tr(context, 'delete_service_confirm_title')),
+        content: Text(
+          tr(context, 'delete_service_confirm_desc', args: [serviceName]),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(tr(context, 'cancel')),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(
+              tr(context, 'delete'),
+              style: const TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      setState(() => _isLoading = true);
+      await SalonService.deleteService(serviceId: serviceId);
+
+      if (!mounted) return;
+      toastification.show(
+        context: context,
+        type: ToastificationType.success,
+        title: Text(tr(context, 'service_deleted')),
+        autoCloseDuration: const Duration(seconds: 3),
+      );
+
+      if (_editingServiceId == serviceId) {
+        _resetServiceForm();
+        setState(() => _isAddingService = false);
+      }
+
+      await _fetchSalonData();
+    } catch (e) {
+      if (!mounted) return;
+      toastification.show(
+        context: context,
+        type: ToastificationType.error,
+        title: Text(tr(context, 'error_title')),
+        description: Text(e.toString().replaceAll('Exception: ', '')),
         autoCloseDuration: const Duration(seconds: 4),
       );
     } finally {
@@ -1211,11 +1367,7 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                 ),
               ),
               ElevatedButton.icon(
-                onPressed: () {
-                  setState(() {
-                    _isAddingService = !_isAddingService;
-                  });
-                },
+                onPressed: _toggleServiceForm,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryBlue,
                   shape: RoundedRectangleBorder(
@@ -1259,7 +1411,12 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    tr(context, 'add_new_service').toUpperCase(),
+                    tr(
+                      context,
+                      _editingServiceId == null
+                          ? 'add_new_service'
+                          : 'edit_service',
+                    ).toUpperCase(),
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
@@ -1267,7 +1424,9 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                     ),
                   ),
                   const SizedBox(height: 16),
-                  Row(
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
                     children: [
                       ElevatedButton.icon(
                         onPressed: () {
@@ -1301,7 +1460,6 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                         ),
                         label: Text(tr(context, 'url_label')),
                       ),
-                      const SizedBox(width: 8),
                       ElevatedButton.icon(
                         onPressed: _pickSrvImage,
                         style: ElevatedButton.styleFrom(
@@ -1331,6 +1489,7 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                           style: TextStyle(
                             color: !_isSrvUrlMode ? Colors.white : Colors.grey,
                           ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
@@ -1399,7 +1558,9 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                   ),
                   const SizedBox(height: 20),
                   ElevatedButton(
-                    onPressed: _handleAddService,
+                    onPressed: _editingServiceId == null
+                        ? _handleAddService
+                        : _handleUpdateService,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primaryBlue,
                       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -1408,7 +1569,12 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                       ),
                     ),
                     child: Text(
-                      tr(context, 'save_service'),
+                      tr(
+                        context,
+                        _editingServiceId == null
+                            ? 'save_service'
+                            : 'update_service',
+                      ),
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -1438,7 +1604,9 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
               itemCount: services.length,
               separatorBuilder: (context, index) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
-                final srv = services[index];
+                final srv = services[index] as Map<String, dynamic>;
+                final serviceId = (srv['id'] as num?)?.toInt();
+                final serviceName = srv['name']?.toString() ?? '';
                 return Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -1494,13 +1662,68 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                           ],
                         ),
                       ),
-                      Text(
-                        "${srv['price']} TND",
-                        style: const TextStyle(
-                          color: AppColors.primaryBlue,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            "${srv['price']} TND",
+                            style: const TextStyle(
+                              color: AppColors.primaryBlue,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          if (serviceId != null)
+                            PopupMenuButton<String>(
+                              onSelected: (value) {
+                                if (value == 'edit') {
+                                  _openEditServiceForm(srv);
+                                  return;
+                                }
+
+                                _handleDeleteService(
+                                  serviceId: serviceId,
+                                  serviceName: serviceName,
+                                );
+                              },
+                              itemBuilder: (_) => [
+                                PopupMenuItem(
+                                  value: 'edit',
+                                  child: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.edit_outlined,
+                                        size: 18,
+                                        color: AppColors.primaryBlue,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(tr(context, 'edit')),
+                                    ],
+                                  ),
+                                ),
+                                PopupMenuItem(
+                                  value: 'delete',
+                                  child: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.delete_outline,
+                                        size: 18,
+                                        color: Colors.red,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        tr(context, 'delete'),
+                                        style: const TextStyle(
+                                          color: Colors.red,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                        ],
                       ),
                     ],
                   ),

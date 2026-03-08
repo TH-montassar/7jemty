@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart'; // 👈 Bech njibou l'Token
+import 'package:shared_preferences/shared_preferences.dart'; // ðŸ‘ˆ Bech njibou l'Token
 
 import 'package:hjamty/config/api_config.dart';
 
 class SalonService {
-  // 🧩 L'IP e-thkiya kima fel AuthService
+  // ðŸ§© L'IP e-thkiya kima fel AuthService
   static String get baseUrl => ApiConfig.endpoint('/api/salon');
 
   static Future<Map<String, dynamic>> createSalon({
@@ -19,9 +19,9 @@ class SalonService {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('jwt_token');
 
-      // Ken mal9inech token, ma3neha l'user mouch connecté
+      // Ken mal9inech token, ma3neha l'user mouch connectÃ©
       if (token == null) {
-        throw Exception('Rak mouch connecté! (Token manquant)');
+        throw Exception('Rak mouch connectÃ©! (Token manquant)');
       }
 
       // 2. Naba3thou l'Request lel backend m3a l'Token
@@ -30,7 +30,7 @@ class SalonService {
         headers: {
           'Content-Type': 'application/json',
           'Authorization':
-              'Bearer $token', // 👈 E-S7OR HOUNI! L'pass mta3 l'Backend
+              'Bearer $token', // ðŸ‘ˆ E-S7OR HOUNI! L'pass mta3 l'Backend
         },
         body: jsonEncode({
           'name': name,
@@ -49,7 +49,7 @@ class SalonService {
         return data;
       } else {
         throw Exception(
-          data['message'] ?? 'Erreur lors de la création du salon',
+          data['message'] ?? 'Erreur lors de la crÃ©ation du salon',
         );
       }
     } catch (e) {
@@ -77,7 +77,7 @@ class SalonService {
       final token = prefs.getString('jwt_token');
 
       if (token == null) {
-        throw Exception('Rak mouch connecté! (Token manquant)');
+        throw Exception('Rak mouch connectÃ©! (Token manquant)');
       }
 
       final body = <String, dynamic>{};
@@ -113,7 +113,7 @@ class SalonService {
         return data;
       } else {
         throw Exception(
-          data['message'] ?? 'Erreur lors de la mise à jour du salon',
+          data['message'] ?? 'Erreur lors de la mise Ã  jour du salon',
         );
       }
     } catch (e) {
@@ -121,14 +121,14 @@ class SalonService {
     }
   }
 
-  // 📝 Fonction bech njibou l'salon mta3 Patron el connecté
+  // ðŸ“ Fonction bech njibou l'salon mta3 Patron el connectÃ©
   static Future<Map<String, dynamic>> getMySalon() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('jwt_token');
 
       if (token == null) {
-        throw Exception('Rak mouch connecté! (Token manquant)');
+        throw Exception('Rak mouch connectÃ©! (Token manquant)');
       }
 
       final response = await http.get(
@@ -145,7 +145,7 @@ class SalonService {
         return data['data'];
       } else {
         throw Exception(
-          data['message'] ?? 'Erreur lors de la récupération du salon',
+          data['message'] ?? 'Erreur lors de la rÃ©cupÃ©ration du salon',
         );
       }
     } catch (e) {
@@ -153,7 +153,7 @@ class SalonService {
     }
   }
 
-  // 📝 Fonction bech tzid employé we ta3melou compte User
+  // ðŸ“ Fonction bech tzid employÃ© we ta3melou compte User
   static Future<Map<String, dynamic>> createEmployeeAccount({
     int? salonId,
     required String name,
@@ -169,7 +169,7 @@ class SalonService {
       final token = prefs.getString('jwt_token');
 
       if (token == null) {
-        throw Exception('Rak mouch connecté! (Token manquant)');
+        throw Exception('Rak mouch connectÃ©! (Token manquant)');
       }
 
       final response = await http.post(
@@ -197,7 +197,7 @@ class SalonService {
         return data;
       } else {
         throw Exception(
-          data['message'] ?? 'Erreur lors de la création du compte employé',
+          data['message'] ?? 'Erreur lors de la crÃ©ation du compte employÃ©',
         );
       }
     } catch (e) {
@@ -205,7 +205,7 @@ class SalonService {
     }
   }
 
-  // 📝 Fonctions bech nmodifiw/faskhou compte employe
+  // ðŸ“ Fonctions bech nmodifiw/faskhou compte employe
 
   static Future<Map<String, dynamic>> updateEmployeeAccount({
     required int employeeId,
@@ -222,7 +222,7 @@ class SalonService {
       final token = prefs.getString('jwt_token');
 
       if (token == null) {
-        throw Exception('Rak mouch connecté! (Token manquant)');
+        throw Exception('Rak mouch connectÃ©! (Token manquant)');
       }
 
       final response = await http.patch(
@@ -248,7 +248,7 @@ class SalonService {
         return data;
       } else {
         throw Exception(
-          data['message'] ?? 'Erreur lors de la modification du spécialiste',
+          data['message'] ?? 'Erreur lors de la modification du spÃ©cialiste',
         );
       }
     } catch (e) {
@@ -262,7 +262,7 @@ class SalonService {
       final token = prefs.getString('jwt_token');
 
       if (token == null) {
-        throw Exception('Rak mouch connecté! (Token manquant)');
+        throw Exception('Rak mouch connectÃ©! (Token manquant)');
       }
 
       final response = await http.delete(
@@ -277,7 +277,7 @@ class SalonService {
 
       if (response.statusCode != 200 || data['success'] != true) {
         throw Exception(
-          data['message'] ?? 'Erreur lors de la suppression du spécialiste',
+          data['message'] ?? 'Erreur lors de la suppression du spÃ©cialiste',
         );
       }
     } catch (e) {
@@ -285,7 +285,7 @@ class SalonService {
     }
   }
 
-  // 📝 Fonction bech njibou e-salons lkol w nrajjouhom lel client
+  // ðŸ“ Fonction bech njibou e-salons lkol w nrajjouhom lel client
   static Future<List<dynamic>> getAllSalons({double? lat, double? lng}) async {
     try {
       final String query = (lat != null && lng != null)
@@ -303,7 +303,7 @@ class SalonService {
         return data['data'];
       } else {
         throw Exception(
-          data['message'] ?? 'Erreur lors de la récupération des salons',
+          data['message'] ?? 'Erreur lors de la rÃ©cupÃ©ration des salons',
         );
       }
     } catch (e) {
@@ -311,7 +311,7 @@ class SalonService {
     }
   }
 
-  // 📝 Fonction bech tzid service l salon
+  // ðŸ“ Fonction bech tzid service l salon
   static Future<Map<String, dynamic>> createService({
     int? salonId,
     required String name,
@@ -325,7 +325,7 @@ class SalonService {
       final token = prefs.getString('jwt_token');
 
       if (token == null) {
-        throw Exception('Rak mouch connecté! (Token manquant)');
+        throw Exception('Rak mouch connectÃ©! (Token manquant)');
       }
 
       final response = await http.post(
@@ -351,7 +351,7 @@ class SalonService {
         return data;
       } else {
         throw Exception(
-          data['message'] ?? 'Erreur lors de la création du service',
+          data['message'] ?? 'Erreur lors de la crÃ©ation du service',
         );
       }
     } catch (e) {
@@ -359,14 +359,89 @@ class SalonService {
     }
   }
 
-  // 📝 Fonction bech njibou les services mta3 salon
-  static Future<List<dynamic>> getServices() async {
+  // ðŸ“ Fonction bech njibou les services mta3 salon
+
+  static Future<Map<String, dynamic>> updateService({
+    required int serviceId,
+    required String name,
+    required double price,
+    required int durationMinutes,
+    String? description,
+    String? imageUrl,
+  }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('jwt_token');
 
       if (token == null) {
         throw Exception('Rak mouch connecté! (Token manquant)');
+      }
+
+      final response = await http.patch(
+        Uri.parse('$baseUrl/service/$serviceId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'name': name,
+          'price': price,
+          'durationMinutes': durationMinutes,
+          'description': description,
+          'imageUrl': imageUrl,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        return data;
+      } else {
+        throw Exception(
+          data['message'] ?? 'Erreur lors de la modification du service',
+        );
+      }
+    } catch (e) {
+      throw Exception(e.toString().replaceAll('Exception: ', ''));
+    }
+  }
+
+  static Future<void> deleteService({required int serviceId}) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token');
+
+      if (token == null) {
+        throw Exception('Rak mouch connecté! (Token manquant)');
+      }
+
+      final response = await http.delete(
+        Uri.parse('$baseUrl/service/$serviceId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode != 200 || data['success'] != true) {
+        throw Exception(
+          data['message'] ?? 'Erreur lors de la suppression du service',
+        );
+      }
+    } catch (e) {
+      throw Exception(e.toString().replaceAll('Exception: ', ''));
+    }
+  }
+
+  static Future<List<dynamic>> getServices() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token');
+
+      if (token == null) {
+        throw Exception('Rak mouch connectÃ©! (Token manquant)');
       }
 
       final response = await http.get(
@@ -383,7 +458,7 @@ class SalonService {
         return data['data'];
       } else {
         throw Exception(
-          data['message'] ?? 'Erreur lors de la récupération des services',
+          data['message'] ?? 'Erreur lors de la rÃ©cupÃ©ration des services',
         );
       }
     } catch (e) {
@@ -391,7 +466,7 @@ class SalonService {
     }
   }
 
-  // 📝 Fonction bech njibou e-salons ta7it Top Rating (A7sen salonat)
+  // ðŸ“ Fonction bech njibou e-salons ta7it Top Rating (A7sen salonat)
   static Future<List<dynamic>> getTopRatedSalons() async {
     try {
       final response = await http.get(
@@ -406,7 +481,7 @@ class SalonService {
       } else {
         throw Exception(
           data['message'] ??
-              'Erreur lors de la récupération des salons bien notés',
+              'Erreur lors de la rÃ©cupÃ©ration des salons bien notÃ©s',
         );
       }
     } catch (e) {
@@ -414,14 +489,14 @@ class SalonService {
     }
   }
 
-  // 📝 Fonction bech njibou les services mta3 patron el connecté
+  // ðŸ“ Fonction bech njibou les services mta3 patron el connectÃ©
   static Future<List<dynamic>> getMyServices() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('jwt_token');
 
       if (token == null) {
-        throw Exception('Rak mouch connecté! (Token manquant)');
+        throw Exception('Rak mouch connectÃ©! (Token manquant)');
       }
 
       final response = await http.get(
@@ -438,7 +513,7 @@ class SalonService {
         return data['data'];
       } else {
         throw Exception(
-          data['message'] ?? 'Erreur lors de la récupération des services',
+          data['message'] ?? 'Erreur lors de la rÃ©cupÃ©ration des services',
         );
       }
     } catch (e) {
@@ -446,9 +521,9 @@ class SalonService {
     }
   }
 
-  // 📝 Fonction bech nzidou service l'salon
+  // ðŸ“ Fonction bech nzidou service l'salon
 
-  // 📝 Fonction bech njibou détail mta3 salon wa7ed b id mta3o
+  // ðŸ“ Fonction bech njibou dÃ©tail mta3 salon wa7ed b id mta3o
   static Future<Map<String, dynamic>> getSalonById(int id) async {
     try {
       final response = await http.get(
@@ -462,7 +537,7 @@ class SalonService {
         return data['data'];
       } else {
         throw Exception(
-          data['message'] ?? 'Erreur lors de la récupération du salon',
+          data['message'] ?? 'Erreur lors de la rÃ©cupÃ©ration du salon',
         );
       }
     } catch (e) {
@@ -470,7 +545,7 @@ class SalonService {
     }
   }
 
-  // 📝 Fonction bech nlawjou 3la salonat (Recherche)
+  // ðŸ“ Fonction bech nlawjou 3la salonat (Recherche)
   static Future<List<dynamic>> searchSalons(String query) async {
     try {
       final response = await http.get(
@@ -490,7 +565,7 @@ class SalonService {
     }
   }
 
-  // 📝 Fonction bech ta3mel toggle lel favoris mta3 salon
+  // ðŸ“ Fonction bech ta3mel toggle lel favoris mta3 salon
   static Future<bool> toggleFavoriteSalon(int salonId) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -520,7 +595,7 @@ class SalonService {
     }
   }
 
-  // 📝 Fonction bech nchoufou chniya l'etat mta3 l'favoris wa9t ndho5lou lel page salon
+  // ðŸ“ Fonction bech nchoufou chniya l'etat mta3 l'favoris wa9t ndho5lou lel page salon
   static Future<bool> checkFavoriteStatus(int salonId) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -550,14 +625,14 @@ class SalonService {
     }
   }
 
-  // 📝 Fonction bech njibou liste l'salonet l'favoris l'kol mta3 l'client
+  // ðŸ“ Fonction bech njibou liste l'salonet l'favoris l'kol mta3 l'client
   static Future<List<dynamic>> getFavoriteSalons() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('jwt_token');
 
       if (token == null) {
-        throw Exception('Rak mouch connecté! (Token manquant)');
+        throw Exception('Rak mouch connectÃ©! (Token manquant)');
       }
 
       final response = await http.get(

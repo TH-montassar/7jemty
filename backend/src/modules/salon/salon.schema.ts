@@ -66,3 +66,11 @@ export const createServiceSchema = z.object({
     description: z.string().optional(),
     imageUrl: z.string().optional(),
 });
+
+export const updateServiceSchema = z.object({
+    name: z.string().min(2, "Le nom du service est requis").optional(),
+    price: z.number().positive("Le prix doit être positif").optional(),
+    durationMinutes: z.number().int().positive("La durée doit être valide (en minutes)").optional(),
+    description: z.string().nullable().optional(),
+    imageUrl: z.string().nullable().optional(),
+});
