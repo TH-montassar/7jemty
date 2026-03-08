@@ -70,6 +70,7 @@ class SalonService {
     String? coverImageUrl,
     String? speciality,
     List<Map<String, String>>? socialLinks,
+    List<Map<String, dynamic>>? workingHours,
   }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -91,6 +92,7 @@ class SalonService {
       if (coverImageUrl != null) body['coverImageUrl'] = coverImageUrl;
       if (speciality != null) body['speciality'] = speciality;
       if (socialLinks != null) body['socialLinks'] = socialLinks;
+      if (workingHours != null) body['workingHours'] = workingHours;
 
       final url = salonId != null
           ? ApiConfig.endpoint('/api/admin/salons/$salonId') // Use Admin Route

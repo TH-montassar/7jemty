@@ -161,6 +161,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
     ];
     if (widget.isPatron) {
       tabs.add(Tab(text: tr(context, 'tab_appointments')));
+      tabs.add(Tab(text: tr(context, 'working_hours')));
     }
     tabs.add(Tab(text: tr(context, 'tab_reviews')));
 
@@ -327,6 +328,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
               _buildServicesTab(),
               _buildSpecialistesTab(),
               if (widget.isPatron) _buildReservationsTab(),
+              if (widget.isPatron) _buildWorkingTimesTab(),
               _buildAvisTab(),
             ],
           ),
@@ -1116,6 +1118,230 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
         tr(context, 'no_reviews_yet'),
         style: const TextStyle(color: Colors.grey),
       ),
+    );
+  }
+
+  Widget _buildWorkingTimesTab() {
+    final List<dynamic>? workingHoursList = _salonData?['workingHours'];
+
+    // Sort logic to match Lundi-Dimanche order based on integer dayOfWeek (1=Lundi, 7=Dimanche)
+    final workingHours = workingHoursList != null
+        ? List<dynamic>.from(workingHoursList)
+        : [];
+    workingHours.sort((a, b) {
+      final dayA = a['dayOfWeek'] as int? ?? 0;
+      final dayB = b['dayOfWeek'] as int? ?? 0;
+      return dayA.compareTo(dayB);
+    });
+
+    return Column(
+      children: [
+        if (widget.isPatron)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SalonScreenUnifiee(
+                        initialTabIndex: 3, // Working Hours tab
+                        openAddForm: true,
+                        salonId:
+                            null, // Always pass null for Patron to use getMySalon / update my salon
+                      ),
+                    ),
+                  ).then((_) => _fetchSalonData());
+                },
+                icon: const Icon(Icons.edit, size: 18, color: Colors.white),
+                label: Text(
+                  tr(context, 'edit'),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryBlue,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        if (workingHours.isEmpty)
+          Expanded(
+            child: Center(
+              child: Text(
+                '${tr(context, 'coming_soon', args: ['Working Hours'])}...',
+                style: const TextStyle(color: Colors.grey, fontSize: 15),
+              ),
+            ),
+          )
+        else
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              itemCount: workingHours.length,
+              itemBuilder: (context, index) {
+                final dayData = workingHours[index];
+                final isDayOff = dayData['isDayOff'] ?? false;
+                final isOpen = !isDayOff;
+                final openTime = dayData['openTime'] ?? '09:00';
+                final closeTime = dayData['closeTime'] ?? '18:00';
+
+                // Map day number to localized string or fixed string
+                final dayNumber = dayData['dayOfWeek'] as int? ?? 1;
+                final days = [
+                  'Lundi',
+                  'Mardi',
+                  'Mercredi',
+                  'Jeudi',
+                  'Vendredi',
+                  'Samedi',
+                  'Dimanche',
+                ];
+                final dayName = (dayNumber >= 1 && dayNumber <= 7)
+                    ? days[dayNumber - 1]
+                    : 'Inconnu';
+
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.grey.shade200),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            dayName,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textDark,
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isOpen
+                                  ? Colors.green.withOpacity(0.1)
+                                  : Colors.red.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              isOpen ? 'Ouvert' : 'Fermé',
+                              style: TextStyle(
+                                color: isOpen ? Colors.green : Colors.red,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (isOpen) ...[
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade50,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.grey.shade200,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      openTime,
+                                      style: const TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    const Icon(
+                                      Icons.access_time,
+                                      size: 18,
+                                      color: Colors.grey,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 12),
+                              child: Text(
+                                'à',
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade50,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.grey.shade200,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      closeTime,
+                                      style: const TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    const Icon(
+                                      Icons.access_time,
+                                      size: 18,
+                                      color: Colors.grey,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+      ],
     );
   }
 }

@@ -150,7 +150,7 @@ class _SalonProfilePageState extends State<SalonProfilePage> {
               body: TabBarView(
                 children: [
                   AboutTab(salonData: salonData),
-                  ServicesTab(),
+                  ServicesTab(salonData: salonData),
                   ProductsTab(),
                   PortfolioTab(),
                   ReviewsTab(),

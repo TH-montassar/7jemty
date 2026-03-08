@@ -12,8 +12,13 @@ import 'package:hjamty/features/client_space/appointments/presentation/pages/boo
 
 class BookingFlowScreen extends StatefulWidget {
   final int salonId;
+  final List<int>? initialServiceIds;
 
-  const BookingFlowScreen({super.key, required this.salonId});
+  const BookingFlowScreen({
+    super.key,
+    required this.salonId,
+    this.initialServiceIds,
+  });
 
   @override
   State<BookingFlowScreen> createState() => _BookingFlowScreenState();
@@ -51,6 +56,10 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
     });
 
     _dateScrollController = ScrollController();
+
+    if (widget.initialServiceIds != null) {
+      _selectedServiceIds = List.from(widget.initialServiceIds!);
+    }
 
     _checkCurrentUser();
     _fetchSalonDetails();
@@ -102,6 +111,11 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
             'imageUrl': salonData['patron']['imageUrl'] ?? '',
             'isPatron': true,
           });
+        }
+
+        // Default to the first professional if available
+        if (_professionals.isNotEmpty) {
+          _selectedBarberId = _professionals.first['id'];
         }
         _isLoading = false;
       });

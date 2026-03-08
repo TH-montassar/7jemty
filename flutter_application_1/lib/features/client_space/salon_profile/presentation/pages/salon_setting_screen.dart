@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:toastification/toastification.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:intl/intl.dart';
 import '../../../../../../core/constants/app_colors.dart';
 import 'package:hjamty/features/auth/data/auth_service.dart';
 import 'package:hjamty/features/client_space/salon_profile/data/salon_service.dart';
@@ -57,6 +58,44 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
   final TextEditingController _srvUrlController = TextEditingController();
   bool _isAddingService = false;
   bool _isSrvUrlMode = true;
+
+  // ---------------------------------------------------------------------------
+  // PATRON CONTROLLERS (For Working Hours Tab)
+  // ---------------------------------------------------------------------------
+  List<Map<String, dynamic>> _workingHours = [
+    {
+      'day': 'Lundi',
+      'isOpen': false,
+      'openTime': '09:00',
+      'closeTime': '18:00',
+    },
+    {'day': 'Mardi', 'isOpen': true, 'openTime': '09:00', 'closeTime': '20:00'},
+    {
+      'day': 'Mercredi',
+      'isOpen': true,
+      'openTime': '09:00',
+      'closeTime': '18:00',
+    },
+    {'day': 'Jeudi', 'isOpen': true, 'openTime': '09:00', 'closeTime': '18:00'},
+    {
+      'day': 'Vendredi',
+      'isOpen': true,
+      'openTime': '09:00',
+      'closeTime': '18:00',
+    },
+    {
+      'day': 'Samedi',
+      'isOpen': true,
+      'openTime': '09:00',
+      'closeTime': '18:00',
+    },
+    {
+      'day': 'Dimanche',
+      'isOpen': false,
+      'openTime': '09:00',
+      'closeTime': '18:00',
+    },
+  ];
 
   // ---------------------------------------------------------------------------
   // PATRON CONTROLLERS (For Equipe Tab)
@@ -165,6 +204,28 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
           } else {
             _socialLinks = [];
           }
+
+          if (data['workingHours'] != null) {
+            final whList = data['workingHours'] as List;
+            if (whList.isNotEmpty) {
+              for (var i = 0; i < _workingHours.length; i++) {
+                final dayNum = i + 1; // 1 = Lundi, 7 = Dimanche
+                final matchedWh = whList.firstWhere(
+                  (wh) => wh['dayOfWeek'] == dayNum,
+                  orElse: () => null,
+                );
+
+                if (matchedWh != null) {
+                  _workingHours[i]['isOpen'] =
+                      !(matchedWh['isDayOff'] ?? false);
+                  _workingHours[i]['openTime'] =
+                      matchedWh['openTime'] ?? '09:00';
+                  _workingHours[i]['closeTime'] =
+                      matchedWh['closeTime'] ?? '18:00';
+                }
+              }
+            }
+          }
         }
       });
     } catch (e) {
@@ -192,6 +253,15 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
             : _coverImageController.text.trim(),
         speciality: _specialityController.text.trim(),
         socialLinks: _socialLinks.isNotEmpty ? _socialLinks : null,
+        workingHours: _workingHours.map((wh) {
+          final index = _workingHours.indexOf(wh);
+          return {
+            'dayOfWeek': index + 1,
+            'openTime': wh['isOpen'] ? wh['openTime'] : null,
+            'closeTime': wh['isOpen'] ? wh['closeTime'] : null,
+            'isDayOff': !(wh['isOpen'] as bool),
+          };
+        }).toList(),
       );
 
       toastification.show(
@@ -524,7 +594,7 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
       _buildInfoTabEditable(),
       _buildServicesTabEditable(),
       _buildEquipeTabEditable(),
-      Center(child: Text(tr(context, 'coming_soon', args: ['Horaires']))),
+      _buildWorkingHoursTabEditable(),
       Center(child: Text(tr(context, 'coming_soon', args: ['Galerie']))),
       Center(
         child: Text(tr(context, 'coming_soon', args: ['Rendez-vous List'])),
@@ -1901,6 +1971,193 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
             ),
           const SizedBox(height: 80),
         ],
+      ),
+    );
+  }
+
+  Widget _buildWorkingHoursTabEditable() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildSectionHeader(Icons.access_time, tr(context, 'opening_time')),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.grey.shade100),
+            ),
+            child: Column(
+              children: List.generate(_workingHours.length, (index) {
+                final dayData = _workingHours[index];
+                final String day = dayData['day'];
+                final bool isOpen = dayData['isOpen'];
+                final String openTime = dayData['openTime'];
+                final String closeTime = dayData['closeTime'];
+
+                return Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                day,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                  color: AppColors.textDark,
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    _workingHours[index]['isOpen'] = !isOpen;
+                                  });
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: isOpen
+                                        ? Colors.green.withOpacity(0.1)
+                                        : Colors.red.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Text(
+                                    isOpen
+                                        ? tr(context, 'open_status')
+                                        : 'Fermé',
+                                    style: TextStyle(
+                                      color: isOpen ? Colors.green : Colors.red,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (isOpen) ...[
+                            const SizedBox(height: 16),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _buildTimePickerField(openTime, (
+                                    newTime,
+                                  ) {
+                                    setState(() {
+                                      _workingHours[index]['openTime'] =
+                                          newTime;
+                                    });
+                                  }),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                  ),
+                                  child: Text(
+                                    tr(context, 'empty_text'),
+                                    style: const TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: _buildTimePickerField(closeTime, (
+                                    newTime,
+                                  ) {
+                                    setState(() {
+                                      _workingHours[index]['closeTime'] =
+                                          newTime;
+                                    });
+                                  }),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    if (index < _workingHours.length - 1)
+                      Divider(color: Colors.grey.shade200, height: 1),
+                  ],
+                );
+              }),
+            ),
+          ),
+          const SizedBox(height: 40),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTimePickerField(String time, Function(String) onChanged) {
+    return GestureDetector(
+      onTap: () async {
+        TimeOfDay initialTime = TimeOfDay.now();
+        try {
+          final format = DateFormat.Hm(); // Use 24h format (HH:mm)
+          final dateTime = format.parse(time);
+          initialTime = TimeOfDay.fromDateTime(dateTime);
+        } catch (_) {}
+
+        final selected = await showTimePicker(
+          context: context,
+          initialTime: initialTime,
+          builder: (context, child) {
+            return MediaQuery(
+              data: MediaQuery.of(
+                context,
+              ).copyWith(alwaysUse24HourFormat: true),
+              child: child!,
+            );
+          },
+        );
+        if (selected != null) {
+          final now = DateTime.now();
+          final dt = DateTime(
+            now.year,
+            now.month,
+            now.day,
+            selected.hour,
+            selected.minute,
+          );
+          final formatted = DateFormat.Hm().format(dt); // Return HH:mm
+          onChanged(formatted);
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              time,
+              style: const TextStyle(
+                fontWeight: FontWeight.w500,
+                fontSize: 14,
+                color: AppColors.textDark,
+              ),
+            ),
+            Icon(Icons.access_time, size: 16, color: Colors.grey.shade600),
+          ],
+        ),
       ),
     );
   }
