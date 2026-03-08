@@ -47,12 +47,12 @@ class _SignInScreenState extends State<SignInScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      backgroundColor: AppColors.bgColor,
+      backgroundColor: const Color(0xFFF5F7FA), // The cooler pro background
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textDark),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textDark),
           onPressed: () {
             if (Navigator.canPop(context)) {
               Navigator.pop(context);
@@ -72,6 +72,7 @@ class _SignInScreenState extends State<SignInScreen> {
         // ✅ 1. زدنا SelectionArea هوني باش تشد الباج الكل
         child: SelectionArea(
           child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: Form(
@@ -94,16 +95,21 @@ class _SignInScreenState extends State<SignInScreen> {
                       tr(context, 'sign_in_title'),
                       textAlign: TextAlign.center,
                       style: const TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 32,
+                        fontWeight: FontWeight.w800,
                         color: AppColors.textDark,
+                        letterSpacing: -0.5,
                       ),
                     ),
                     const SizedBox(height: 10),
                     Text(
                       tr(context, 'welcome_back'),
                       textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 14, color: Colors.grey),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        color: Colors.black54,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                     const SizedBox(height: 40),
 
@@ -111,7 +117,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     _buildTextField(
                       controller: _phoneController,
                       hintText: tr(context, 'phone_number_label'),
-                      icon: Icons.phone_android_outlined,
+                      icon: Icons.phone_android_rounded,
                       keyboardType: TextInputType.phone,
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
@@ -130,7 +136,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     _buildTextField(
                       hintText: tr(context, 'password_short'),
                       controller: _passwordController,
-                      icon: Icons.lock_outline,
+                      icon: Icons.lock_outline_rounded,
                       keyboardType: TextInputType.visiblePassword,
                       isPassword: true,
                       obscureText: _obscurePassword,
@@ -156,66 +162,109 @@ class _SignInScreenState extends State<SignInScreen> {
                       alignment: Alignment.centerRight,
                       child: TextButton(
                         onPressed: () {},
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
                         child: Text(
                           tr(context, 'forgot_password'),
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: AppColors.primaryBlue,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(height: 30),
+                    const SizedBox(height: 32),
 
                     // Bouton Connexion
-                    ElevatedButton(
-                      onPressed: _isLoading
-                          ? null
-                          : () async {
-                              if (_formKey.currentState!.validate()) {
-                                setState(() {
-                                  _isLoading = true;
-                                });
+                    Container(
+                      decoration: BoxDecoration(
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primaryBlue.withOpacity(0.2),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: ElevatedButton(
+                        onPressed: _isLoading
+                            ? null
+                            : () async {
+                                if (_formKey.currentState!.validate()) {
+                                  setState(() {
+                                    _isLoading = true;
+                                  });
 
-                                try {
-                                  final response = await AuthService.loginUser(
-                                    phoneNumber: _phoneController.text.trim(),
-                                    password: _passwordController.text,
-                                  );
+                                  try {
+                                    final response = await AuthService.loginUser(
+                                      phoneNumber: _phoneController.text.trim(),
+                                      password: _passwordController.text,
+                                    );
 
-                                  // Backend yarja3 { success: true, data: { user: {...}, token: "..." } }
-                                  final token = response['data']['token'];
-                                  final userRole =
-                                      response['data']['user']['role'];
-                                  final hasSalon =
-                                      response['data']['user']['hasSalon'] ??
-                                      false;
+                                    // Backend yarja3 { success: true, data: { user: {...}, token: "..." } }
+                                    final token = response['data']['token'];
+                                    final userRole =
+                                        response['data']['user']['role'];
+                                    final hasSalon =
+                                        response['data']['user']['hasSalon'] ??
+                                        false;
 
-                                  // Nsobba fi SharedPreferences
-                                  final prefs =
-                                      await SharedPreferences.getInstance();
-                                  await prefs.setString('jwt_token', token);
-                                  await prefs.setString('user_role', userRole);
+                                    // Nsobba fi SharedPreferences
+                                    final prefs =
+                                        await SharedPreferences.getInstance();
+                                    await prefs.setString('jwt_token', token);
+                                    await prefs.setString('user_role', userRole);
 
-                                  if (!mounted) return;
+                                    if (!mounted) return;
 
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        tr(context, 'logged_in_successfully'),
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          tr(context, 'logged_in_successfully'),
+                                        ),
+                                        backgroundColor: Colors.green,
                                       ),
-                                      backgroundColor: Colors.green,
-                                    ),
-                                  );
+                                    );
 
-                                  // ken role PATRON yemchi ll CreateSalonScreen
-                                  if (userRole == 'PATRON') {
-                                    if (hasSalon == true) {
+                                    // ken role PATRON yemchi ll CreateSalonScreen
+                                    if (userRole == 'PATRON') {
+                                      if (hasSalon == true) {
+                                        Navigator.pushAndRemoveUntil(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                const MainPage(),
+                                          ),
+                                          (route) => false,
+                                        );
+                                      } else {
+                                        Navigator.pushAndRemoveUntil(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                const CreateSalonScreen(),
+                                          ),
+                                          (route) => false,
+                                        );
+                                      }
+                                    } else if (userRole == 'ADMIN') {
                                       Navigator.pushAndRemoveUntil(
                                         context,
                                         MaterialPageRoute(
                                           builder: (context) =>
-                                              const MainPage(),
+                                              const AdminMainScreen(),
+                                        ),
+                                        (route) => false,
+                                      );
+                                    } else if (userRole == 'EMPLOYEE') {
+                                      Navigator.pushAndRemoveUntil(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const EmployeeMainLayout(),
                                         ),
                                         (route) => false,
                                       );
@@ -224,89 +273,62 @@ class _SignInScreenState extends State<SignInScreen> {
                                         context,
                                         MaterialPageRoute(
                                           builder: (context) =>
-                                              const CreateSalonScreen(),
+                                              const ClientMainLayout(),
                                         ),
                                         (route) => false,
                                       );
                                     }
-                                  } else if (userRole == 'ADMIN') {
-                                    Navigator.pushAndRemoveUntil(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const AdminMainScreen(),
-                                      ),
-                                      (route) => false,
-                                    );
-                                  } else if (userRole == 'EMPLOYEE') {
-                                    Navigator.pushAndRemoveUntil(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const EmployeeMainLayout(),
-                                      ),
-                                      (route) => false,
-                                    );
-                                  } else {
-                                    Navigator.pushAndRemoveUntil(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            const ClientMainLayout(),
-                                      ),
-                                      (route) => false,
-                                    );
-                                  }
-                                } catch (e) {
-                                  if (!mounted) return;
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        e.toString().replaceAll(
-                                          'Exception: ',
-                                          '',
+                                  } catch (e) {
+                                    if (!mounted) return;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          e.toString().replaceAll(
+                                            'Exception: ',
+                                            '',
+                                          ),
                                         ),
+                                        backgroundColor: Colors.red,
                                       ),
-                                      backgroundColor: Colors.red,
-                                    ),
-                                  );
-                                } finally {
-                                  if (mounted) {
-                                    setState(() {
-                                      _isLoading = false;
-                                    });
+                                    );
+                                  } finally {
+                                    if (mounted) {
+                                      setState(() {
+                                        _isLoading = false;
+                                      });
+                                    }
                                   }
                                 }
-                              }
-                            },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primaryBlue,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                              },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primaryBlue,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 18),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          elevation: 0,
                         ),
-                        elevation: 2,
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 3,
+                                ),
+                              )
+                            : Text(
+                                tr(context, 'sign_in_title'),
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 1.2,
+                                ),
+                              ),
                       ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              height: 24,
-                              width: 24,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 3,
-                              ),
-                            )
-                          : Text(
-                              tr(context, 'sign_in_title'),
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1.2,
-                              ),
-                            ),
                     ),
-                    const SizedBox(height: 30),
+                    const SizedBox(height: 32),
 
                     // Lien vers Inscription
                     Row(
@@ -315,8 +337,9 @@ class _SignInScreenState extends State<SignInScreen> {
                         Text(
                           "${tr(context, 'no_account_yet')} ",
                           style: const TextStyle(
-                            color: Colors.grey,
-                            fontSize: 14,
+                            color: Colors.black54,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                         GestureDetector(
@@ -331,10 +354,10 @@ class _SignInScreenState extends State<SignInScreen> {
                           },
                           child: Text(
                             tr(context, 'create_account'),
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: AppColors.primaryBlue,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 15,
                             ),
                           ),
                         ),
@@ -365,12 +388,12 @@ class _SignInScreenState extends State<SignInScreen> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withAlpha(12), // equivalent l withOpacity(0.05)
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(0.04), // Soft pro shadow
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -378,27 +401,28 @@ class _SignInScreenState extends State<SignInScreen> {
         controller: controller,
         obscureText: obscureText,
         keyboardType: keyboardType,
-        style: const TextStyle(fontWeight: FontWeight.w500),
+        style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.textDark),
         decoration: InputDecoration(
           hintText: hintText,
-          hintStyle: const TextStyle(color: Colors.grey),
-          prefixIcon: Icon(icon, color: AppColors.primaryBlue),
+          hintStyle: const TextStyle(color: Colors.black38, fontWeight: FontWeight.w500),
+          prefixIcon: Icon(icon, color: AppColors.primaryBlue, size: 22),
           suffixIcon: isPassword
               ? IconButton(
                   icon: Icon(
-                    obscureText ? Icons.visibility_off : Icons.visibility,
-                    color: Colors.grey,
+                    obscureText ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                    color: Colors.black38,
+                    size: 22,
                   ),
                   onPressed: onTogglePassword,
                 )
               : null,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(20),
             borderSide: BorderSide.none,
           ),
           filled: true,
           fillColor: Colors.transparent,
-          contentPadding: const EdgeInsets.symmetric(vertical: 20),
+          contentPadding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
         ),
         validator:
             validator ??

@@ -44,12 +44,13 @@ class _ActivityMenuState extends State<ActivityMenu> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: Colors.black.withOpacity(0.04),
             blurRadius: 20,
-            offset: const Offset(0, 5),
+            offset: const Offset(0, 8),
+            spreadRadius: 1,
           ),
         ],
       ),
@@ -59,8 +60,12 @@ class _ActivityMenuState extends State<ActivityMenu> {
             icon: Icons.local_shipping_outlined,
             title: tr(context, 'product_orders'),
             subtitle: tr(context, 'orders_remaining', args: ['2']),
+            isTop: true,
           ),
-          const Divider(height: 1, indent: 60),
+          Padding(
+            padding: const EdgeInsets.only(left: 64, right: 16),
+            child: Divider(height: 1, color: Colors.grey[200]),
+          ),
           _ProfileMenuItem(
             icon: Icons.favorite_border,
             title: tr(context, 'favorite_salons'),
@@ -69,6 +74,7 @@ class _ActivityMenuState extends State<ActivityMenu> {
               'favorite_salons_count',
               args: ['$_favoriteCount'],
             ),
+            isBottom: true,
             onTap: () {
               Navigator.push(
                 context,
@@ -102,70 +108,90 @@ class _SettingsMenuState extends State<SettingsMenu> {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: Colors.black.withOpacity(0.04),
             blurRadius: 20,
-            offset: const Offset(0, 5),
+            offset: const Offset(0, 8),
+            spreadRadius: 1,
           ),
         ],
       ),
       child: Column(
         children: [
-          ListTile(
-            leading: _buildIconBox(Icons.language),
-            title: Text(
-              tr(context, 'language'),
-              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
-            ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  TranslationProvider.of(context).currentLang == 'tn'
-                      ? "TN"
-                      : "EN",
-                  style: const TextStyle(
-                    color: AppColors.primaryBlue,
-                    fontWeight: FontWeight.bold,
-                  ),
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              onTap: () => _showLanguageDialog(),
+              child: ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                leading: _buildIconBox(Icons.language),
+                title: Text(
+                  tr(context, 'language'),
+                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: AppColors.textDark),
                 ),
-                const SizedBox(width: 5),
-                const Icon(
-                  Icons.arrow_forward_ios,
-                  size: 14,
-                  color: Colors.grey,
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      TranslationProvider.of(context).currentLang == 'tn'
+                          ? "TN"
+                          : "EN",
+                      style: const TextStyle(
+                        color: AppColors.primaryBlue,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 16,
+                      color: Colors.black38,
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-            onTap: () {
-              // Ouvrir un dialog de choix de langue
-              _showLanguageDialog();
-            },
           ),
-          const Divider(height: 1, indent: 60),
+          Padding(
+            padding: const EdgeInsets.only(left: 64, right: 16),
+            child: Divider(height: 1, color: Colors.grey[200]),
+          ),
           ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             leading: _buildIconBox(Icons.notifications_outlined),
             title: Text(
               tr(context, 'notifications'),
-              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: AppColors.textDark),
             ),
             trailing: Switch(
               value: _isNotifOn,
-              activeThumbColor: AppColors.primaryBlue,
+              activeColor: Colors.white,
+              activeTrackColor: AppColors.primaryBlue,
+              inactiveThumbColor: Colors.grey[400],
+              inactiveTrackColor: Colors.grey[200],
               onChanged: (val) => setState(() => _isNotifOn = val),
             ),
           ),
-          const Divider(height: 1, indent: 60),
+          Padding(
+            padding: const EdgeInsets.only(left: 64, right: 16),
+            child: Divider(height: 1, color: Colors.grey[200]),
+          ),
           _ProfileMenuItem(
-            icon: Icons.help_outline,
+            icon: Icons.help_outline_rounded,
             title: tr(context, 'help_support'),
           ),
-          const Divider(height: 1, indent: 60),
+          Padding(
+            padding: const EdgeInsets.only(left: 64, right: 16),
+            child: Divider(height: 1, color: Colors.grey[200]),
+          ),
           _ProfileMenuItem(
             icon: Icons.description_outlined,
             title: tr(context, 'terms'),
+            isBottom: true,
           ),
         ],
       ),
@@ -213,12 +239,12 @@ class _SettingsMenuState extends State<SettingsMenu> {
 
   Widget _buildIconBox(IconData icon) {
     return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: const BoxDecoration(
-        color: AppColors.bgColor,
-        shape: BoxShape.circle,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: AppColors.primaryBlue.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(14),
       ),
-      child: Icon(icon, color: AppColors.textDark, size: 20),
+      child: Icon(icon, color: AppColors.primaryBlue, size: 22),
     );
   }
 }
@@ -248,33 +274,46 @@ class LogoutButton extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: Colors.black.withOpacity(0.04),
             blurRadius: 20,
-            offset: const Offset(0, 5),
+            offset: const Offset(0, 8),
+            spreadRadius: 1,
           ),
         ],
       ),
-      child: ListTile(
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: AppColors.actionRed.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(24),
+          onTap: () => _logout(context),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppColors.actionRed.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: const Icon(Icons.logout_rounded, color: AppColors.actionRed, size: 22),
+                ),
+                const SizedBox(width: 16),
+                Text(
+                  tr(context, 'logout'),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                    color: AppColors.actionRed,
+                  ),
+                ),
+              ],
+            ),
           ),
-          child: const Icon(Icons.logout, color: AppColors.actionRed, size: 20),
         ),
-        title: Text(
-          tr(context, 'logout'),
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 15,
-            color: AppColors.actionRed,
-          ),
-        ),
-        onTap: () => _logout(context),
       ),
     );
   }
@@ -288,41 +327,68 @@ class _ProfileMenuItem extends StatelessWidget {
   final String title;
   final String? subtitle;
   final VoidCallback? onTap;
+  final bool isTop;
+  final bool isBottom;
 
   const _ProfileMenuItem({
     required this.icon,
     required this.title,
     this.subtitle,
     this.onTap,
+    this.isTop = false,
+    this.isBottom = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: const BoxDecoration(
-          color: AppColors.bgColor,
-          shape: BoxShape.circle,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.vertical(
+          top: isTop ? const Radius.circular(24) : Radius.zero,
+          bottom: isBottom ? const Radius.circular(24) : Radius.zero,
         ),
-        child: Icon(icon, color: AppColors.textDark, size: 20),
+        onTap: onTap ?? () {},
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryBlue.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(icon, color: AppColors.primaryBlue, size: 22),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: AppColors.textDark),
+                    ),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle!,
+                        style: TextStyle(fontSize: 13, color: Colors.grey[600], fontWeight: FontWeight.w500),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 16,
+                color: Colors.black38,
+              ),
+            ],
+          ),
+        ),
       ),
-      title: Text(
-        title,
-        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
-      ),
-      subtitle: subtitle != null
-          ? Text(
-              subtitle!,
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
-            )
-          : null,
-      trailing: const Icon(
-        Icons.arrow_forward_ios,
-        size: 14,
-        color: Colors.grey,
-      ),
-      onTap: onTap,
     );
   }
 }

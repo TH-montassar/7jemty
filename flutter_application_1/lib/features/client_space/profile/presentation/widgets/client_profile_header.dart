@@ -468,30 +468,47 @@ class _ProfileHeaderState extends State<ProfileHeader> {
     final avatarUrl = widget.userData?['profile']?['avatarUrl'];
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 20,
-            offset: const Offset(0, 5),
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 30,
+            offset: const Offset(0, 10),
+            spreadRadius: 2,
           ),
         ],
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 35,
-            backgroundColor: AppColors.primaryBlue.withValues(alpha: 0.1),
-            backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
-                ? NetworkImage(avatarUrl)
-                : const NetworkImage(
-                    'https://cdn-icons-png.flaticon.com/512/149/149071.png', // Generic avatar
-                  ),
+          Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: AppColors.primaryBlue.withOpacity(0.15),
+                width: 3,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primaryBlue.withOpacity(0.1),
+                  blurRadius: 15,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: CircleAvatar(
+              radius: 42,
+              backgroundColor: AppColors.primaryBlue.withOpacity(0.1),
+              backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
+                  ? NetworkImage(avatarUrl)
+                  : const NetworkImage(
+                      'https://cdn-icons-png.flaticon.com/512/149/149071.png', // Generic avatar
+                    ),
+            ),
           ),
-          const SizedBox(width: 15),
+          const SizedBox(width: 20),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -499,33 +516,51 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                 Text(
                   name,
                   style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
                     color: AppColors.textDark,
+                    letterSpacing: -0.3,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  role == 'EMPLOYEE'
-                      ? phone
-                      : (phone.isNotEmpty ? phone : role),
-                  style: const TextStyle(color: Colors.grey, fontSize: 14),
+                const SizedBox(height: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.bgColor,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    role == 'EMPLOYEE'
+                        ? phone
+                        : (phone.isNotEmpty ? phone : role),
+                    style: const TextStyle(
+                      color: Colors.black54,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
                 ),
               ],
             ),
           ),
-          Container(
-            decoration: const BoxDecoration(
-              color: AppColors.bgColor,
-              shape: BoxShape.circle,
-            ),
-            child: IconButton(
-              icon: const Icon(
-                Icons.edit,
-                color: AppColors.primaryBlue,
-                size: 20,
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => _showEditProfileModal(context),
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryBlue.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Icon(
+                  Icons.edit_rounded,
+                  color: AppColors.primaryBlue,
+                  size: 22,
+                ),
               ),
-              onPressed: () => _showEditProfileModal(context),
             ),
           ),
         ],
