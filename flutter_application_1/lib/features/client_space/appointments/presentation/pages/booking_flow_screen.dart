@@ -8,7 +8,7 @@ import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:hjamty/features/client_space/salon_profile/data/salon_service.dart';
 import 'package:hjamty/features/client_space/appointments/data/appointment_service.dart';
 import 'package:hjamty/features/auth/data/auth_service.dart';
-import 'package:hjamty/features/client_space/main_layout/presentation/pages/client_main_layout.dart';
+import 'package:hjamty/features/client_space/appointments/presentation/pages/booking_success_screen.dart';
 
 class BookingFlowScreen extends StatefulWidget {
   final int salonId;
@@ -24,6 +24,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
   bool _isCheckingAvailability = false;
   bool _isSubmitting = false;
   String _salonName = "";
+  String _salonAddress = "";
   Map<String, dynamic>? _currentUser;
 
   // Data from API
@@ -84,6 +85,8 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
 
       // Extract services and employees if available, else empty lists
       setState(() {
+        _salonName = salonData['name'] ?? "";
+        _salonAddress = salonData['address'] ?? "";
         _services = salonData['services'] ?? [];
         _professionals =
             (salonData['employees'] as List?)?.map((e) {
@@ -287,13 +290,26 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
           autoCloseDuration: const Duration(seconds: 4),
         );
 
-        // Navigate to the Appointments tab (index 1)
-        Navigator.pushAndRemoveUntil(
+        final List<Map<String, dynamic>> selectedServices = _services
+            .where((s) => _selectedServiceIds.contains(s['id']))
+            .map((s) => Map<String, dynamic>.from(s))
+            .toList();
+
+        // Navigate to the Success Screen
+        Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const ClientMainLayout(initialIndex: 1),
+            builder: (context) => BookingSuccessScreen(
+              salonName: _salonName,
+              salonAddress: _salonAddress,
+              date: _dates[_selectedDateIndex],
+              time: _selectedTime!,
+              durationMinutes: _totalDuration,
+              services: selectedServices,
+              totalPrice: _totalPrice,
+              barberName: selectedProfessional?['name'] ?? '',
+            ),
           ),
-          (route) => false,
         );
       }
     } catch (e) {
