@@ -4,7 +4,8 @@ import { createSalonSchema, updateSalonSchema, createEmployeeAccountSchema, crea
 import {
     createSalon, updateSalon, getSalonByPatronId,
     createEmployeeAccount, getAllSalons, createService,
-    getServices, getTopRatedSalons, getSalonById, searchSalons
+    getServices, getTopRatedSalons, getSalonById, searchSalons,
+    toggleFavoriteSalon, getFavoriteSalons, checkFavoriteStatus
 } from './salon.service.js';
 
 export const createSalonHandler = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -138,6 +139,51 @@ export const searchSalonHandler = async (req: Request, res: Response): Promise<v
         }
         const salons = await searchSalons(query.trim());
         res.json({ success: true, data: salons });
+    } catch (error: any) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+export const toggleFavoriteSalonHandler = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const clientId = req.user!.userId;
+        const salonId = parseInt(req.params.id as string);
+
+        if (isNaN(salonId)) {
+            res.status(400).json({ success: false, message: 'ID invalide' });
+            return;
+        }
+
+        const result = await toggleFavoriteSalon(clientId, salonId);
+        res.status(200).json({ success: true, data: result });
+    } catch (error: any) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+export const checkFavoriteStatusHandler = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const clientId = req.user!.userId;
+        const salonId = parseInt(req.params.id as string);
+
+        if (isNaN(salonId)) {
+            res.status(400).json({ success: false, message: 'ID invalide' });
+            return;
+        }
+
+        const result = await checkFavoriteStatus(clientId, salonId);
+        res.status(200).json({ success: true, data: result });
+    } catch (error: any) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+export const getFavoriteSalonsHandler = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const clientId = req.user!.userId;
+        const favorites = await getFavoriteSalons(clientId);
+
+        res.status(200).json({ success: true, data: favorites });
     } catch (error: any) {
         res.status(500).json({ success: false, message: error.message });
     }

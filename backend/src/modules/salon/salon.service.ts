@@ -390,3 +390,62 @@ export const searchSalons = async (query: string, includeUnapproved: boolean = f
         rating: (salon as any).rating ? ((salon as any).rating as number).toFixed(1) : "4.5",
     }));
 };
+
+export const toggleFavoriteSalon = async (clientId: number, salonId: number) => {
+    // Check if it's already favorited
+    const existingFavorite = await prisma.favoriteSalon.findFirst({
+        where: {
+            clientId,
+            salonId
+        }
+    });
+
+    if (existingFavorite) {
+        // Remove from favorites
+        await prisma.favoriteSalon.delete({
+            where: { id: existingFavorite.id }
+        });
+        return { isFavorite: false };
+    } else {
+        // Add to favorites
+        await prisma.favoriteSalon.create({
+            data: {
+                clientId,
+                salonId
+            }
+        });
+        return { isFavorite: true };
+    }
+};
+
+export const checkFavoriteStatus = async (clientId: number, salonId: number) => {
+    const favorite = await prisma.favoriteSalon.findFirst({
+        where: {
+            clientId,
+            salonId
+        }
+    });
+    return { isFavorite: !!favorite };
+};
+
+export const getFavoriteSalons = async (clientId: number) => {
+    const favorites = await prisma.favoriteSalon.findMany({
+        where: { clientId },
+        include: {
+            salon: {
+                include: {
+                    services: true,
+                    workingHours: true,
+                }
+            }
+        },
+        orderBy: { createdAt: 'desc' }
+    });
+
+    return favorites.map(fav => ({
+        ...fav.salon,
+        image: fav.salon.coverImageUrl || 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=500&q=80',
+        rating: (fav.salon as any).rating ? ((fav.salon as any).rating as number).toFixed(1) : "4.5",
+        favoritedAt: fav.createdAt
+    }));
+};

@@ -54,7 +54,8 @@ class SalonInfoSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Category Pill
-          if (salonData['speciality'] != null)
+          if (salonData['speciality'] != null &&
+              salonData['speciality'].toString().isNotEmpty)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               margin: const EdgeInsets.only(bottom: 10),

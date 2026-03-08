@@ -6,6 +6,7 @@ import 'package:hjamty/features/client_space/salon_profile/data/salon_service.da
 import 'package:hjamty/features/client_space/appointments/data/appointment_service.dart';
 import 'package:hjamty/features/client_space/appointments/presentation/widgets/appointment_details_bottom_sheet.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
 
 import 'package:hjamty/features/client_space/salon_profile/presentation/pages/salon_setting_screen.dart';
 import 'package:hjamty/features/client_space/appointments/presentation/pages/booking_flow_screen.dart';
@@ -31,6 +32,8 @@ class SalonDashboardScreen extends StatefulWidget {
 class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
   bool _isLoading = true;
   Map<String, dynamic>? _salonData;
+  bool _isFavorite = false;
+  bool _isLoadingFavorite = false;
 
   @override
   void initState() {
@@ -45,8 +48,16 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
           : await SalonService.getSalonById(widget.salonId!);
       if (!mounted) return;
 
+      bool isFav = false;
+      if (response != null && response['id'] != null && !widget.isPatron) {
+        isFav = await SalonService.checkFavoriteStatus(response['id']);
+      }
+
+      if (!mounted) return;
+
       setState(() {
         _salonData = response;
+        _isFavorite = isFav;
         _isLoading = false;
       });
     } catch (e) {
@@ -79,6 +90,67 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
           showProgressBar: false,
         );
       });
+    }
+  }
+
+  Future<void> _shareSalon() async {
+    if (_salonData == null) return;
+    final name = _salonData!['name'] ?? 'Salon';
+    final address = _salonData!['address'] ?? '';
+    final rating = _salonData!['rating']?.toString() ?? '?';
+    final message =
+        '🏪 $name\n⭐ $rating / 5\n📍 $address\n\nDécouvre ce salon sur Hjamty!';
+    try {
+      await Share.share(message);
+    } catch (e) {
+      debugPrint('Share error: $e');
+    }
+  }
+
+  Future<void> _toggleFavorite() async {
+    if (_salonData == null || _salonData!['id'] == null) return;
+
+    // Optimistic UI update
+    setState(() {
+      _isFavorite = !_isFavorite;
+      _isLoadingFavorite = true;
+    });
+
+    try {
+      final isNowFavorite = await SalonService.toggleFavoriteSalon(
+        _salonData!['id'],
+      );
+      if (!mounted) return;
+
+      setState(() {
+        _isFavorite = isNowFavorite;
+        _isLoadingFavorite = false;
+      });
+    } catch (e) {
+      // Revert on error
+      if (!mounted) return;
+      setState(() {
+        _isFavorite = !_isFavorite;
+        _isLoadingFavorite = false;
+      });
+
+      toastification.show(
+        context: context,
+        type: ToastificationType.error,
+        style: ToastificationStyle.fillColored,
+        alignment: Alignment.topCenter,
+        autoCloseDuration: const Duration(seconds: 4),
+        title: const Text(
+          'Mochkla',
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+        description: Text(
+          e.toString(),
+          style: const TextStyle(color: Colors.white),
+        ),
+        primaryColor: AppColors.actionRed,
+        backgroundColor: AppColors.actionRed,
+      );
     }
   }
 
@@ -203,7 +275,87 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                 backgroundColor: AppColors.primaryBlue,
                 elevation: 0,
                 iconTheme: const IconThemeData(color: Colors.white),
+                automaticallyImplyLeading: false,
+                leading: widget.isPatron
+                    ? const SizedBox.shrink()
+                    : Container(
+                        margin: const EdgeInsets.all(8.0),
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          icon: const Icon(
+                            Icons.arrow_back,
+                            color: Colors.black,
+                            size: 20,
+                          ),
+                          onPressed: () {
+                            if (Navigator.canPop(context)) {
+                              Navigator.pop(context);
+                            }
+                          },
+                        ),
+                      ),
                 actions: [
+                  if (!widget.isPatron) ...[
+                    Container(
+                      margin: const EdgeInsets.symmetric(vertical: 8.0),
+                      width: 40,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: const Icon(
+                          Icons.share_outlined,
+                          color: Colors.black,
+                          size: 20,
+                        ),
+                        onPressed: _shareSalon,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      margin: const EdgeInsets.symmetric(vertical: 8.0),
+                      width: 40,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: _isLoadingFavorite
+                          ? const Padding(
+                              padding: EdgeInsets.all(10.0),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.black,
+                                ),
+                              ),
+                            )
+                          : IconButton(
+                              padding: EdgeInsets.zero,
+                              icon: Icon(
+                                _isFavorite
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
+                                color: _isFavorite
+                                    ? AppColors.actionRed
+                                    : Colors.black,
+                                size: 20,
+                              ),
+                              onPressed: () {
+                                // Only clients can favorite
+                                if (!widget.isPatron) {
+                                  _toggleFavorite();
+                                }
+                              },
+                            ),
+                    ),
+                    const SizedBox(width: 12),
+                  ],
                   // Show for patron or admin
                   FutureBuilder<Map<String, dynamic>>(
                     future: AuthService.getMe(),

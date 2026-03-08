@@ -10,6 +10,9 @@ import 'package:hjamty/features/client_space/salon_profile/data/salon_service.da
 import 'package:hjamty/features/client_space/appointments/presentation/pages/booking_flow_screen.dart';
 import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:hjamty/features/client_space/salon_profile/presentation/widgets/about_tab.dart';
+import 'package:toastification/toastification.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:share_plus/share_plus.dart';
 
 class SalonProfilePage extends StatefulWidget {
   final int salonId;
@@ -22,11 +25,82 @@ class SalonProfilePage extends StatefulWidget {
 
 class _SalonProfilePageState extends State<SalonProfilePage> {
   late Future<Map<String, dynamic>> _salonFuture;
+  bool _isFavorite = false;
+  bool _isLoadingFavorite = false;
+  bool _isClient = true; // Default to true until checked
 
   @override
   void initState() {
     super.initState();
     _salonFuture = SalonService.getSalonById(widget.salonId);
+    _checkFavorite();
+    _loadUserRole();
+  }
+
+  Future<void> _loadUserRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    final role = prefs.getString('user_role');
+    if (mounted) {
+      setState(() {
+        _isClient = role == 'CLIENT';
+      });
+    }
+  }
+
+  Future<void> _checkFavorite() async {
+    try {
+      final isFav = await SalonService.checkFavoriteStatus(widget.salonId);
+      if (mounted) {
+        setState(() {
+          _isFavorite = isFav;
+        });
+      }
+    } catch (e) {
+      // Ignore initial error
+    }
+  }
+
+  Future<void> _toggleFavorite() async {
+    setState(() {
+      _isFavorite = !_isFavorite;
+      _isLoadingFavorite = true;
+    });
+
+    try {
+      final isNowFavorite = await SalonService.toggleFavoriteSalon(
+        widget.salonId,
+      );
+      if (!mounted) return;
+
+      setState(() {
+        _isFavorite = isNowFavorite;
+        _isLoadingFavorite = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isFavorite = !_isFavorite;
+        _isLoadingFavorite = false;
+      });
+
+      toastification.show(
+        context: context,
+        type: ToastificationType.error,
+        style: ToastificationStyle.fillColored,
+        alignment: Alignment.topCenter,
+        autoCloseDuration: const Duration(seconds: 4),
+        title: const Text(
+          'Mochkla',
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+        description: Text(
+          e.toString(),
+          style: const TextStyle(color: Colors.white),
+        ),
+        primaryColor: AppColors.actionRed,
+        backgroundColor: AppColors.actionRed,
+      );
+    }
   }
 
   @override
@@ -93,13 +167,88 @@ class _SalonProfilePageState extends State<SalonProfilePage> {
                     pinned: true,
                     backgroundColor: AppColors.primaryBlue,
                     elevation: 0,
-                    leading: IconButton(
-                      icon: const Icon(
-                        Icons.arrow_back_ios,
+                    leading: Container(
+                      margin: const EdgeInsets.all(8.0),
+                      decoration: const BoxDecoration(
                         color: Colors.white,
+                        shape: BoxShape.circle,
                       ),
-                      onPressed: () => Navigator.pop(context),
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: const Icon(
+                          Icons.arrow_back,
+                          color: Colors.black,
+                          size: 20,
+                        ),
+                        onPressed: () => Navigator.pop(context),
+                      ),
                     ),
+                    actions: [
+                      if (_isClient) ...[
+                        Container(
+                          margin: const EdgeInsets.symmetric(vertical: 8.0),
+                          width: 40,
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                          child: IconButton(
+                            padding: EdgeInsets.zero,
+                            icon: const Icon(
+                              Icons.share_outlined,
+                              color: Colors.black,
+                              size: 20,
+                            ),
+                            onPressed: () async {
+                              final name = salonData['name'] ?? 'Salon';
+                              final address = salonData['address'] ?? '';
+                              final rating =
+                                  salonData['rating']?.toString() ?? '?';
+                              final message =
+                                  '🏪 $name\n⭐ $rating / 5\n📍 $address\n\nDécouvre ce salon sur Hjamty!';
+                              try {
+                                await Share.share(message);
+                              } catch (e) {
+                                debugPrint('Share error: $e');
+                              }
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          margin: const EdgeInsets.symmetric(vertical: 8.0),
+                          width: 40,
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                          child: _isLoadingFavorite
+                              ? const Padding(
+                                  padding: EdgeInsets.all(10.0),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.black,
+                                    ),
+                                  ),
+                                )
+                              : IconButton(
+                                  padding: EdgeInsets.zero,
+                                  icon: Icon(
+                                    _isFavorite
+                                        ? Icons.favorite
+                                        : Icons.favorite_border,
+                                    color: _isFavorite
+                                        ? AppColors.actionRed
+                                        : Colors.black,
+                                    size: 20,
+                                  ),
+                                  onPressed: _toggleFavorite,
+                                ),
+                        ),
+                        const SizedBox(width: 12),
+                      ],
+                    ],
                     flexibleSpace: FlexibleSpaceBar(
                       background: Stack(
                         fit: StackFit.expand,
