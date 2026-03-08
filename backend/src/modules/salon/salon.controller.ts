@@ -1,9 +1,17 @@
 import type { Response, Request } from 'express';
 import type { AuthRequest } from '../../middlewares/auth.middleware.js';
-import { createSalonSchema, updateSalonSchema, createEmployeeAccountSchema, createServiceSchema } from './salon.schema.js';
+import {
+    createSalonSchema,
+    updateSalonSchema,
+    createEmployeeAccountSchema,
+    updateEmployeeAccountSchema,
+    createServiceSchema,
+    updateServiceSchema
+} from './salon.schema.js';
 import {
     createSalon, updateSalon, getSalonByPatronId,
-    createEmployeeAccount, getAllSalons, createService,
+    createEmployeeAccount, updateEmployeeAccount, removeEmployeeFromSalon, getAllSalons, createService,
+    updateService, deleteService,
     getServices, getTopRatedSalons, getSalonById, searchSalons,
     toggleFavoriteSalon, getFavoriteSalons, checkFavoriteStatus
 } from './salon.service.js';
@@ -67,6 +75,44 @@ export const createEmployeeAccountHandler = async (req: AuthRequest, res: Respon
     }
 };
 
+export const updateEmployeeAccountHandler = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const patronId = req.user!.userId;
+        const employeeId = parseInt(req.params.employeeId as string);
+
+        if (isNaN(employeeId)) {
+            res.status(400).json({ success: false, message: 'ID employe invalide' });
+            return;
+        }
+
+        const validatedData = updateEmployeeAccountSchema.parse(req.body);
+        const updatedEmployee = await updateEmployeeAccount(patronId, employeeId, validatedData);
+
+        res.status(200).json({ success: true, data: updatedEmployee });
+    } catch (error: any) {
+        const message = error.errors ? error.errors[0].message : error.message;
+        res.status(400).json({ success: false, message });
+    }
+};
+
+export const deleteEmployeeAccountHandler = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const patronId = req.user!.userId;
+        const employeeId = parseInt(req.params.employeeId as string);
+
+        if (isNaN(employeeId)) {
+            res.status(400).json({ success: false, message: 'ID employe invalide' });
+            return;
+        }
+
+        const result = await removeEmployeeFromSalon(patronId, employeeId);
+        res.status(200).json({ success: true, data: result });
+    } catch (error: any) {
+        const message = error.errors ? error.errors[0].message : error.message;
+        res.status(400).json({ success: false, message });
+    }
+};
+
 export const getAllSalonsHandler = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const lat = req.query.lat ? parseFloat(req.query.lat as string) : undefined;
@@ -103,6 +149,44 @@ export const getServicesHandler = async (req: AuthRequest, res: Response): Promi
         res.status(200).json({ success: true, data: services });
     } catch (error: any) {
         res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+export const updateServiceHandler = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const patronId = req.user!.userId;
+        const serviceId = parseInt(req.params.serviceId as string);
+
+        if (isNaN(serviceId)) {
+            res.status(400).json({ success: false, message: 'ID service invalide' });
+            return;
+        }
+
+        const validatedData = updateServiceSchema.parse(req.body);
+        const updatedService = await updateService(patronId, serviceId, validatedData);
+
+        res.status(200).json({ success: true, data: updatedService });
+    } catch (error: any) {
+        const message = error.errors ? error.errors[0].message : error.message;
+        res.status(400).json({ success: false, message });
+    }
+};
+
+export const deleteServiceHandler = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const patronId = req.user!.userId;
+        const serviceId = parseInt(req.params.serviceId as string);
+
+        if (isNaN(serviceId)) {
+            res.status(400).json({ success: false, message: 'ID service invalide' });
+            return;
+        }
+
+        const result = await deleteService(patronId, serviceId);
+        res.status(200).json({ success: true, data: result });
+    } catch (error: any) {
+        const message = error.errors ? error.errors[0].message : error.message;
+        res.status(400).json({ success: false, message });
     }
 };
 
