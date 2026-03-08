@@ -161,7 +161,7 @@ class _NearYouListState extends State<NearYouList> {
                                     ),
                                     const SizedBox(width: 2),
                                     Text(
-                                      salon['rating']?.toString() ?? '4.5',
+                                      salon['rating']?.toString() ?? '0.0',
                                       style: const TextStyle(
                                         color: AppColors.primaryBlue,
                                         fontWeight: FontWeight.bold,
@@ -186,3 +186,4 @@ class _NearYouListState extends State<NearYouList> {
     );
   }
 }
+

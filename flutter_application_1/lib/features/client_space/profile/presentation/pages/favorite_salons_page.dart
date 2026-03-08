@@ -300,7 +300,7 @@ class _FavoriteSalonsPageState extends State<FavoriteSalonsPage> {
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
-                                      salon['rating']?.toString() ?? '4.5',
+                                      salon['rating']?.toString() ?? '0.0',
                                       style: const TextStyle(
                                         color: AppColors.primaryBlue,
                                         fontWeight: FontWeight.bold,
@@ -325,3 +325,4 @@ class _FavoriteSalonsPageState extends State<FavoriteSalonsPage> {
     );
   }
 }
+

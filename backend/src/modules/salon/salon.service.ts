@@ -26,8 +26,6 @@ export const createSalon = async (patronId: number, data: any) => {
         throw new Error('3andek salon deja m9ayed fel system');
     }
 
-    const randomRating = parseFloat((Math.random() * (5.0 - 3.5) + 3.5).toFixed(1));
-
     // 2. Nasn3ou e-salon
     const newSalon = await prisma.salon.create({
         data: {
@@ -37,7 +35,7 @@ export const createSalon = async (patronId: number, data: any) => {
             longitude: data.longitude, // <-- Save longitude
             googleMapsUrl: data.googleMapsUrl, // <-- Save fields from new onboarding
             speciality: data.speciality,
-            rating: randomRating,
+            rating: 0,
             patronId: patronId, // 👈 Narbtou l'salon bel Patron mta3ou
         },
     });
@@ -144,6 +142,14 @@ export const getSalonByPatronId = async (patronId: number) => {
             services: true,
             workingHours: true,
             portfolio: true,
+            reviews: {
+                include: {
+                    client: {
+                        include: { profile: true }
+                    }
+                },
+                orderBy: { createdAt: 'desc' }
+            }
         }
     });
 
@@ -165,7 +171,21 @@ export const getSalonByPatronId = async (patronId: number) => {
         createdAt: emp.createdAt
     }));
 
-    return { ...salon, employees: formattedEmployees };
+    const formattedReviews = salon.reviews.map(rev => ({
+        id: rev.id,
+        clientId: rev.clientId,
+        clientName: rev.client.fullName,
+        clientImage: rev.client.profile?.avatarUrl || null,
+        rating: rev.rating,
+        comment: rev.comment,
+        createdAt: rev.createdAt,
+    }));
+
+    const formattedRating = formattedReviews.length > 0 && typeof salon.rating === 'number'
+        ? salon.rating.toFixed(1)
+        : "0.0";
+
+    return { ...salon, employees: formattedEmployees, reviews: formattedReviews, rating: formattedRating };
 };
 
 export const createEmployeeAccount = async (patronId: number, data: any) => {
@@ -360,6 +380,13 @@ export const getAllSalons = async (lat?: number, lng?: number, includeUnapproved
     // Njibou tous les salons men base de données
     const salons = await prisma.salon.findMany({
         where: !includeUnapproved ? { approvalStatus: 'APPROVED' } : {},
+        include: {
+            _count: {
+                select: {
+                    reviews: true,
+                }
+            }
+        }
     });
 
     // Ken 3ana les coordonnées mta3 el client, n7esbou el distance (en km mthln)
@@ -384,7 +411,7 @@ export const getAllSalons = async (lat?: number, lng?: number, includeUnapproved
             // l'app yesta3mel 'image' ltaw fi mocked data, nejmou nraj3ou coverImageUrl 
             image: salon.coverImageUrl || 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=500&q=80',
             // Default rating for now, or you can calculate if reviews relation is added
-            rating: (salon as any).rating ? ((salon as any).rating as number).toFixed(1) : "4.5"
+            rating: (salon as any)._count?.reviews > 0 && (salon as any).rating ? ((salon as any).rating as number).toFixed(1) : "0.0"
         };
     });
 
@@ -581,7 +608,7 @@ export const getSalonById = async (id: number) => {
         employees: formattedEmployees,
         reviews: formattedReviews,
         image: salon.coverImageUrl || 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=500&q=80',
-        rating: salon.rating ? (salon.rating as number).toFixed(1) : "4.5",
+        rating: formattedReviews.length > 0 && typeof salon.rating === "number" ? salon.rating.toFixed(1) : "0.0",
     };
 };
 
@@ -590,13 +617,19 @@ export const getTopRatedSalons = async (limit: number = 10, includeUnapproved: b
         where: !includeUnapproved ? { approvalStatus: 'APPROVED' } : {},
         orderBy: { rating: 'desc' } as any,
         take: limit,
-        // Removed include: { services: true } to speed up startup
+        include: {
+            _count: {
+                select: {
+                    reviews: true,
+                }
+            }
+        }
     });
 
     return salons.map(salon => ({
         ...salon,
         image: salon.coverImageUrl || 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=500&q=80',
-        rating: (salon as any).rating ? ((salon as any).rating as number).toFixed(1) : "4.5",
+        rating: (salon as any)._count?.reviews > 0 && (salon as any).rating ? ((salon as any).rating as number).toFixed(1) : "0.0",
     }));
 };
 
@@ -613,6 +646,11 @@ export const searchSalons = async (query: string, includeUnapproved: boolean = f
         include: {
             services: true,
             workingHours: true,
+            _count: {
+                select: {
+                    reviews: true,
+                }
+            }
         },
         take: 20, // Limit results for performance
     });
@@ -620,7 +658,7 @@ export const searchSalons = async (query: string, includeUnapproved: boolean = f
     return salons.map(salon => ({
         ...salon,
         image: salon.coverImageUrl || 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=500&q=80',
-        rating: (salon as any).rating ? ((salon as any).rating as number).toFixed(1) : "4.5",
+        rating: (salon as any)._count?.reviews > 0 && (salon as any).rating ? ((salon as any).rating as number).toFixed(1) : "0.0",
     }));
 };
 
@@ -669,6 +707,11 @@ export const getFavoriteSalons = async (clientId: number) => {
                 include: {
                     services: true,
                     workingHours: true,
+                    _count: {
+                        select: {
+                            reviews: true,
+                        }
+                    }
                 }
             }
         },
@@ -678,7 +721,7 @@ export const getFavoriteSalons = async (clientId: number) => {
     return favorites.map(fav => ({
         ...fav.salon,
         image: fav.salon.coverImageUrl || 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=500&q=80',
-        rating: (fav.salon as any).rating ? ((fav.salon as any).rating as number).toFixed(1) : "4.5",
+        rating: (fav.salon as any)._count?.reviews > 0 && (fav.salon as any).rating ? ((fav.salon as any).rating as number).toFixed(1) : "0.0",
         favoritedAt: fav.createdAt
     }));
 };

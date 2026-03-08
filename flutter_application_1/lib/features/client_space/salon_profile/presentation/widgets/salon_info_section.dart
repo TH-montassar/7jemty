@@ -20,6 +20,11 @@ class SalonInfoSection extends StatelessWidget {
       orElse: () => null,
     );
 
+    final int reviewsCount = (salonData['reviews'] as List<dynamic>?)?.length ?? 0;
+    final String displayRating = reviewsCount == 0
+        ? '0.0'
+        : (salonData['rating']?.toString() ?? '0.0');
+
     bool isOpen = false;
     String? closeTimeStr;
 
@@ -110,7 +115,7 @@ class SalonInfoSection extends StatelessWidget {
                     const Icon(Icons.star, color: Colors.black, size: 14),
                     const SizedBox(width: 4),
                     Text(
-                      salonData['rating']?.toString() ?? '5.0',
+                      displayRating,
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 13,
@@ -122,7 +127,7 @@ class SalonInfoSection extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               Text(
-                '${salonData['reviews']?.length ?? 0} avis',
+                '${reviewsCount} avis',
                 style: const TextStyle(
                   color: Colors.grey,
                   fontSize: 14,

@@ -385,6 +385,8 @@ const Map<String, String> tn = {
   'submit_review_btn': 'Abaath l\'avis',
   'skip_btn': 'Fout',
   'close_btn': 'Fermer',
+  'start_service_btn': 'jee lclient',
+  'no_show_btn': 'majech lclient',
 
   // System & Messages
   'status_updated': 'Statut mis à jour: {0}',
@@ -438,7 +440,7 @@ const Map<String, String> tn = {
   'active': 'Active',
   'deactivated': 'Desactivé',
   'waiting_approval': 'Waiting for approval',
-  'based_on_n_reviews': 'Based on {} reviews',
+  'based_on_n_reviews': 'Based on {0} reviews',
   'no_reviews_yet': 'Ma famma 7atta avi ltaw',
   'rate_this_salon': '9ayyem hal saloun',
   'thank_you_for_review': 'Yaatik essa7a ala rayek! ⭐',

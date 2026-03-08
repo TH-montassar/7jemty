@@ -38,6 +38,8 @@ const Map<String, String> en = {
   'status_completed': 'Completed',
   'status_cancelled': 'Cancelled',
   'status_declined': 'Declined',
+  'start_service_btn': 'is client camee /Start Service',
+  'no_show_btn': 'No Show',
 
   // Filters
   'all': 'All',
@@ -410,6 +412,7 @@ const Map<String, String> en = {
   'send_the_review': 'Send the review',
   'rating_4_9': '4.9',
   'based_on_120_reviews': 'Based on 120 reviews',
+  'based_on_n_reviews': 'Based on {0} reviews',
   'write_a_review': 'Write a review',
   'address_ariana': 'Habib Bourguiba Avenue, Ariana',
   'reviews_120': ' (120 reviews)',
