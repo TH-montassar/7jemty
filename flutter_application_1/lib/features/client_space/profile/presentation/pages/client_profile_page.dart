@@ -101,17 +101,19 @@ class _ProfilePageState extends State<ProfilePage> {
             const SizedBox(height: 30),
 
             // 3. Mes Activités (Commandes & Favoris)
-            Text(
-              tr(context, 'my_activities'),
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textDark,
+            if (_userData != null && _userData!['role'] == 'CLIENT') ...[
+              Text(
+                tr(context, 'my_activities'),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textDark,
+                ),
               ),
-            ),
-            const SizedBox(height: 15),
-            const ActivityMenu(),
-            const SizedBox(height: 30),
+              const SizedBox(height: 15),
+              const ActivityMenu(),
+              const SizedBox(height: 30),
+            ],
 
             // 4. Paramètres
             Text(

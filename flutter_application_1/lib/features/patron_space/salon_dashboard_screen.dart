@@ -6,6 +6,7 @@ import 'package:hjamty/features/client_space/salon_profile/data/salon_service.da
 import 'package:hjamty/features/client_space/appointments/data/appointment_service.dart';
 import 'package:hjamty/features/client_space/appointments/presentation/widgets/appointment_details_bottom_sheet.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
 
 import 'package:hjamty/features/client_space/salon_profile/presentation/pages/salon_setting_screen.dart';
 import 'package:hjamty/features/client_space/appointments/presentation/pages/booking_flow_screen.dart';
@@ -16,6 +17,8 @@ import '../../features/client_space/salon_profile/presentation/widgets/salon_inf
 import '../../features/client_space/salon_profile/presentation/widgets/about_tab.dart';
 import 'package:hjamty/core/widgets/notification_bell.dart';
 import 'package:hjamty/features/auth/data/auth_service.dart';
+import 'package:hjamty/features/auth/signIn.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SalonDashboardScreen extends StatefulWidget {
   final bool isPatron;
@@ -31,6 +34,8 @@ class SalonDashboardScreen extends StatefulWidget {
 class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
   bool _isLoading = true;
   Map<String, dynamic>? _salonData;
+  bool _isFavorite = false;
+  bool _isLoadingFavorite = false;
 
   @override
   void initState() {
@@ -45,8 +50,16 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
           : await SalonService.getSalonById(widget.salonId!);
       if (!mounted) return;
 
+      bool isFav = false;
+      if (response != null && response['id'] != null && !widget.isPatron) {
+        isFav = await SalonService.checkFavoriteStatus(response['id']);
+      }
+
+      if (!mounted) return;
+
       setState(() {
         _salonData = response;
+        _isFavorite = isFav;
         _isLoading = false;
       });
     } catch (e) {
@@ -79,6 +92,79 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
           showProgressBar: false,
         );
       });
+    }
+  }
+
+  Future<void> _shareSalon() async {
+    if (_salonData == null) return;
+    final name = _salonData!['name'] ?? 'Salon';
+    final address = _salonData!['address'] ?? '';
+    final rating = _salonData!['rating']?.toString() ?? '?';
+    final message =
+        '🏪 $name\n⭐ $rating / 5\n📍 $address\n\nDécouvre ce salon sur Hjamty!';
+    try {
+      await Share.share(message);
+    } catch (e) {
+      debugPrint('Share error: $e');
+    }
+  }
+
+  Future<void> _toggleFavorite() async {
+    if (_salonData == null || _salonData!['id'] == null) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('jwt_token');
+
+    if (token == null || token.isEmpty) {
+      if (!mounted) return;
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const SignInScreen()),
+      );
+      return;
+    }
+
+    // Optimistic UI update
+    setState(() {
+      _isFavorite = !_isFavorite;
+      _isLoadingFavorite = true;
+    });
+
+    try {
+      final isNowFavorite = await SalonService.toggleFavoriteSalon(
+        _salonData!['id'],
+      );
+      if (!mounted) return;
+
+      setState(() {
+        _isFavorite = isNowFavorite;
+        _isLoadingFavorite = false;
+      });
+    } catch (e) {
+      // Revert on error
+      if (!mounted) return;
+      setState(() {
+        _isFavorite = !_isFavorite;
+        _isLoadingFavorite = false;
+      });
+
+      toastification.show(
+        context: context,
+        type: ToastificationType.error,
+        style: ToastificationStyle.fillColored,
+        alignment: Alignment.topCenter,
+        autoCloseDuration: const Duration(seconds: 4),
+        title: const Text(
+          'Mochkla',
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
+        description: Text(
+          e.toString(),
+          style: const TextStyle(color: Colors.white),
+        ),
+        primaryColor: AppColors.actionRed,
+        backgroundColor: AppColors.actionRed,
+      );
     }
   }
 
@@ -161,6 +247,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
     ];
     if (widget.isPatron) {
       tabs.add(Tab(text: tr(context, 'tab_appointments')));
+      tabs.add(Tab(text: tr(context, 'working_hours')));
     }
     tabs.add(Tab(text: tr(context, 'tab_reviews')));
 
@@ -202,7 +289,87 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                 backgroundColor: AppColors.primaryBlue,
                 elevation: 0,
                 iconTheme: const IconThemeData(color: Colors.white),
+                automaticallyImplyLeading: false,
+                leading: widget.isPatron
+                    ? const SizedBox.shrink()
+                    : Container(
+                        margin: const EdgeInsets.all(8.0),
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          icon: const Icon(
+                            Icons.arrow_back,
+                            color: Colors.black,
+                            size: 20,
+                          ),
+                          onPressed: () {
+                            if (Navigator.canPop(context)) {
+                              Navigator.pop(context);
+                            }
+                          },
+                        ),
+                      ),
                 actions: [
+                  if (!widget.isPatron) ...[
+                    Container(
+                      margin: const EdgeInsets.symmetric(vertical: 8.0),
+                      width: 40,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: const Icon(
+                          Icons.share_outlined,
+                          color: Colors.black,
+                          size: 20,
+                        ),
+                        onPressed: _shareSalon,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      margin: const EdgeInsets.symmetric(vertical: 8.0),
+                      width: 40,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: _isLoadingFavorite
+                          ? const Padding(
+                              padding: EdgeInsets.all(10.0),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.black,
+                                ),
+                              ),
+                            )
+                          : IconButton(
+                              padding: EdgeInsets.zero,
+                              icon: Icon(
+                                _isFavorite
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
+                                color: _isFavorite
+                                    ? AppColors.actionRed
+                                    : Colors.black,
+                                size: 20,
+                              ),
+                              onPressed: () {
+                                // Only clients can favorite
+                                if (!widget.isPatron) {
+                                  _toggleFavorite();
+                                }
+                              },
+                            ),
+                    ),
+                    const SizedBox(width: 12),
+                  ],
                   // Show for patron or admin
                   FutureBuilder<Map<String, dynamic>>(
                     future: AuthService.getMe(),
@@ -327,6 +494,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
               _buildServicesTab(),
               _buildSpecialistesTab(),
               if (widget.isPatron) _buildReservationsTab(),
+              if (widget.isPatron) _buildWorkingTimesTab(),
               _buildAvisTab(),
             ],
           ),
@@ -1116,6 +1284,230 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
         tr(context, 'no_reviews_yet'),
         style: const TextStyle(color: Colors.grey),
       ),
+    );
+  }
+
+  Widget _buildWorkingTimesTab() {
+    final List<dynamic>? workingHoursList = _salonData?['workingHours'];
+
+    // Sort logic to match Lundi-Dimanche order based on integer dayOfWeek (1=Lundi, 7=Dimanche)
+    final workingHours = workingHoursList != null
+        ? List<dynamic>.from(workingHoursList)
+        : [];
+    workingHours.sort((a, b) {
+      final dayA = a['dayOfWeek'] as int? ?? 0;
+      final dayB = b['dayOfWeek'] as int? ?? 0;
+      return dayA.compareTo(dayB);
+    });
+
+    return Column(
+      children: [
+        if (widget.isPatron)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SalonScreenUnifiee(
+                        initialTabIndex: 3, // Working Hours tab
+                        openAddForm: true,
+                        salonId:
+                            null, // Always pass null for Patron to use getMySalon / update my salon
+                      ),
+                    ),
+                  ).then((_) => _fetchSalonData());
+                },
+                icon: const Icon(Icons.edit, size: 18, color: Colors.white),
+                label: Text(
+                  tr(context, 'edit'),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryBlue,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        if (workingHours.isEmpty)
+          Expanded(
+            child: Center(
+              child: Text(
+                '${tr(context, 'coming_soon', args: ['Working Hours'])}...',
+                style: const TextStyle(color: Colors.grey, fontSize: 15),
+              ),
+            ),
+          )
+        else
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              itemCount: workingHours.length,
+              itemBuilder: (context, index) {
+                final dayData = workingHours[index];
+                final isDayOff = dayData['isDayOff'] ?? false;
+                final isOpen = !isDayOff;
+                final openTime = dayData['openTime'] ?? '09:00';
+                final closeTime = dayData['closeTime'] ?? '18:00';
+
+                // Map day number to localized string or fixed string
+                final dayNumber = dayData['dayOfWeek'] as int? ?? 1;
+                final days = [
+                  'Lundi',
+                  'Mardi',
+                  'Mercredi',
+                  'Jeudi',
+                  'Vendredi',
+                  'Samedi',
+                  'Dimanche',
+                ];
+                final dayName = (dayNumber >= 1 && dayNumber <= 7)
+                    ? days[dayNumber - 1]
+                    : 'Inconnu';
+
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.grey.shade200),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            dayName,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textDark,
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isOpen
+                                  ? Colors.green.withOpacity(0.1)
+                                  : Colors.red.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              isOpen ? 'Ouvert' : 'Fermé',
+                              style: TextStyle(
+                                color: isOpen ? Colors.green : Colors.red,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (isOpen) ...[
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade50,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.grey.shade200,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      openTime,
+                                      style: const TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    const Icon(
+                                      Icons.access_time,
+                                      size: 18,
+                                      color: Colors.grey,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 12),
+                              child: Text(
+                                'à',
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade50,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.grey.shade200,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      closeTime,
+                                      style: const TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    const Icon(
+                                      Icons.access_time,
+                                      size: 18,
+                                      color: Colors.grey,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+      ],
     );
   }
 }

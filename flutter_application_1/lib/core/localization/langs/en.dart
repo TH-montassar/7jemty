@@ -161,6 +161,9 @@ const Map<String, String> en = {
   'settings_fr': 'Settings',
   'orders_remaining': '{0} orders remaining',
   'favorite_salons_count': '{0} salons',
+  'favorites_empty_title': 'No favorite salons yet',
+  'favorites_empty_subtitle':
+      'Save salons you like and you will find them here quickly.',
 
   // Barber / Admin Salon Management
   'admin_dashboard': 'Admin Dashboard',

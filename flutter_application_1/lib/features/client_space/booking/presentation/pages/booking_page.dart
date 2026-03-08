@@ -8,6 +8,7 @@ import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:hjamty/features/auth/data/auth_service.dart';
 import 'package:hjamty/features/client_space/appointments/data/appointment_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hjamty/features/client_space/appointments/presentation/pages/booking_success_screen.dart';
 
 class BookingPage extends StatefulWidget {
   final String serviceName;
@@ -472,13 +473,38 @@ class _BookingPageState extends State<BookingPage> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("${tr(context, 'appointment_confirmed')} ✅"),
-            backgroundColor: Colors.green,
+        // Extract price strictly from string, e.g., '20 TND' -> 20.0
+        final priceStr = widget.servicePrice.replaceAll(RegExp(r'[^0-9.]'), '');
+        final double price = double.tryParse(priceStr) ?? 0.0;
+
+        final durationStr = widget.serviceDuration.replaceAll(
+          RegExp(r'[^0-9]'),
+          '',
+        );
+        final int duration = int.tryParse(durationStr) ?? 30;
+
+        final barberName =
+            _selectedBarberIndex > 0 && _selectedBarberIndex < _barbers.length
+            ? _barbers[_selectedBarberIndex]['name'] ?? ''
+            : 'Any Barber';
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => BookingSuccessScreen(
+              salonName: 'Mon Salon', // Fallback for hardcoded booking_page
+              salonAddress: '',
+              date: _dates[_selectedDateIndex],
+              time: _selectedTime!,
+              durationMinutes: duration,
+              services: [
+                {'name': widget.serviceName, 'price': price},
+              ],
+              totalPrice: price,
+              barberName: barberName,
+            ),
           ),
         );
-        Navigator.pop(context);
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(

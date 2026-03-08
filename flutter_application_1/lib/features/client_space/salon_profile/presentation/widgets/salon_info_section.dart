@@ -1,6 +1,7 @@
 import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:flutter/material.dart';
 import 'package:hjamty/core/constants/app_colors.dart';
+import 'package:intl/intl.dart';
 
 class SalonInfoSection extends StatelessWidget {
   final Map<String, dynamic> salonData;
@@ -9,6 +10,43 @@ class SalonInfoSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Determine current open/close status
+    final now = DateTime.now();
+    final currentDay = now.weekday; // Lundi = 1, Dimanche = 7
+
+    final workingHours = salonData['workingHours'] as List<dynamic>? ?? [];
+    final todayHours = workingHours.firstWhere(
+      (wh) => wh['dayOfWeek'] == currentDay,
+      orElse: () => null,
+    );
+
+    bool isOpen = false;
+    String? closeTimeStr;
+
+    if (todayHours != null) {
+      final isDayOff = todayHours['isDayOff'] ?? false;
+      if (!isDayOff) {
+        final oTime = todayHours['openTime'] as String?;
+        final cTime = todayHours['closeTime'] as String?;
+        if (oTime != null && cTime != null) {
+          try {
+            final format = DateFormat.Hm();
+            final openDT = format.parse(oTime);
+            final closeDT = format.parse(cTime);
+            final currentDT = DateTime(1970, 1, 1, now.hour, now.minute);
+
+            if (currentDT.isAfter(openDT) && currentDT.isBefore(closeDT)) {
+              isOpen = true;
+              closeTimeStr = DateFormat.jm().format(closeDT); // e.g. 8:00 PM
+            }
+          } catch (_) {
+            isOpen = true;
+            closeTimeStr = cTime;
+          }
+        }
+      }
+    }
+
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
@@ -149,7 +187,9 @@ class SalonInfoSection extends StatelessWidget {
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          tr(context, 'open_until', args: ['8:00 PM']),
+                          isOpen
+                              ? 'Ouvert jusqu\'à ${closeTimeStr ?? ''}'
+                              : 'Fermé actuellement',
                           style: const TextStyle(
                             color: Colors.grey,
                             fontSize: 13,
@@ -166,13 +206,15 @@ class SalonInfoSection extends StatelessWidget {
                   vertical: 7,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.green.withAlpha(26),
+                  color: isOpen
+                      ? Colors.green.withOpacity(0.1)
+                      : Colors.red.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  tr(context, 'open_status').toUpperCase(),
-                  style: const TextStyle(
-                    color: Colors.green,
+                  isOpen ? 'OUVERT' : 'FERMÉ',
+                  style: TextStyle(
+                    color: isOpen ? Colors.green : Colors.red,
                     fontWeight: FontWeight.w900,
                     fontSize: 11,
                   ),

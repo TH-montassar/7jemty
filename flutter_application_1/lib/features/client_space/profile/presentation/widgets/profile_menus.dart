@@ -4,11 +4,40 @@ import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hjamty/features/auth/signIn.dart';
 
+import 'package:hjamty/features/client_space/profile/presentation/pages/favorite_salons_page.dart';
+import 'package:hjamty/features/client_space/salon_profile/data/salon_service.dart';
+
 // --------------------------------------------------------
 // 1. Menu des Activités (Commandes & Favoris)
 // --------------------------------------------------------
-class ActivityMenu extends StatelessWidget {
+class ActivityMenu extends StatefulWidget {
   const ActivityMenu({super.key});
+
+  @override
+  State<ActivityMenu> createState() => _ActivityMenuState();
+}
+
+class _ActivityMenuState extends State<ActivityMenu> {
+  int _favoriteCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchFavoriteCount();
+  }
+
+  Future<void> _fetchFavoriteCount() async {
+    try {
+      final salons = await SalonService.getFavoriteSalons();
+      if (mounted) {
+        setState(() {
+          _favoriteCount = salons.length;
+        });
+      }
+    } catch (e) {
+      // Ignore
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,11 +60,23 @@ class ActivityMenu extends StatelessWidget {
             title: tr(context, 'product_orders'),
             subtitle: tr(context, 'orders_remaining', args: ['2']),
           ),
-          Divider(height: 1, indent: 60),
+          const Divider(height: 1, indent: 60),
           _ProfileMenuItem(
             icon: Icons.favorite_border,
             title: tr(context, 'favorite_salons'),
-            subtitle: tr(context, 'favorite_salons_count', args: ['4']),
+            subtitle: tr(
+              context,
+              'favorite_salons_count',
+              args: ['$_favoriteCount'],
+            ),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const FavoriteSalonsPage(),
+                ),
+              ).then((_) => _fetchFavoriteCount()); // Refresh count on return
+            },
           ),
         ],
       ),
@@ -246,11 +287,13 @@ class _ProfileMenuItem extends StatelessWidget {
   final IconData icon;
   final String title;
   final String? subtitle;
+  final VoidCallback? onTap;
 
   const _ProfileMenuItem({
     required this.icon,
     required this.title,
     this.subtitle,
+    this.onTap,
   });
 
   @override
@@ -279,7 +322,7 @@ class _ProfileMenuItem extends StatelessWidget {
         size: 14,
         color: Colors.grey,
       ),
-      onTap: () {},
+      onTap: onTap,
     );
   }
 }

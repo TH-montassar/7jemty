@@ -5,7 +5,7 @@ import 'package:hjamty/features/client_space/appointments/presentation/widgets/u
 import 'package:hjamty/features/client_space/appointments/presentation/widgets/history_tab.dart';
 import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:hjamty/features/auth/signIn.dart';
-import 'package:hjamty/features/client_space/main_layout/presentation/pages/client_main_layout.dart';
+import 'package:hjamty/features/client_space/search/presentation/pages/search_page.dart';
 
 class AppointmentsPage extends StatefulWidget {
   const AppointmentsPage({super.key});
@@ -120,14 +120,11 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: () {
-                        // Navigate to Home Tab (Search salons)
-                        Navigator.pushAndRemoveUntil(
+                        Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>
-                                const ClientMainLayout(initialIndex: 0),
+                            builder: (context) => const SearchPage(),
                           ),
-                          (route) => false,
                         );
                       },
                       style: ElevatedButton.styleFrom(

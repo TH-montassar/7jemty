@@ -7,6 +7,12 @@ export const createSalonSchema = z.object({
     longitude: z.number().optional(),
     googleMapsUrl: z.string().optional(),
     speciality: z.string().optional(),
+    workingHours: z.array(z.object({
+        dayOfWeek: z.number().int().min(1).max(7),
+        openTime: z.string().nullable().optional(),
+        closeTime: z.string().nullable().optional(),
+        isDayOff: z.boolean().default(false)
+    })).optional(),
 });
 
 export const updateSalonSchema = z.object({
@@ -23,6 +29,12 @@ export const updateSalonSchema = z.object({
     socialLinks: z.array(z.object({
         platform: z.string(),
         url: z.string(),
+    })).optional(),
+    workingHours: z.array(z.object({
+        dayOfWeek: z.number().int().min(1).max(7),
+        openTime: z.string().nullable().optional(),
+        closeTime: z.string().nullable().optional(),
+        isDayOff: z.boolean().default(false)
     })).optional(),
 });
 

@@ -155,7 +155,11 @@ export const getBarberAvailability = async (
     clientId_for_overlap_check?: number
 ) => {
     const date = new Date(dateString);
-    const dayOfWeek = date.getDay();
+    let dayOfWeek = date.getDay();
+    // JS getDay() returns 0 for Sunday, 1 for Monday...
+    // Prisma DayOfWeek expects 1=Lundi, ..., 7=Dimanche.
+    if (dayOfWeek === 0) dayOfWeek = 7;
+
     const now = new Date();
 
     const workingHours = await prisma.workingHours.findFirst({ where: { salonId, dayOfWeek } });
@@ -589,8 +593,12 @@ const getEmployeeSalonId = async (userId: number) => {
 };
 
 const getSalonOpenCloseForDate = async (salonId: number, date: Date): Promise<[Date, Date]> => {
+    let dayOfWeek = date.getDay();
+    // JS getDay() returns 0 for Sunday
+    if (dayOfWeek === 0) dayOfWeek = 7;
+
     const workingHours = await prisma.workingHours.findFirst({
-        where: { salonId, dayOfWeek: date.getDay() }
+        where: { salonId, dayOfWeek }
     });
 
     let openTime = '08:00';

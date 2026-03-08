@@ -71,6 +71,7 @@ class SalonService {
     String? coverImageUrl,
     String? speciality,
     List<Map<String, String>>? socialLinks,
+    List<Map<String, dynamic>>? workingHours,
   }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -92,6 +93,7 @@ class SalonService {
       if (coverImageUrl != null) body['coverImageUrl'] = coverImageUrl;
       if (speciality != null) body['speciality'] = speciality;
       if (socialLinks != null) body['socialLinks'] = socialLinks;
+      if (workingHours != null) body['workingHours'] = workingHours;
 
       final url = salonId != null
           ? ApiConfig.endpoint('/api/admin/salons/$salonId') // Use Admin Route
@@ -408,6 +410,96 @@ class SalonService {
         return data['data'];
       } else {
         throw Exception(data['message'] ?? 'Erreur lors de la recherche');
+      }
+    } catch (e) {
+      throw Exception('Erreur de connexion: $e');
+    }
+  }
+
+  // 📝 Fonction bech ta3mel toggle lel favoris mta3 salon
+  static Future<bool> toggleFavoriteSalon(int salonId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token');
+
+      if (token == null) {
+        return false; // Not logged in
+      }
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/$salonId/favorite'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        return data['data']['isFavorite'] == true;
+      } else {
+        throw Exception(data['message'] ?? 'Erreur toggle favorite');
+      }
+    } catch (e) {
+      throw Exception('Erreur de connexion: $e');
+    }
+  }
+
+  // 📝 Fonction bech nchoufou chniya l'etat mta3 l'favoris wa9t ndho5lou lel page salon
+  static Future<bool> checkFavoriteStatus(int salonId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token');
+
+      if (token == null) {
+        return false;
+      }
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/$salonId/favorite-status'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        return data['data']['isFavorite'] == true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // 📝 Fonction bech njibou liste l'salonet l'favoris l'kol mta3 l'client
+  static Future<List<dynamic>> getFavoriteSalons() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token');
+
+      if (token == null) {
+        throw Exception('Rak mouch connecté! (Token manquant)');
+      }
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/favorites/all'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        return data['data'];
+      } else {
+        throw Exception(data['message'] ?? 'Erreur fetching favorites');
       }
     } catch (e) {
       throw Exception('Erreur de connexion: $e');
