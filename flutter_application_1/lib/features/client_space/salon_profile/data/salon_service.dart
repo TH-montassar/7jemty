@@ -205,6 +205,86 @@ class SalonService {
     }
   }
 
+  // 📝 Fonctions bech nmodifiw/faskhou compte employe
+
+  static Future<Map<String, dynamic>> updateEmployeeAccount({
+    required int employeeId,
+    required String name,
+    required String phoneNumber,
+    String? password,
+    String? role,
+    String? bio,
+    String? description,
+    String? imageUrl,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token');
+
+      if (token == null) {
+        throw Exception('Rak mouch connecté! (Token manquant)');
+      }
+
+      final response = await http.patch(
+        Uri.parse('$baseUrl/employee/$employeeId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'name': name,
+          'phoneNumber': phoneNumber,
+          if (password != null && password.isNotEmpty) 'password': password,
+          'role': role,
+          'bio': bio,
+          'description': description,
+          'imageUrl': imageUrl,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        return data;
+      } else {
+        throw Exception(
+          data['message'] ?? 'Erreur lors de la modification du spécialiste',
+        );
+      }
+    } catch (e) {
+      throw Exception(e.toString().replaceAll('Exception: ', ''));
+    }
+  }
+
+  static Future<void> deleteEmployeeAccount({required int employeeId}) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token');
+
+      if (token == null) {
+        throw Exception('Rak mouch connecté! (Token manquant)');
+      }
+
+      final response = await http.delete(
+        Uri.parse('$baseUrl/employee/$employeeId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode != 200 || data['success'] != true) {
+        throw Exception(
+          data['message'] ?? 'Erreur lors de la suppression du spécialiste',
+        );
+      }
+    } catch (e) {
+      throw Exception(e.toString().replaceAll('Exception: ', ''));
+    }
+  }
+
   // 📝 Fonction bech njibou e-salons lkol w nrajjouhom lel client
   static Future<List<dynamic>> getAllSalons({double? lat, double? lng}) async {
     try {

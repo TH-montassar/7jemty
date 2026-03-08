@@ -49,6 +49,15 @@ export const createEmployeeAccountSchema = z.object({
     imageUrl: z.string().optional(),
 });
 
+export const updateEmployeeAccountSchema = z.object({
+    name: z.string().min(2, "Nom lazem ykoun s7i7").optional(),
+    phoneNumber: z.string().min(8, "Numéro téléphone lazem 8 ar9am au minimum").optional(),
+    password: z.string().min(6, "Mot de passe lazem 6 7rouf au minimum").nullable().optional(),
+    role: z.string().nullable().optional(),
+    bio: z.string().nullable().optional(),
+    description: z.string().nullable().optional(),
+    imageUrl: z.string().nullable().optional(),
+});
 export const createServiceSchema = z.object({
     salonId: z.number().optional(),
     name: z.string().min(2, "Le nom du service est requis"),

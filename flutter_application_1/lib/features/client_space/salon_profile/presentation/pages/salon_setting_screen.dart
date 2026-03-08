@@ -107,6 +107,7 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
   final TextEditingController _empBioController = TextEditingController();
   final TextEditingController _empImageUrlController = TextEditingController();
   bool _isAddingSpecialist = false;
+  int? _editingEmployeeId;
   bool _empPasswordVisible = false;
   bool _isEmpUrlMode = true;
 
@@ -1515,6 +1516,49 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
   // ============================================
   // EQUIPE TAB - EDITABLE FOR PATRON
   // ============================================
+  void _resetSpecialistForm() {
+    _empNameController.clear();
+    _empPhoneController.clear();
+    _empPasswordController.clear();
+    _empRoleController.clear();
+    _empBioController.clear();
+    _empImageUrlController.clear();
+    _empPasswordVisible = false;
+    _isEmpUrlMode = true;
+    _editingEmployeeId = null;
+  }
+
+  void _toggleSpecialistForm() {
+    setState(() {
+      if (_isAddingSpecialist) {
+        _isAddingSpecialist = false;
+        _resetSpecialistForm();
+        return;
+      }
+
+      _resetSpecialistForm();
+      _isAddingSpecialist = true;
+    });
+  }
+
+  void _openEditSpecialistForm(Map<String, dynamic> emp) {
+    final employeeId = (emp['id'] as num?)?.toInt();
+    if (employeeId == null) return;
+
+    setState(() {
+      _isAddingSpecialist = true;
+      _editingEmployeeId = employeeId;
+      _empNameController.text = emp['name']?.toString() ?? '';
+      _empPhoneController.text = emp['phoneNumber']?.toString() ?? '';
+      _empRoleController.text = emp['role']?.toString() ?? '';
+      _empBioController.text = emp['bio']?.toString() ?? '';
+      _empImageUrlController.text = emp['imageUrl']?.toString() ?? '';
+      _empPasswordController.clear();
+      _empPasswordVisible = false;
+      _isEmpUrlMode = true;
+    });
+  }
+
   Future<void> _handleAddSpecialist() async {
     if (_empNameController.text.isEmpty ||
         _empPhoneController.text.isEmpty ||
@@ -1555,15 +1599,135 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
         title: Text(tr(context, 'specialist_added')),
         autoCloseDuration: const Duration(seconds: 3),
       );
-      _empNameController.clear();
-      _empPhoneController.clear();
-      _empPasswordController.clear();
-      _empRoleController.clear();
-      _empBioController.clear();
-      _empImageUrlController.clear();
+      _resetSpecialistForm();
       setState(() {
         _isAddingSpecialist = false;
       });
+      await _fetchSalonData();
+    } catch (e) {
+      if (!mounted) return;
+      toastification.show(
+        context: context,
+        type: ToastificationType.error,
+        title: Text(tr(context, 'error_title')),
+        description: Text(e.toString().replaceAll('Exception: ', '')),
+        autoCloseDuration: const Duration(seconds: 4),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _handleUpdateSpecialist() async {
+    if (_editingEmployeeId == null) return;
+
+    if (_empNameController.text.isEmpty || _empPhoneController.text.isEmpty) {
+      toastification.show(
+        context: context,
+        type: ToastificationType.warning,
+        title: Text(tr(context, 'missing_info')),
+        description: Text(tr(context, 'name_phone_required')),
+        autoCloseDuration: const Duration(seconds: 3),
+      );
+      return;
+    }
+
+    try {
+      FocusScope.of(context).unfocus();
+      setState(() => _isLoading = true);
+
+      String? finalImageUrl = _empImageUrlController.text.trim();
+      if (finalImageUrl.isEmpty) finalImageUrl = null;
+      final passwordValue = _empPasswordController.text.trim();
+
+      await SalonService.updateEmployeeAccount(
+        employeeId: _editingEmployeeId!,
+        name: _empNameController.text.trim(),
+        phoneNumber: _empPhoneController.text.trim(),
+        password: passwordValue.isEmpty ? null : passwordValue,
+        role: _empRoleController.text.trim().isEmpty
+            ? null
+            : _empRoleController.text.trim(),
+        bio: _empBioController.text.trim().isEmpty
+            ? null
+            : _empBioController.text.trim(),
+        imageUrl: finalImageUrl,
+      );
+
+      if (!mounted) return;
+      toastification.show(
+        context: context,
+        type: ToastificationType.success,
+        title: Text(tr(context, 'specialist_updated')),
+        autoCloseDuration: const Duration(seconds: 3),
+      );
+
+      _resetSpecialistForm();
+      setState(() {
+        _isAddingSpecialist = false;
+      });
+
+      await _fetchSalonData();
+    } catch (e) {
+      if (!mounted) return;
+      toastification.show(
+        context: context,
+        type: ToastificationType.error,
+        title: Text(tr(context, 'error_title')),
+        description: Text(e.toString().replaceAll('Exception: ', '')),
+        autoCloseDuration: const Duration(seconds: 4),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _handleDeleteSpecialist({
+    required int employeeId,
+    required String employeeName,
+  }) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(tr(context, 'delete_specialist_confirm_title')),
+        content: Text(
+          tr(context, 'delete_specialist_confirm_desc', args: [employeeName]),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(tr(context, 'cancel')),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(
+              tr(context, 'delete'),
+              style: const TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      setState(() => _isLoading = true);
+      await SalonService.deleteEmployeeAccount(employeeId: employeeId);
+
+      if (!mounted) return;
+      toastification.show(
+        context: context,
+        type: ToastificationType.success,
+        title: Text(tr(context, 'specialist_deleted')),
+        autoCloseDuration: const Duration(seconds: 3),
+      );
+
+      if (_editingEmployeeId == employeeId) {
+        _resetSpecialistForm();
+        setState(() => _isAddingSpecialist = false);
+      }
+
       await _fetchSalonData();
     } catch (e) {
       if (!mounted) return;
@@ -1598,8 +1762,7 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                 ),
               ),
               ElevatedButton.icon(
-                onPressed: () =>
-                    setState(() => _isAddingSpecialist = !_isAddingSpecialist),
+                onPressed: _toggleSpecialistForm,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryBlue,
                   shape: RoundedRectangleBorder(
@@ -1643,7 +1806,12 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    tr(context, 'new_specialist').toUpperCase(),
+                    tr(
+                      context,
+                      _editingEmployeeId == null
+                          ? 'new_specialist'
+                          : 'edit_specialist',
+                    ).toUpperCase(),
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
@@ -1653,7 +1821,9 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                   ),
                   const SizedBox(height: 16),
                   _buildLabelInput(tr(context, 'image_optional')),
-                  Row(
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
                     children: [
                       ElevatedButton.icon(
                         onPressed: () => setState(() => _isEmpUrlMode = true),
@@ -1683,7 +1853,6 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                         ),
                         label: Text(tr(context, 'url_label')),
                       ),
-                      const SizedBox(width: 8),
                       ElevatedButton.icon(
                         onPressed: _pickEmpImage,
                         style: ElevatedButton.styleFrom(
@@ -1713,6 +1882,7 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                           style: TextStyle(
                             color: !_isEmpUrlMode ? Colors.white : Colors.grey,
                           ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
@@ -1764,7 +1934,11 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                     keyboardType: TextInputType.phone,
                   ),
                   const SizedBox(height: 12),
-                  _buildLabelInput("${tr(context, 'password')} *"),
+                  _buildLabelInput(
+                    _editingEmployeeId == null
+                        ? "${tr(context, 'password')} *"
+                        : tr(context, 'password'),
+                  ),
                   Container(
                     decoration: BoxDecoration(
                       color: Colors.grey.shade50,
@@ -1827,7 +2001,9 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                   ),
                   const SizedBox(height: 20),
                   ElevatedButton(
-                    onPressed: _handleAddSpecialist,
+                    onPressed: _editingEmployeeId == null
+                        ? _handleAddSpecialist
+                        : _handleUpdateSpecialist,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primaryBlue,
                       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -1836,7 +2012,12 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                       ),
                     ),
                     child: Text(
-                      tr(context, 'save_specialist'),
+                      tr(
+                        context,
+                        _editingEmployeeId == null
+                            ? 'save_specialist'
+                            : 'update_specialist',
+                      ),
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -1877,6 +2058,7 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
               separatorBuilder: (_, __) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final emp = employees[index] as Map<String, dynamic>;
+                final employeeId = (emp['id'] as num?)?.toInt();
                 final name = emp['name']?.toString() ?? 'Spécialiste';
                 final role = emp['role']?.toString() ?? 'Spécialiste';
                 final bio = emp['bio'] as String?;
@@ -1964,6 +2146,52 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
                           ],
                         ),
                       ),
+                      if (employeeId != null)
+                        PopupMenuButton<String>(
+                          onSelected: (value) {
+                            if (value == 'edit') {
+                              _openEditSpecialistForm(emp);
+                              return;
+                            }
+                            _handleDeleteSpecialist(
+                              employeeId: employeeId,
+                              employeeName: name,
+                            );
+                          },
+                          itemBuilder: (_) => [
+                            PopupMenuItem(
+                              value: 'edit',
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.edit_outlined,
+                                    size: 18,
+                                    color: AppColors.primaryBlue,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(tr(context, 'edit')),
+                                ],
+                              ),
+                            ),
+                            PopupMenuItem(
+                              value: 'delete',
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.delete_outline,
+                                    size: 18,
+                                    color: Colors.red,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    tr(context, 'delete'),
+                                    style: const TextStyle(color: Colors.red),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                     ],
                   ),
                 );
