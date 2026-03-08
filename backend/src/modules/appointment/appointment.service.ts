@@ -646,7 +646,7 @@ export const getClientAppointments = async (clientId: number) => {
         where: { clientId },
         include: {
             client: { select: { fullName: true, phoneNumber: true } },
-            salon: { select: { name: true, address: true, coverImageUrl: true } },
+            salon: { select: { id: true, name: true, address: true, coverImageUrl: true } },
             barber: { select: { fullName: true, profile: { select: { avatarUrl: true } } } },
             services: { include: { service: true } }
         },
@@ -660,7 +660,7 @@ export const getEmployeeAppointments = async (employeeId: number) => {
         include: {
             client: { select: { id: true, fullName: true, phoneNumber: true } },
             barber: { select: { fullName: true, profile: { select: { avatarUrl: true } } } },
-            salon: { select: { name: true, address: true } },
+            salon: { select: { id: true, name: true, address: true } },
             services: { include: { service: true } }
         },
         orderBy: { appointmentDate: 'desc' },
@@ -713,7 +713,7 @@ export const getUnreviewedAppointments = async (clientId: number) => {
 };
 
 export const submitReview = async (appointmentId: number, clientId: number, salonId: number, rating: number, comment?: string) => {
-    const appointment = await prisma.appointment.findUnique({
+    const appointment = await prisma.appointment.findFirst({
         where: { id: appointmentId, clientId, salonId }
     });
 
@@ -729,13 +729,30 @@ export const submitReview = async (appointmentId: number, clientId: number, salo
         throw new Error("Aatit deja rayek f hal rendez-vous");
     }
 
-    return prisma.review.create({
-        data: {
-            appointmentId,
-            clientId,
-            salonId,
-            rating,
-            comment: comment || null
-        }
+    return prisma.$transaction(async (tx) => {
+        const review = await tx.review.create({
+            data: {
+                appointmentId,
+                clientId,
+                salonId,
+                rating,
+                comment: comment || null
+            }
+        });
+
+        // Recalculate Salon Rating
+        const allReviews = await tx.review.findMany({
+            where: { salonId },
+            select: { rating: true }
+        });
+
+        const avgRating = allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length;
+
+        await tx.salon.update({
+            where: { id: salonId },
+            data: { rating: avgRating }
+        });
+
+        return review;
     });
-};
+}

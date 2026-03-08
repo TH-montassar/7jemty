@@ -304,6 +304,14 @@ export const getSalonById = async (id: number) => {
             socialLinks: true,
             workingHours: true,
             portfolio: true,
+            reviews: {
+                include: {
+                    client: {
+                        include: { profile: true }
+                    }
+                },
+                orderBy: { createdAt: 'desc' }
+            }
         },
     });
 
@@ -323,16 +331,47 @@ export const getSalonById = async (id: number) => {
         createdAt: emp.createdAt,
     }));
 
+    const formattedReviews = salon.reviews.map(rev => ({
+        id: rev.id,
+        clientId: rev.clientId,
+        clientName: rev.client.fullName,
+        clientImage: rev.client.profile?.avatarUrl || null,
+        rating: rev.rating,
+        comment: rev.comment,
+        createdAt: rev.createdAt,
+    }));
+
+    console.log(`[getSalonById] Finalizing response for Salon ${salon.id}. Reviews: ${formattedReviews.length}`);
+
     return {
-        ...salon,
+        id: salon.id,
+        patronId: salon.patronId,
+        name: salon.name,
+        description: salon.description,
+        contactPhone: salon.contactPhone,
+        address: salon.address,
+        latitude: salon.latitude,
+        longitude: salon.longitude,
+        googleMapsUrl: salon.googleMapsUrl,
+        websiteUrl: salon.websiteUrl,
+        coverImageUrl: salon.coverImageUrl,
+        speciality: salon.speciality,
+        approvalStatus: salon.approvalStatus,
+        isForceClosed: salon.isForceClosed,
+        createdAt: salon.createdAt,
         patron: {
             id: salon.patron.id,
             name: salon.patron.fullName,
             imageUrl: salon.patron.profile?.avatarUrl || null,
         },
+        services: salon.services,
+        socialLinks: salon.socialLinks,
+        workingHours: salon.workingHours,
+        portfolio: salon.portfolio,
         employees: formattedEmployees,
+        reviews: formattedReviews,
         image: salon.coverImageUrl || 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=500&q=80',
-        rating: (salon as any).rating ? ((salon as any).rating as number).toFixed(1) : "4.5",
+        rating: salon.rating ? (salon.rating as number).toFixed(1) : "4.5",
     };
 };
 

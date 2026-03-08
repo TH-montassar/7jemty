@@ -15,25 +15,35 @@ class SalonInfoSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Category Pill
-          if (salonData['speciality'] != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              margin: const EdgeInsets.only(bottom: 10),
-              decoration: BoxDecoration(
-                color: AppColors.primaryBlue,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                salonData['speciality'].toString().toUpperCase(),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.1,
+          // Category Pill & Status
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              if (salonData['speciality'] != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryBlue,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    salonData['speciality'].toString().toUpperCase(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.1,
+                    ),
+                  ),
                 ),
-              ),
-            ),
+              const Spacer(),
+              _buildStatusBadge(context),
+            ],
+          ),
+          const SizedBox(height: 10),
 
           // Salon Name
           Text(
@@ -74,7 +84,7 @@ class SalonInfoSection extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               Text(
-                '${salonData['reviews']?.length ?? 1} avis',
+                '${salonData['reviews']?.length ?? 0} avis',
                 style: const TextStyle(
                   color: Colors.grey,
                   fontSize: 14,
@@ -171,6 +181,50 @@ class SalonInfoSection extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildStatusBadge(BuildContext context) {
+    final String status = salonData['approvalStatus'] ?? 'PENDING';
+    Color bgColor;
+    Color textColor;
+    String label;
+
+    switch (status) {
+      case 'APPROVED':
+        bgColor = Colors.green.withValues(alpha: 0.1);
+        textColor = Colors.green;
+        label = tr(context, 'active');
+        break;
+      case 'SUSPENDED':
+        bgColor = Colors.red.withValues(alpha: 0.1);
+        textColor = Colors.red;
+        label = tr(context, 'deactivated');
+        break;
+      case 'PENDING':
+      default:
+        bgColor = Colors.orange.withValues(alpha: 0.1);
+        textColor = Colors.orange;
+        label = tr(context, 'waiting_approval');
+        break;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: textColor.withValues(alpha: 0.2)),
+      ),
+      child: Text(
+        label.toUpperCase(),
+        style: TextStyle(
+          color: textColor,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1.1,
+        ),
       ),
     );
   }

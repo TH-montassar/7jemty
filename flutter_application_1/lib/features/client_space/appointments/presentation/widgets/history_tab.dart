@@ -592,7 +592,7 @@ class _ReviewDialogState extends State<_ReviewDialog> {
         context: context,
         type: ToastificationType.error,
         title: Text(tr(context, 'error')),
-        description: Text(e.toString()),
+        description: Text(e.toString().replaceAll('Exception: ', '')),
         autoCloseDuration: const Duration(seconds: 4),
       );
       setState(() => _isSubmitting = false);
