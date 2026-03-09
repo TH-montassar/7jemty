@@ -9,57 +9,119 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-    console.log("Looking for nearest CONFIRMED and IN_PROGRESS appointments...");
+    console.log('Looking for nearest CONFIRMED and IN_PROGRESS appointments per client...');
 
-    // Find the nearest confirmed appointment
-    const confirmedApt = await prisma.appointment.findFirst({
-        where: { status: 'CONFIRMED' },
-        orderBy: { appointmentDate: 'asc' },
+    const clients = await prisma.appointment.findMany({
+        where: {
+            status: {
+                in: ['PENDING', 'CONFIRMED', 'IN_PROGRESS'],
+            },
+        },
+        select: {
+            clientId: true,
+        },
+        distinct: ['clientId'],
+        orderBy: {
+            clientId: 'asc',
+        },
     });
 
-    // Find the nearest in-progress appointment
-    const inProgressApt = await prisma.appointment.findFirst({
-        where: { status: 'IN_PROGRESS' },
-        orderBy: { appointmentDate: 'asc' },
-    });
-
-    if (!confirmedApt && !inProgressApt) {
-        console.log("No confirmed or in-progress appointments found.");
+    if (clients.length === 0) {
+        console.log('No pending, confirmed or in-progress appointments found.');
         return;
     }
 
     const now = new Date();
     now.setMinutes(now.getMinutes() + 1);
 
-    const startTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+    const pendingNow = new Date();
+    pendingNow.setMinutes(pendingNow.getMinutes() + 61);
 
-    if (confirmedApt) {
-        // Fast forward start time
-        await prisma.appointment.update({
-            where: { id: confirmedApt.id },
-            data: {
-                appointmentDate: now,
+    const timeLabel = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+
+    let pendingUpdates = 0;
+    let confirmedUpdates = 0;
+    let inProgressUpdates = 0;
+
+    for (const { clientId } of clients) {
+        // Fast-forward PENDING
+        const pendingApt = await prisma.appointment.findFirst({
+            where: {
+                clientId,
+                status: 'PENDING',
+            },
+            orderBy: {
+                appointmentDate: 'asc',
             },
         });
-        console.log(`\n✅ Updated CONFIRMED appointment ID: ${confirmedApt.id}`);
-        console.log(`✅ New Start Date: ${now.toLocaleDateString()}`);
-        console.log(`✅ New Start Time: ${startTime}`);
-        console.log(`\nGo check the app now! In 1 minute, the start button should appear and you should get a notification.`);
-    }
 
-    if (inProgressApt) {
-        // Fast forward end time
-        await prisma.appointment.update({
-            where: { id: inProgressApt.id },
-            data: {
-                estimatedEndTime: now,
+        if (pendingApt) {
+            await prisma.appointment.update({
+                where: {
+                    id: pendingApt.id,
+                },
+                data: {
+                    appointmentDate: pendingNow,
+                },
+            });
+            pendingUpdates += 1;
+            console.log(`[Client ${clientId}] Updated PENDING appointment ID: ${pendingApt.id} to +30mn`);
+        }
+
+        // Fast-forward CONFIRMED
+        const confirmedApt = await prisma.appointment.findFirst({
+            where: {
+                clientId,
+                status: 'CONFIRMED',
+            },
+            orderBy: {
+                appointmentDate: 'asc',
             },
         });
-        console.log(`\n✅ Updated IN_PROGRESS appointment ID: ${inProgressApt.id}`);
-        console.log(`✅ New End Date: ${now.toLocaleDateString()}`);
-        console.log(`✅ New End Time: ${startTime}`);
-        console.log(`\nGo check the app now for the in-progress ride! In 1 minute, the completion prompt should trigger.`);
+
+        if (confirmedApt) {
+            await prisma.appointment.update({
+                where: {
+                    id: confirmedApt.id,
+                },
+                data: {
+                    appointmentDate: now,
+                },
+            });
+            confirmedUpdates += 1;
+            console.log(`[Client ${clientId}] Updated CONFIRMED appointment ID: ${confirmedApt.id}`);
+        }
+
+        const inProgressApt = await prisma.appointment.findFirst({
+            where: {
+                clientId,
+                status: 'IN_PROGRESS',
+            },
+            orderBy: {
+                appointmentDate: 'asc',
+            },
+        });
+
+        if (inProgressApt) {
+            await prisma.appointment.update({
+                where: {
+                    id: inProgressApt.id,
+                },
+                data: {
+                    estimatedEndTime: now,
+                },
+            });
+            inProgressUpdates += 1;
+            console.log(`[Client ${clientId}] Updated IN_PROGRESS appointment ID: ${inProgressApt.id}`);
+        }
     }
+
+    console.log('');
+    console.log(`Done at ${now.toLocaleDateString()} ${timeLabel}`);
+    console.log(`PENDING appointments updated: ${pendingUpdates}`);
+    console.log(`CONFIRMED appointments updated: ${confirmedUpdates}`);
+    console.log(`IN_PROGRESS appointments updated: ${inProgressUpdates}`);
+    console.log('Go check the app now. In about 1 minute, status-based actions should be visible.');
 }
 
 main()

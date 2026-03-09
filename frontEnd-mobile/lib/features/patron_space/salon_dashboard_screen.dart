@@ -11,6 +11,7 @@ import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 import 'dart:async';
 import 'package:hjamty/core/services/fcm_service.dart';
+import 'package:hjamty/features/patron_space/appointments/presentation/widgets/no_show_flow.dart';
 
 import 'package:hjamty/features/client_space/salon_profile/presentation/pages/salon_setting_screen.dart';
 import 'package:hjamty/features/client_space/appointments/presentation/pages/booking_flow_screen.dart';
@@ -87,7 +88,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
       if (!mounted) return;
 
       bool isFav = false;
-      if (response != null && response['id'] != null && !widget.isPatron) {
+      if (response['id'] != null && !widget.isPatron) {
         isFav = await SalonService.checkFavoriteStatus(response['id']);
       }
 
@@ -137,7 +138,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
     final address = _salonData!['address'] ?? '';
     final rating = _salonData!['rating']?.toString() ?? '?';
     final message =
-        '🏪 $name\n⭐ $rating / 5\n📍 $address\n\nDécouvre ce salon sur Hjamty!';
+        '\u{1F3EA} $name\n\u{2B50} $rating / 5\n\u{1F4CD} $address\n\nD\u{00E9}couvre ce salon sur Hjamty!';
     try {
       await Share.share(message);
     } catch (e) {
@@ -545,24 +546,33 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
   }
 
   Future<void> _updateAptStatus(int id, String status) async {
-    try {
-      await AppointmentService.updateStatus(appointmentId: id, status: status);
-      setState(() {}); // Refresh FutureBuilder
-      toastification.show(
+    await updateAppointmentStatusFlow(
+      context: context,
+      appointmentId: id,
+      status: status,
+      successMessage: tr(context, 'status_updated', args: [status]),
+      errorMessage: tr(context, 'error_updating_status'),
+      onUpdated: () async {
+        if (!mounted) return;
+        setState(() {});
+      },
+    );
+  }
+
+  Future<void> _showNoShowDialog(int appointmentId) async {
+    await showNoShowDecisionDialog(
+      context: context,
+      appointmentId: appointmentId,
+      onConfirmNoShow: (id) => _updateAptStatus(id, 'CANCELLED'),
+      onPostpone15: (id) => postponeNoShowWithCascadeFlow(
         context: context,
-        type: ToastificationType.success,
-        title: Text(tr(context, 'status_updated', args: [status])),
-        backgroundColor: Colors.green,
-      );
-    } catch (e) {
-      toastification.show(
-        context: context,
-        type: ToastificationType.error,
-        title: Text(tr(context, 'error_updating_status')),
-        backgroundColor: Colors.red,
-        description: Text(e.toString()),
-      );
-    }
+        appointmentId: id,
+        onRefresh: () async {
+          if (!mounted) return;
+          setState(() {});
+        },
+      ),
+    );
   }
 
   // TABS BUILDERS
@@ -959,7 +969,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                       if (clientPhone.isNotEmpty) ...[
                         const SizedBox(height: 4),
                         Text(
-                          "Tél: $clientPhone",
+                          "T\u{00E9}l: $clientPhone",
                           style: const TextStyle(
                             color: Colors.grey,
                             fontSize: 13,
@@ -1043,8 +1053,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                           children: [
                             Expanded(
                               child: OutlinedButton.icon(
-                                onPressed: () =>
-                                    _updateAptStatus(apt['id'], 'CANCELLED'),
+                                onPressed: () => _showNoShowDialog(apt['id']),
                                 icon: const Icon(Icons.person_off, size: 18),
                                 label: Text(
                                   tr(context, 'no_show_btn'),
@@ -1459,7 +1468,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(
-                              isOpen ? 'Ouvert' : 'Fermé',
+                              isOpen ? 'Ouvert' : 'Ferm\u{00E9}',
                               style: TextStyle(
                                 color: isOpen ? Colors.green : Colors.red,
                                 fontWeight: FontWeight.bold,
@@ -1509,7 +1518,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                             const Padding(
                               padding: EdgeInsets.symmetric(horizontal: 12),
                               child: Text(
-                                'à',
+                                '\u{00E0}',
                                 style: TextStyle(
                                   color: Colors.grey,
                                   fontSize: 14,

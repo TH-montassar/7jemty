@@ -387,6 +387,11 @@ const Map<String, String> tn = {
   'close_btn': 'Fermer',
   'start_service_btn': 'jee lclient',
   'no_show_btn': 'majech lclient',
+  'no_show_dialog_title': 'El client majech?',
+  'no_show_dialog_desc': 'T7eb tlaghi rendez-vous wala tzid 15mn lel client w lel specialist planning?',
+  'no_show_confirm_btn': 'Mta2ked, majech',
+  'postpone_15_btn': 'Nsanoh 15mn',
+  'postpone_15_success': 'Rendez-vous t2ajal 15mn w planning etbadel.',
 
   // System & Messages
   'status_updated': 'Statut mis à jour: {0}',

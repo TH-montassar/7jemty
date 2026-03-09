@@ -261,6 +261,44 @@ export const extendAppointmentController = async (req: AuthRequest, res: Respons
     }
 };
 
+export const postponeNoShowController = async (req: AuthRequest, res: Response) => {
+    try {
+        const appointmentId = parseInt(req.params.id as string);
+        if (isNaN(appointmentId)) {
+            return res.status(400).json({ success: false, message: "ID l'rendez-vous ghalet" });
+        }
+
+        const { postponeNoShowSchema } = await import('./appointment.schema.js');
+        const parsedSchema = postponeNoShowSchema.safeParse(req.body ?? {});
+        if (!parsedSchema.success) {
+            return res.status(400).json({ success: false, message: parsedSchema.error?.issues[0]?.message || 'Invalid data' });
+        }
+
+        const userId = req.user?.userId;
+        const role = req.user?.role;
+
+        if (!userId || !role || (role !== 'EMPLOYEE' && role !== 'PATRON')) {
+            return res.status(401).json({ success: false, message: "Non autorise" });
+        }
+
+        const { postponeNoShowWithCascade } = await import('./appointment.service.js');
+        const result = await postponeNoShowWithCascade(
+            appointmentId,
+            parsedSchema.data.minutes,
+            userId,
+            role as 'PATRON' | 'EMPLOYEE'
+        );
+
+        res.status(200).json({
+            success: true,
+            message: "Rendez-vous decale b nja7!",
+            data: result
+        });
+    } catch (error: any) {
+        res.status(400).json({ success: false, message: error.message || "Famma mochkla fel report de rendez-vous" });
+    }
+};
+
 export const getUnreviewedAppointmentsController = async (req: AuthRequest, res: Response) => {
     try {
         const userId = req.user?.userId;

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { updateStatus, getAvailability, getAvailableDatesController, createAppointment, getSalonAppointmentsController, getClientAppointmentsController, getEmployeeAppointmentsController, extendAppointmentController, getUnreviewedAppointmentsController, submitReviewController } from './appointment.controller.js';
+import { updateStatus, getAvailability, getAvailableDatesController, createAppointment, getSalonAppointmentsController, getClientAppointmentsController, getEmployeeAppointmentsController, extendAppointmentController, postponeNoShowController, getUnreviewedAppointmentsController, submitReviewController } from './appointment.controller.js';
 import { protect } from '../../middlewares/auth.middleware.js';
 
 const router = Router();
@@ -9,6 +9,9 @@ router.patch('/:id/status', protect, updateStatus);
 
 // Endpoint pour étendre la durée d'un rendez-vous en cours
 router.patch('/:id/extend', protect, extendAppointmentController);
+
+// Endpoint no-show: decaler le rendez-vous de X minutes + cascade sur le meme specialist
+router.patch('/:id/no-show-postpone', protect, postponeNoShowController);
 
 // Endpoint pour soumettre un avis
 router.post('/:id/review', protect, submitReviewController);

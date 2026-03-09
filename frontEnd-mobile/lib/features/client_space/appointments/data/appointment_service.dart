@@ -317,6 +317,42 @@ class AppointmentService {
     }
   }
 
+  static Future<Map<String, dynamic>> postponeNoShowWithCascade({
+    required int appointmentId,
+    int minutes = 15,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token');
+
+      if (token == null) {
+        throw Exception('Rak mouch connectÃ©!');
+      }
+
+      final response = await http.patch(
+        Uri.parse('$baseUrl/$appointmentId/no-show-postpone'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'minutes': minutes}),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return data;
+      } else {
+        throw Exception(
+          data['message'] ??
+              'Erreur lors du report du rendez-vous et de la cascade',
+        );
+      }
+    } catch (e) {
+      throw Exception(e.toString().replaceAll('Exception: ', ''));
+    }
+  }
+
   static Future<List<dynamic>> getUnreviewedAppointments() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('jwt_token');

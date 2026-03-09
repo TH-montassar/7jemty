@@ -24,6 +24,10 @@ export const extendAppointmentSchema = z.object({
     minutes: z.number().int().positive().max(60)
 });
 
+export const postponeNoShowSchema = z.object({
+    minutes: z.number().int().positive().max(60).default(15)
+});
+
 export const submitReviewSchema = z.object({
     salonId: z.number(),
     rating: z.number().int().min(1).max(5),
