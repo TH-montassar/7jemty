@@ -1,12 +1,16 @@
 import 'package:hjamty/core/localization/translation_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:hjamty/core/utils/cloudinary_utils.dart';
 import 'package:hjamty/core/constants/app_colors.dart';
 import 'package:hjamty/features/client_space/salon_profile/data/salon_service.dart';
 import 'package:hjamty/features/client_space/appointments/data/appointment_service.dart';
+import 'package:hjamty/core/services/notification_service.dart';
 import 'package:hjamty/features/client_space/appointments/presentation/widgets/appointment_details_bottom_sheet.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
+import 'dart:async';
+import 'package:hjamty/core/services/fcm_service.dart';
 
 import 'package:hjamty/features/client_space/salon_profile/presentation/pages/salon_setting_screen.dart';
 import 'package:hjamty/features/client_space/appointments/presentation/pages/booking_flow_screen.dart';
@@ -46,11 +50,33 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
   Map<String, dynamic>? _salonData;
   bool _isFavorite = false;
   bool _isLoadingFavorite = false;
+  StreamSubscription<Map<String, dynamic>>? _fcmSubscription;
 
   @override
   void initState() {
     super.initState();
     _fetchSalonData();
+    if (kIsWeb) {
+      NotificationService.listenToNotificationsStream();
+    }
+    _setupFcmListener();
+  }
+
+  void _setupFcmListener() {
+    _fcmSubscription = FcmService.messageStream.listen((data) {
+      if (data['type'] == 'APPOINTMENT_UPDATED') {
+        if (mounted) {
+          // Re-trigger FutureBuilder by calling setState
+          setState(() {});
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _fcmSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _fetchSalonData() async {

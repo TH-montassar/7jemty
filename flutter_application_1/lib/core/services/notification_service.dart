@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart'; // For ValueNotifier
 import 'package:hjamty/config/api_config.dart';
+import 'package:hjamty/core/services/fcm_service.dart';
 
 class NotificationService {
   // Reactive state for unread notifications count
@@ -71,33 +72,55 @@ class NotificationService {
       final token = prefs.getString('jwt_token');
       if (token == null) return;
 
-      final request = http.Request('GET', Uri.parse('${ApiConfig.host}/api/notifications/stream'));
+      final request = http.Request(
+        'GET',
+        Uri.parse('${ApiConfig.host}/api/notifications/stream'),
+      );
       request.headers['Authorization'] = 'Bearer $token';
       request.headers['Accept'] = 'text/event-stream';
       request.headers['Cache-Control'] = 'no-cache';
 
       _client.send(request).then((response) {
         _streamResponse = response;
-        response.stream.transform(utf8.decoder).transform(const LineSplitter()).listen((line) {
-          if (line.startsWith('data: ')) {
-            final dataStr = line.substring(6);
-            if (dataStr.trim() == '{"connected":true}') return;
-            try {
-              final data = json.decode(dataStr);
-              if (data['id'] != null) {
-                incrementUnreadCount();
-              }
-            } catch (e) {
-              debugPrint('SSE Decode Error: $e');
-            }
-          }
-        }, onDone: () {
-          debugPrint('SSE Stream closed. Reconnecting in 5s...');
-          Future.delayed(const Duration(seconds: 5), () => listenToNotificationsStream());
-        }, onError: (e) {
-          debugPrint('SSE Stream error: $e. Reconnecting in 5s...');
-          Future.delayed(const Duration(seconds: 5), () => listenToNotificationsStream());
-        });
+        response.stream
+            .transform(utf8.decoder)
+            .transform(const LineSplitter())
+            .listen(
+              (line) {
+                if (line.startsWith('data: ')) {
+                  final dataStr = line.substring(6);
+                  if (dataStr.trim() == '{"connected":true}') return;
+                  try {
+                    final data = json.decode(dataStr);
+
+                    // Bridge to FcmService for real-time UI refresh
+                    if (data is Map<String, dynamic>) {
+                      FcmService.dispatchMessage(data);
+                    }
+
+                    if (data['id'] != null) {
+                      incrementUnreadCount();
+                    }
+                  } catch (e) {
+                    debugPrint('SSE Decode Error: $e');
+                  }
+                }
+              },
+              onDone: () {
+                debugPrint('SSE Stream closed. Reconnecting in 5s...');
+                Future.delayed(
+                  const Duration(seconds: 5),
+                  () => listenToNotificationsStream(),
+                );
+              },
+              onError: (e) {
+                debugPrint('SSE Stream error: $e. Reconnecting in 5s...');
+                Future.delayed(
+                  const Duration(seconds: 5),
+                  () => listenToNotificationsStream(),
+                );
+              },
+            );
       });
     } catch (e) {
       debugPrint('SSE Connection Error: $e');

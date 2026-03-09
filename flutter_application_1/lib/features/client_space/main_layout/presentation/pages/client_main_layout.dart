@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hjamty/features/client_space/products/presentation/pages/products_page.dart';
 
@@ -27,7 +28,9 @@ class _ClientMainLayoutState extends State<ClientMainLayout> {
   void initState() {
     super.initState();
     _selectedIndex = widget.initialIndex;
-    NotificationService.listenToNotificationsStream();
+    if (kIsWeb) {
+      NotificationService.listenToNotificationsStream();
+    }
   }
 
   List<Widget> _pages = [

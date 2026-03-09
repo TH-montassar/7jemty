@@ -5,6 +5,7 @@ import 'package:hjamty/core/constants/app_colors.dart';
 import 'package:hjamty/core/localization/translation_service.dart'; // Added this import
 import 'package:hjamty/features/auth/data/auth_service.dart';
 import 'package:hjamty/features/client_space/appointments/data/appointment_service.dart';
+import 'package:hjamty/core/services/fcm_service.dart';
 import 'package:hjamty/features/client_space/home/presentation/widgets/client_header_section.dart';
 import 'package:hjamty/features/client_space/home/presentation/widgets/next_rdv_card.dart';
 import 'package:hjamty/features/client_space/home/presentation/widgets/quick_categories.dart';
@@ -24,7 +25,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
   bool _isLoggedIn = false;
   String _clientName = "Client";
   Map<String, dynamic>? _nextAppointment;
-  Timer? _pollingTimer;
+  StreamSubscription<Map<String, dynamic>>? _fcmSubscription;
   bool _isReviewModalShowing = false;
   final Set<int> _shownReviewApptIds = {}; // Track shown modals
 
@@ -32,19 +33,21 @@ class _ClientHomePageState extends State<ClientHomePage> {
   void initState() {
     super.initState();
     _checkLoginStatus();
-    _startPolling();
+    _setupFcmListener();
+  }
+
+  void _setupFcmListener() {
+    _fcmSubscription = FcmService.messageStream.listen((data) {
+      if (data['type'] == 'APPOINTMENT_UPDATED') {
+        _fetchAppointmentsSilent();
+      }
+    });
   }
 
   @override
   void dispose() {
-    _pollingTimer?.cancel();
+    _fcmSubscription?.cancel();
     super.dispose();
-  }
-
-  void _startPolling() {
-    _pollingTimer = Timer.periodic(const Duration(seconds: 10), (_) {
-      _fetchAppointmentsSilent();
-    });
   }
 
   Future<void> _fetchAppointmentsSilent() async {
@@ -196,7 +199,9 @@ class _ClientHomePageState extends State<ClientHomePage> {
       body: SafeArea(
         bottom: false,
         child: Container(
-          color: const Color(0xFFF5F7FA), // A slightly cooler, "pro" grey background
+          color: const Color(
+            0xFFF5F7FA,
+          ), // A slightly cooler, "pro" grey background
           child: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
             child: Column(

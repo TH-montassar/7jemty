@@ -11,6 +11,7 @@ type NotifyPayload = {
     body: string;
     userIds: number[];
     appointmentId: number;
+    type?: string;
 };
 
 const ACTIVE_APPOINTMENT_STATUSES: AppointmentStatusInput[] = ['PENDING', 'CONFIRMED', 'IN_PROGRESS', 'ARRIVED'];
@@ -33,12 +34,17 @@ const notifyUsers = async (_payload: NotifyPayload) => {
             });
 
             // 1a. Emit event via SSE Real-Time Stream
-            broadcastNotificationToUser(user.id, newDbNotification);
+            broadcastNotificationToUser(user.id, {
+                ...newDbNotification,
+                type: _payload.type || 'APPOINTMENT_DEFAULT'
+            });
 
-            // 2. Transmit the physical Push Notification
             const token = user.profile?.fcmToken;
             if (token) {
-                await sendNotification(token, _payload.title, _payload.body, { appointmentId: _payload.appointmentId.toString() });
+                await sendNotification(token, _payload.title, _payload.body, {
+                    appointmentId: _payload.appointmentId.toString(),
+                    type: _payload.type || 'APPOINTMENT_DEFAULT'
+                });
             }
         }
     } catch (e) {
@@ -389,8 +395,35 @@ export const createClientAppointment = async (
         title: 'Nouvelle demande de rendez-vous',
         body: `Service réservé à ${timeString}`,
         userIds: recipients,
-        appointmentId: appointment.id
+        appointmentId: appointment.id,
+        type: 'APPOINTMENT_UPDATED'
     });
+
+    // Silent broadcast to ensure all apps refresh
+    const allInvolved = [clientId, targetBarberId, salon.patronId].filter((id): id is number => Boolean(id));
+    const uniqueInvolved = Array.from(new Set(allInvolved));
+
+    const users = await prisma.user.findMany({
+        where: { id: { in: uniqueInvolved } },
+        include: { profile: true }
+    });
+
+    for (const user of users) {
+        // Broadcast via SSE (for Web and Mobile fallback)
+        broadcastNotificationToUser(user.id, {
+            type: 'APPOINTMENT_UPDATED',
+            appointmentId: appointment.id,
+            newStatus: 'PENDING'
+        });
+
+        if (user.profile?.fcmToken) {
+            await sendNotification(user.profile.fcmToken, undefined, undefined, {
+                type: 'APPOINTMENT_UPDATED',
+                appointmentId: appointment.id.toString(),
+                newStatus: 'PENDING'
+            });
+        }
+    }
 
     return appointment;
 };
@@ -497,8 +530,9 @@ const emitStatusNotifications = async (
         await notifyUsers({
             title: 'Rendez-vous confirmé',
             body: `Votre rendez-vous a été accepté pour le ${appointmentDate.toLocaleDateString('fr-FR')} à ${appointmentDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`,
-            userIds: [clientId],
-            appointmentId
+            userIds: [clientId, barberId, patronId].filter((id): id is number => Boolean(id)),
+            appointmentId,
+            type: 'APPOINTMENT_UPDATED'
         });
     }
 
@@ -510,7 +544,8 @@ const emitStatusNotifications = async (
             title: 'Rendez-vous annulé',
             body: 'Une modification a été effectuée sur le rendez-vous.',
             userIds: recipients,
-            appointmentId
+            appointmentId,
+            type: 'APPOINTMENT_UPDATED'
         });
     }
 
@@ -518,8 +553,9 @@ const emitStatusNotifications = async (
         await notifyUsers({
             title: 'Rendez-vous refusé',
             body: 'Malheureusement, le salon a refusé ce créneau. Veuillez en choisir un autre.',
-            userIds: [clientId],
-            appointmentId
+            userIds: [clientId, barberId, patronId].filter((id): id is number => Boolean(id)),
+            appointmentId,
+            type: 'APPOINTMENT_UPDATED'
         });
     }
 
@@ -531,9 +567,36 @@ const emitStatusNotifications = async (
         await notifyUsers({
             title: 'Laissez votre avis',
             body: 'Votre prestation est terminée, partagez votre review.',
-            userIds: [clientId],
-            appointmentId
+            userIds: [clientId, barberId, patronId].filter((id): id is number => Boolean(id)),
+            appointmentId,
+            type: 'APPOINTMENT_UPDATED'
         });
+    }
+
+    // Always send a silent real-time refresh trigger to everyone involved so frontend apps can reload data
+    const allInvolved = [clientId, barberId, patronId].filter((id): id is number => Boolean(id));
+    const uniqueInvolved = Array.from(new Set(allInvolved));
+
+    const users = await prisma.user.findMany({
+        where: { id: { in: uniqueInvolved } },
+        include: { profile: true }
+    });
+
+    for (const user of users) {
+        // Broadcast via SSE (for Web and Mobile fallback)
+        broadcastNotificationToUser(user.id, {
+            type: 'APPOINTMENT_UPDATED',
+            appointmentId: appointmentId,
+            newStatus: status
+        });
+
+        if (user.profile?.fcmToken) {
+            await sendNotification(user.profile.fcmToken, undefined, undefined, {
+                type: 'APPOINTMENT_UPDATED',
+                appointmentId: appointmentId.toString(),
+                newStatus: status
+            });
+        }
     }
 };
 

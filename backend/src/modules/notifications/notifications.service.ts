@@ -1,17 +1,20 @@
 import admin from 'firebase-admin';
 
-export const sendNotification = async (token: string, title: string, body: string, data?: any) => {
+export const sendNotification = async (token: string, title?: string, body?: string, data?: any) => {
     try {
         if (!token) return;
 
-        const message = {
-            notification: {
-                title,
-                body,
-            },
+        const message: any = {
             data: data || {},
             token,
         };
+
+        if (title || body) {
+            message.notification = {
+                title: title || '',
+                body: body || '',
+            };
+        }
 
         const response = await admin.messaging().send(message);
         console.log(`[FCM] Sent message successfully: ${response}`);

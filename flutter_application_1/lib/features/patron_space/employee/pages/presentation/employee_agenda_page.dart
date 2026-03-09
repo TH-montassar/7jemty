@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:flutter/material.dart';
 import 'package:hjamty/core/services/fcm_service.dart';
 import 'package:intl/intl.dart';
 import 'package:toastification/toastification.dart';
 import 'package:hjamty/core/constants/app_colors.dart';
+import 'package:hjamty/core/services/notification_service.dart';
 import 'package:hjamty/features/client_space/appointments/data/appointment_service.dart';
 import 'package:hjamty/features/client_space/appointments/presentation/widgets/appointment_details_bottom_sheet.dart';
 
@@ -19,7 +21,7 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
   bool _isLoading = true;
   List<dynamic> _appointments = [];
   final Set<int> _notifiedAptIds = {};
-  Timer? _pollingTimer;
+  StreamSubscription<Map<String, dynamic>>? _fcmSubscription;
   Timer? _uiTimer;
 
   @override
@@ -27,12 +29,10 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
     super.initState();
     _fetchAppointments();
 
-    // Poll the API every 10 seconds for real-time updates without fully reloading the UI
-    _pollingTimer = Timer.periodic(const Duration(seconds: 10), (_) {
-      if (mounted) {
-        _fetchAppointmentsSilent();
-      }
-    });
+    if (kIsWeb) {
+      NotificationService.listenToNotificationsStream();
+    }
+    _setupFcmListener();
 
     // Add per-second UI timer for granular countdown (seconds)
     _uiTimer = Timer.periodic(const Duration(seconds: 1), (_) {
@@ -43,9 +43,19 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
     });
   }
 
+  void _setupFcmListener() {
+    _fcmSubscription = FcmService.messageStream.listen((data) {
+      if (data['type'] == 'APPOINTMENT_UPDATED') {
+        if (mounted) {
+          _fetchAppointmentsSilent();
+        }
+      }
+    });
+  }
+
   @override
   void dispose() {
-    _pollingTimer?.cancel();
+    _fcmSubscription?.cancel();
     _uiTimer?.cancel();
     super.dispose();
   }

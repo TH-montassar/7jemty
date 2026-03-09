@@ -7,11 +7,24 @@ import 'dart:convert';
 import 'package:hjamty/core/services/notification_service.dart';
 import '../../../config/api_config.dart';
 
+import 'dart:async';
+
 class FcmService {
   static final FirebaseMessaging _firebaseMessaging =
       FirebaseMessaging.instance;
   static final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
+
+  // Create a broadcast stream to listen for specific data payloads (e.g., appointment updates)
+  static final StreamController<Map<String, dynamic>> _messageStreamController =
+      StreamController.broadcast();
+  static Stream<Map<String, dynamic>> get messageStream =>
+      _messageStreamController.stream;
+
+  // Manual dispatch for SSE or other sources
+  static void dispatchMessage(Map<String, dynamic> data) {
+    _messageStreamController.add(data);
+  }
 
   // Initialization
   static Future<void> initialize() async {
@@ -42,7 +55,15 @@ class FcmService {
       // 3. Listen to foreground messages (while app is open)
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
         debugPrint('Got a message whilst in the foreground!');
-        if (message.notification != null) {
+
+        // Push the payload to the stream so UI can react in real-time
+        if (message.data.isNotEmpty) {
+          _messageStreamController.add(message.data);
+        }
+
+        if (message.notification != null &&
+            (message.notification?.title?.isNotEmpty == true ||
+                message.notification?.body?.isNotEmpty == true)) {
           _showLocalNotification(message);
           // Instantly update badge count reactively
           NotificationService.incrementUnreadCount();
