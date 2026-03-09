@@ -221,3 +221,59 @@ export const verifyOtp = async (phoneNumber: string, submittedCode: string) => {
 
     return { message: "Numéro vérifié avec succès" };
 };
+type AdminUserUpdateInput = {
+    fullName?: string;
+    phoneNumber?: string;
+    role?: Role;
+    isVerified?: boolean;
+    isBlacklistedBySystem?: boolean;
+    profile?: {
+        email?: string;
+        specialityTitle?: string;
+        bio?: string;
+        description?: string;
+    };
+};
+
+export const getAllUsersAdmin = async () => {
+    const users = await prisma.user.findMany({
+        include: {
+            profile: true,
+            _count: {
+                select: {
+                    salonsOwned: true,
+                    appointmentsClient: true,
+                    appointmentsBarber: true,
+                }
+            }
+        }
+    });
+
+    return users.map((user) => {
+        const { passwordHash: _, ...userWithoutPassword } = user;
+        return userWithoutPassword;
+    });
+};
+
+export const updateUserAdmin = async (userId: number, data: AdminUserUpdateInput) => {
+    const { profile, ...userData } = data;
+
+    return prisma.user.update({
+        where: { id: userId },
+        data: {
+            ...userData,
+            ...(profile && {
+                profile: {
+                    update: profile
+                }
+            })
+        },
+        include: { profile: true }
+    });
+};
+
+export const deleteUserAdmin = async (userId: number) => {
+    return prisma.user.delete({
+        where: { id: userId }
+    });
+};

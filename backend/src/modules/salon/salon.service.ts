@@ -1,6 +1,6 @@
 import { prisma } from '../../lib/db.js';
 import bcrypt from 'bcryptjs';
-import { AppointmentStatus, Role } from '../../../generated/prisma/index.js';
+import { ApprovalStatus, AppointmentStatus, Role } from '../../../generated/prisma/index.js';
 import { sendNotification } from '../notifications/notifications.service.js';
 
 const getSalonIdByPatronId = async (patronId: number): Promise<number> => {
@@ -36,7 +36,7 @@ export const createSalon = async (patronId: number, data: any) => {
             googleMapsUrl: data.googleMapsUrl, // <-- Save fields from new onboarding
             speciality: data.speciality,
             rating: 0,
-            patronId: patronId, // 👈 Narbtou l'salon bel Patron mta3ou
+            patronId: patronId, // ðŸ‘ˆ Narbtou l'salon bel Patron mta3ou
         },
     });
 
@@ -164,7 +164,7 @@ export const getSalonByPatronId = async (patronId: number) => {
         salonId: salon.id,
         name: emp.fullName,
         phoneNumber: emp.phoneNumber,
-        role: emp.profile?.specialityTitle || 'Spécialiste',
+        role: emp.profile?.specialityTitle || 'SpÃ©cialiste',
         bio: emp.profile?.bio || null,
         description: emp.profile?.description || null,
         imageUrl: emp.profile?.avatarUrl || null,
@@ -202,7 +202,7 @@ export const createEmployeeAccount = async (patronId: number, data: any) => {
         salonIdToUse = salon.id;
     }
 
-    // 2. Nthabtou ken nomrou teflon mta3 employé mouch msta3mel 9bal
+    // 2. Nthabtou ken nomrou teflon mta3 employÃ© mouch msta3mel 9bal
     const existingUser = await prisma.user.findUnique({
         where: { phoneNumber: data.phoneNumber }
     });
@@ -227,7 +227,7 @@ export const createEmployeeAccount = async (patronId: number, data: any) => {
             // B. Nasn3ou l'Profile f wist l'User (Nested Writes)
             profile: {
                 create: {
-                    specialityTitle: data.role || 'Spécialiste',
+                    specialityTitle: data.role || 'SpÃ©cialiste',
                     bio: data.bio || null,
                     description: data.description || null,
                     avatarUrl: data.imageUrl || null
@@ -243,7 +243,7 @@ export const createEmployeeAccount = async (patronId: number, data: any) => {
         salonId: salonIdToUse,
         name: newUser.fullName,
         phoneNumber: newUser.phoneNumber,
-        role: data.role || 'Spécialiste',
+        role: data.role || 'SpÃ©cialiste',
         bio: data.bio || null,
         description: data.description || null,
         imageUrl: data.imageUrl || null,
@@ -256,7 +256,7 @@ export const createEmployeeAccountAdmin = async (salonId: number, data: any) => 
     const salon = await prisma.salon.findUnique({ where: { id: salonId } });
     if (!salon) throw new Error("Salon introuvable");
 
-    // 2. Nthabtou ken nomrou teflon mta3 employé mouch msta3mel 9bal
+    // 2. Nthabtou ken nomrou teflon mta3 employÃ© mouch msta3mel 9bal
     const existingUser = await prisma.user.findUnique({
         where: { phoneNumber: data.phoneNumber }
     });
@@ -279,7 +279,7 @@ export const createEmployeeAccountAdmin = async (salonId: number, data: any) => 
             workplaceSalonId: salonId,
             profile: {
                 create: {
-                    specialityTitle: data.role || 'Spécialiste',
+                    specialityTitle: data.role || 'SpÃ©cialiste',
                     bio: data.bio || null,
                     description: data.description || null,
                     avatarUrl: data.imageUrl || null
@@ -294,7 +294,7 @@ export const createEmployeeAccountAdmin = async (salonId: number, data: any) => 
         salonId,
         name: newUser.fullName,
         phoneNumber: newUser.phoneNumber,
-        role: data.role || 'Spécialiste',
+        role: data.role || 'SpÃ©cialiste',
         bio: data.bio || null,
         description: data.description || null,
         imageUrl: data.imageUrl || null,
@@ -355,7 +355,7 @@ export const updateEmployeeAccount = async (patronId: number, employeeId: number
                             ...(data.imageUrl !== undefined && { avatarUrl: data.imageUrl })
                         },
                         create: {
-                            specialityTitle: data.role ?? 'Spécialiste',
+                            specialityTitle: data.role ?? 'SpÃ©cialiste',
                             bio: data.bio ?? null,
                             description: data.description ?? null,
                             avatarUrl: data.imageUrl ?? null
@@ -373,7 +373,7 @@ export const updateEmployeeAccount = async (patronId: number, employeeId: number
         salonId,
         name: updatedEmployee.fullName,
         phoneNumber: updatedEmployee.phoneNumber,
-        role: updatedEmployee.profile?.specialityTitle || 'Spécialiste',
+        role: updatedEmployee.profile?.specialityTitle || 'SpÃ©cialiste',
         bio: updatedEmployee.profile?.bio || null,
         description: updatedEmployee.profile?.description || null,
         imageUrl: updatedEmployee.profile?.avatarUrl || null,
@@ -432,7 +432,7 @@ export const updateEmployeeAccountAdmin = async (salonId: number, employeeId: nu
                             ...(data.imageUrl !== undefined && { avatarUrl: data.imageUrl })
                         },
                         create: {
-                            specialityTitle: data.role ?? 'Spécialiste',
+                            specialityTitle: data.role ?? 'SpÃ©cialiste',
                             bio: data.bio ?? null,
                             description: data.description ?? null,
                             avatarUrl: data.imageUrl ?? null
@@ -450,7 +450,7 @@ export const updateEmployeeAccountAdmin = async (salonId: number, employeeId: nu
         salonId,
         name: updatedEmployee.fullName,
         phoneNumber: updatedEmployee.phoneNumber,
-        role: updatedEmployee.profile?.specialityTitle || 'Spécialiste',
+        role: updatedEmployee.profile?.specialityTitle || 'SpÃ©cialiste',
         bio: updatedEmployee.profile?.bio || null,
         description: updatedEmployee.profile?.description || null,
         imageUrl: updatedEmployee.profile?.avatarUrl || null,
@@ -549,7 +549,7 @@ export const removeEmployeeFromSalonAdmin = async (salonId: number, employeeId: 
 };
 
 export const getAllSalons = async (lat?: number, lng?: number, includeUnapproved: boolean = false) => {
-    // Njibou tous les salons men base de données
+    // Njibou tous les salons men base de donnÃ©es
     const salons = await prisma.salon.findMany({
         where: !includeUnapproved ? { approvalStatus: 'APPROVED' } : {},
         include: {
@@ -561,7 +561,7 @@ export const getAllSalons = async (lat?: number, lng?: number, includeUnapproved
         }
     });
 
-    // Ken 3ana les coordonnées mta3 el client, n7esbou el distance (en km mthln)
+    // Ken 3ana les coordonnÃ©es mta3 el client, n7esbou el distance (en km mthln)
     let salonsWithDistance = salons.map(salon => {
         let distance: string | null = null;
         if (lat && lng && salon.latitude && salon.longitude) {
@@ -798,7 +798,7 @@ export const getSalonById = async (id: number) => {
         salonId: salon.id,
         name: emp.fullName,
         phoneNumber: emp.phoneNumber,
-        role: emp.profile?.specialityTitle || 'Spécialiste',
+        role: emp.profile?.specialityTitle || 'SpÃ©cialiste',
         bio: emp.profile?.bio || null,
         description: emp.profile?.description || null,
         imageUrl: emp.profile?.avatarUrl || null,
@@ -1008,4 +1008,122 @@ export const deletePortfolioImageAdmin = async (salonId: number, imageId: number
             salonId
         }
     });
+};
+
+export const getAllSalonsAdmin = async () => {
+    return prisma.salon.findMany({
+        include: {
+            patron: true,
+            _count: {
+                select: {
+                    employees: true,
+                    services: true,
+                    appointments: true,
+                }
+            }
+        }
+    });
+};
+
+export const updateSalonStatusAdmin = async (salonId: number, status: ApprovalStatus) => {
+    return prisma.salon.update({
+        where: { id: salonId },
+        data: { approvalStatus: status }
+    });
+};
+
+export const deleteSalonAdmin = async (salonId: number) => {
+    return prisma.salon.delete({
+        where: { id: salonId }
+    });
+};
+
+export const updateSalonAdmin = async (salonId: number, data: any) => {
+    const updatedSalon = await prisma.salon.update({
+        where: { id: salonId },
+        data: {
+            ...(data.name !== undefined && { name: data.name }),
+            ...(data.description !== undefined && { description: data.description }),
+            ...(data.contactPhone !== undefined && { contactPhone: data.contactPhone }),
+            ...(data.address !== undefined && { address: data.address }),
+            ...(data.latitude !== undefined && { latitude: data.latitude }),
+            ...(data.longitude !== undefined && { longitude: data.longitude }),
+            ...(data.googleMapsUrl !== undefined && { googleMapsUrl: data.googleMapsUrl }),
+            ...(data.websiteUrl !== undefined && { websiteUrl: data.websiteUrl }),
+            ...(data.speciality !== undefined && { speciality: data.speciality }),
+            ...(data.approvalStatus !== undefined && { approvalStatus: data.approvalStatus }),
+            ...(data.coverImageUrl !== undefined && { coverImageUrl: data.coverImageUrl }),
+        }
+    });
+
+    if (data.socialLinks !== undefined) {
+        await prisma.salonSocialLink.deleteMany({ where: { salonId } });
+        if (data.socialLinks.length > 0) {
+            await prisma.salonSocialLink.createMany({
+                data: data.socialLinks.map((link: { platform: string; url: string }) => ({
+                    salonId,
+                    platform: link.platform,
+                    url: link.url,
+                })),
+            });
+        }
+    }
+
+    if (data.workingHours !== undefined) {
+        await prisma.workingHours.deleteMany({ where: { salonId } });
+        if (data.workingHours.length > 0) {
+            await prisma.workingHours.createMany({
+                data: data.workingHours.map((wh: any) => ({
+                    salonId,
+                    dayOfWeek: wh.dayOfWeek,
+                    openTime: wh.openTime,
+                    closeTime: wh.closeTime,
+                    isDayOff: wh.isDayOff ?? false,
+                })),
+            });
+        }
+    }
+
+    return updatedSalon;
+};
+
+export const getSalonStatsAdmin = async (salonId: number) => {
+    const appointments = await prisma.appointment.findMany({
+        where: {
+            salonId,
+            status: AppointmentStatus.COMPLETED
+        },
+        include: {
+            barber: true
+        }
+    });
+
+    const totalAppointments = appointments.length;
+    let totalRevenue = 0;
+    const specialistStats: Record<number, { name: string; count: number; revenue: number }> = {};
+
+    for (const appt of appointments) {
+        totalRevenue += appt.totalPrice;
+        const barberId = appt.barberId;
+        if (!barberId) {
+            continue;
+        }
+
+        if (!specialistStats[barberId]) {
+            specialistStats[barberId] = {
+                name: appt.barber?.fullName || 'Inconnu',
+                count: 0,
+                revenue: 0
+            };
+        }
+
+        specialistStats[barberId].count += 1;
+        specialistStats[barberId].revenue += appt.totalPrice;
+    }
+
+    return {
+        totalAppointments,
+        totalRevenue,
+        specialistStats: Object.values(specialistStats)
+    };
 };
