@@ -42,6 +42,7 @@ dependencies:
   url_launcher_web: ^2.4.1
   firebase_core: ^4.5.0
   firebase_messaging: ^16.1.2
+  flutter_dotenv: ^5.1.0
   flutter_local_notifications: ^20.1.0
   flutter_map: 6.1.0
   latlong2: 0.9.0
@@ -66,5 +67,6 @@ flutter:
   uses-material-design: true
 
   assets:
+    - .env
     - assets/images/img1.jpg
     - assets/images/logo.png

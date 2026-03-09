@@ -1,3 +1,13 @@
+
+## Firebase environment
+
+Firebase options are loaded from `flutter_application_1/.env`.
+
+1. Copy `.env.example` to `.env`
+2. Fill all `FIREBASE_*` values for your project
+3. Run `flutter pub get`
+
+The `.env` file is git-ignored.
 # hjamty
 
 A new Flutter project.
@@ -38,7 +48,7 @@ cd flutter_application_1
 ./scripts/run_phone.sh --usb-only --port 3000
 ```
 
-This runs USB only (`adb reverse`) with `REAL_DEVICE=true`. If no USB device is detected, the script exits with an error (no Wi‑Fi fallback).
+This runs USB only (`adb reverse`) with `REAL_DEVICE=true`. If no USB device is detected, the script exits with an error (no Wiâ€‘Fi fallback).
 
 2. **Wi-Fi mode (same network)**
 

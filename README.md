@@ -133,3 +133,12 @@ From `backend/`:
 - client side: discover salons, view services, book/manage appointments, review experiences
 - salon side: manage profile, staff, service catalog, and incoming appointments
 - system side: enforce role-based access, scheduling flows, and moderation/approval workflows
+
+## Firebase (Flutter)
+
+The Flutter app now reads Firebase config from `flutter_application_1/.env`.
+
+1. Copy `flutter_application_1/.env.example` to `flutter_application_1/.env`
+2. Fill in your Firebase values
+
+The `.env` file is ignored by git.
