@@ -133,6 +133,11 @@ export const getSalonByPatronId = async (patronId: number) => {
     const salon = await prisma.salon.findFirst({
         where: { patronId: patronId },
         include: {
+            patron: {
+                include: {
+                    profile: true
+                }
+            },
             employees: {
                 include: {
                     profile: true
@@ -185,7 +190,17 @@ export const getSalonByPatronId = async (patronId: number) => {
         ? salon.rating.toFixed(1)
         : "0.0";
 
-    return { ...salon, employees: formattedEmployees, reviews: formattedReviews, rating: formattedRating };
+    return {
+        ...salon,
+        patron: {
+            id: salon.patron.id,
+            name: salon.patron.fullName,
+            imageUrl: salon.patron.profile?.avatarUrl || null,
+        },
+        employees: formattedEmployees,
+        reviews: formattedReviews,
+        rating: formattedRating
+    };
 };
 
 export const createEmployeeAccount = async (patronId: number, data: any) => {
