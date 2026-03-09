@@ -76,6 +76,36 @@ class AppointmentService {
     }
   }
 
+  static Future<List<dynamic>> getAppointmentsForSalonId(int salonId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('jwt_token');
+
+    if (token == null) {
+      throw Exception('Rak mouch connecté!');
+    }
+
+    final response = await http.get(
+      Uri.parse(
+        '${ApiConfig.endpoint('/api/admin')}/salons/$salonId/appointments',
+      ),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      return data['data'] ?? [];
+    } else {
+      throw Exception(
+        data['message'] ??
+            'Erreur lors de la récupération des rendez-vous par l\'admin',
+      );
+    }
+  }
+
   static Future<List<dynamic>> getClientAppointments() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('jwt_token');

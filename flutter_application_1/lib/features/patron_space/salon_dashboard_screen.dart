@@ -25,8 +25,16 @@ class SalonDashboardScreen extends StatefulWidget {
   final bool isPatron;
   final int?
   salonId; // Optional: Only provided if a client views a specific salon
+  final bool showBackButton;
+  final bool isAdminPeek;
 
-  const SalonDashboardScreen({super.key, this.isPatron = false, this.salonId});
+  const SalonDashboardScreen({
+    super.key,
+    this.isPatron = false,
+    this.salonId,
+    this.showBackButton = false,
+    this.isAdminPeek = false,
+  });
 
   @override
   State<SalonDashboardScreen> createState() => _SalonDashboardScreenState();
@@ -248,6 +256,8 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
     ];
     if (widget.isPatron) {
       tabs.add(Tab(text: tr(context, 'tab_appointments')));
+    }
+    if (widget.isPatron || widget.isAdminPeek) {
       tabs.add(Tab(text: tr(context, 'working_hours')));
     }
     tabs.add(Tab(text: tr(context, 'tab_reviews')));
@@ -291,7 +301,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                 elevation: 0,
                 iconTheme: const IconThemeData(color: Colors.white),
                 automaticallyImplyLeading: false,
-                leading: widget.isPatron
+                leading: (widget.isPatron && !widget.showBackButton)
                     ? const SizedBox.shrink()
                     : Container(
                         margin: const EdgeInsets.all(8.0),
@@ -393,6 +403,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                                   MaterialPageRoute(
                                     builder: (context) => SalonScreenUnifiee(
                                       salonId: widget.salonId,
+                                      isAdminPeek: widget.isAdminPeek,
                                     ),
                                   ),
                                 ).then((_) => _fetchSalonData());
@@ -488,14 +499,14 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
             ];
           },
 
-          // 4. Tab content
           body: TabBarView(
             children: [
               AboutTab(salonData: _salonData!),
               _buildServicesTab(),
               _buildSpecialistesTab(),
               if (widget.isPatron) _buildReservationsTab(),
-              if (widget.isPatron) _buildWorkingTimesTab(),
+              if (widget.isPatron || widget.isAdminPeek)
+                _buildWorkingTimesTab(),
               _buildAvisTab(),
             ],
           ),
@@ -550,9 +561,11 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const SalonScreenUnifiee(
+                      builder: (context) => SalonScreenUnifiee(
                         initialTabIndex: 1, // Services tab
                         openAddForm: true,
+                        salonId: widget.salonId,
+                        isAdminPeek: widget.isAdminPeek,
                       ),
                     ),
                   ).then((_) => _fetchSalonData());
@@ -708,7 +721,9 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
 
   Widget _buildReservationsTab() {
     return FutureBuilder<List<dynamic>>(
-      future: AppointmentService.getSalonAppointments(),
+      future: (widget.isAdminPeek && widget.salonId != null)
+          ? AppointmentService.getAppointmentsForSalonId(widget.salonId!)
+          : AppointmentService.getSalonAppointments(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
@@ -1130,9 +1145,11 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const SalonScreenUnifiee(
+                      builder: (context) => SalonScreenUnifiee(
                         initialTabIndex: 2, // 2 is Equipe tab for Patron
                         openAddForm: true,
+                        salonId: widget.salonId,
+                        isAdminPeek: widget.isAdminPeek,
                       ),
                     ),
                   ).then((_) => _fetchSalonData());
@@ -1317,11 +1334,11 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const SalonScreenUnifiee(
+                      builder: (context) => SalonScreenUnifiee(
                         initialTabIndex: 3, // Working Hours tab
                         openAddForm: true,
-                        salonId:
-                            null, // Always pass null for Patron to use getMySalon / update my salon
+                        salonId: widget.salonId,
+                        isAdminPeek: widget.isAdminPeek,
                       ),
                     ),
                   ).then((_) => _fetchSalonData());
@@ -1516,4 +1533,3 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
     );
   }
 }
-

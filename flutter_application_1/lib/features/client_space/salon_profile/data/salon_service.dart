@@ -156,6 +156,7 @@ class SalonService {
 
   // ðŸ“ Fonction bech tzid employÃ© we ta3melou compte User
   static Future<Map<String, dynamic>> createEmployeeAccount({
+    bool isAdminPeek = false,
     int? salonId,
     required String name,
     required String phoneNumber,
@@ -173,8 +174,12 @@ class SalonService {
         throw Exception('Rak mouch connectÃ©! (Token manquant)');
       }
 
+      final url = isAdminPeek && salonId != null
+          ? ApiConfig.endpoint('/api/admin/salons/$salonId/employee')
+          : '$baseUrl/employee/create-account';
+
       final response = await http.post(
-        Uri.parse('$baseUrl/employee/create-account'),
+        Uri.parse(url),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -209,6 +214,8 @@ class SalonService {
   // ðŸ“ Fonctions bech nmodifiw/faskhou compte employe
 
   static Future<Map<String, dynamic>> updateEmployeeAccount({
+    bool isAdminPeek = false,
+    int? salonId,
     required int employeeId,
     required String name,
     required String phoneNumber,
@@ -226,8 +233,14 @@ class SalonService {
         throw Exception('Rak mouch connectÃ©! (Token manquant)');
       }
 
+      final url = isAdminPeek && salonId != null
+          ? ApiConfig.endpoint(
+              '/api/admin/salons/$salonId/employee/$employeeId',
+            )
+          : '$baseUrl/employee/$employeeId';
+
       final response = await http.patch(
-        Uri.parse('$baseUrl/employee/$employeeId'),
+        Uri.parse(url),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -257,7 +270,11 @@ class SalonService {
     }
   }
 
-  static Future<void> deleteEmployeeAccount({required int employeeId}) async {
+  static Future<void> deleteEmployeeAccount({
+    bool isAdminPeek = false,
+    int? salonId,
+    required int employeeId,
+  }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('jwt_token');
@@ -266,8 +283,14 @@ class SalonService {
         throw Exception('Rak mouch connectÃ©! (Token manquant)');
       }
 
+      final url = isAdminPeek && salonId != null
+          ? ApiConfig.endpoint(
+              '/api/admin/salons/$salonId/employee/$employeeId',
+            )
+          : '$baseUrl/employee/$employeeId';
+
       final response = await http.delete(
-        Uri.parse('$baseUrl/employee/$employeeId'),
+        Uri.parse(url),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -314,6 +337,7 @@ class SalonService {
 
   // ðŸ“ Fonction bech tzid service l salon
   static Future<Map<String, dynamic>> createService({
+    bool isAdminPeek = false,
     int? salonId,
     required String name,
     required double price,
@@ -329,8 +353,12 @@ class SalonService {
         throw Exception('Rak mouch connectÃ©! (Token manquant)');
       }
 
+      final url = isAdminPeek && salonId != null
+          ? ApiConfig.endpoint('/api/admin/salons/$salonId/service')
+          : '$baseUrl/service/create';
+
       final response = await http.post(
-        Uri.parse('$baseUrl/service/create'),
+        Uri.parse(url),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -363,6 +391,8 @@ class SalonService {
   // ðŸ“ Fonction bech njibou les services mta3 salon
 
   static Future<Map<String, dynamic>> updateService({
+    bool isAdminPeek = false,
+    int? salonId,
     required int serviceId,
     required String name,
     required double price,
@@ -378,8 +408,12 @@ class SalonService {
         throw Exception('Rak mouch connecté! (Token manquant)');
       }
 
+      final url = isAdminPeek && salonId != null
+          ? ApiConfig.endpoint('/api/admin/salons/$salonId/service/$serviceId')
+          : '$baseUrl/service/$serviceId';
+
       final response = await http.patch(
-        Uri.parse('$baseUrl/service/$serviceId'),
+        Uri.parse(url),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -407,7 +441,11 @@ class SalonService {
     }
   }
 
-  static Future<void> deleteService({required int serviceId}) async {
+  static Future<void> deleteService({
+    bool isAdminPeek = false,
+    int? salonId,
+    required int serviceId,
+  }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('jwt_token');
@@ -416,8 +454,12 @@ class SalonService {
         throw Exception('Rak mouch connecté! (Token manquant)');
       }
 
+      final url = isAdminPeek && salonId != null
+          ? ApiConfig.endpoint('/api/admin/salons/$salonId/service/$serviceId')
+          : '$baseUrl/service/$serviceId';
+
       final response = await http.delete(
-        Uri.parse('$baseUrl/service/$serviceId'),
+        Uri.parse(url),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',

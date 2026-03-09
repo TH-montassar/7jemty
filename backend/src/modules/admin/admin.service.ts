@@ -73,6 +73,22 @@ export const updateSalonAdmin = async (salonId: number, data: any) => {
         }
     }
 
+    // Handle working hours: delete all then re-insert
+    if (data.workingHours !== undefined) {
+        await prisma.workingHours.deleteMany({ where: { salonId } });
+        if (data.workingHours.length > 0) {
+            await prisma.workingHours.createMany({
+                data: data.workingHours.map((wh: any) => ({
+                    salonId,
+                    dayOfWeek: wh.dayOfWeek,
+                    openTime: wh.openTime,
+                    closeTime: wh.closeTime,
+                    isDayOff: wh.isDayOff ?? false,
+                })),
+            });
+        }
+    }
+
     return updatedSalon;
 };
 

@@ -128,6 +128,8 @@ class _ManageSalonsPageState extends State<ManageSalonsPage> {
                                 isPatron:
                                     true, // Allow admin to peek with full permissions
                                 salonId: salon['id'],
+                                showBackButton: true,
+                                isAdminPeek: true,
                               ),
                             ),
                           );

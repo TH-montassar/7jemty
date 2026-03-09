@@ -15,12 +15,14 @@ class SalonScreenUnifiee extends StatefulWidget {
   final int initialTabIndex;
   final bool openAddForm;
   final int? salonId;
+  final bool isAdminPeek;
 
   const SalonScreenUnifiee({
     super.key,
     this.initialTabIndex = 0,
     this.openAddForm = false,
     this.salonId,
+    this.isAdminPeek = false,
   });
 
   @override
@@ -471,6 +473,7 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
       if (finalImageUrl.isEmpty) finalImageUrl = null;
 
       await SalonService.createService(
+        isAdminPeek: widget.isAdminPeek,
         salonId: widget.salonId, // Added salonId
         name: _srvNameController.text.trim(),
         price: double.parse(_srvPriceController.text.trim()),
@@ -570,6 +573,8 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
       if (finalImageUrl.isEmpty) finalImageUrl = null;
 
       await SalonService.updateService(
+        isAdminPeek: widget.isAdminPeek,
+        salonId: widget.salonId,
         serviceId: _editingServiceId!,
         name: _srvNameController.text.trim(),
         price: double.parse(_srvPriceController.text.trim()),
@@ -636,7 +641,11 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
 
     try {
       setState(() => _isLoading = true);
-      await SalonService.deleteService(serviceId: serviceId);
+      await SalonService.deleteService(
+        isAdminPeek: widget.isAdminPeek,
+        salonId: widget.salonId,
+        serviceId: serviceId,
+      );
 
       if (!mounted) return;
       toastification.show(
@@ -1803,6 +1812,7 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
       if (finalImageUrl.isEmpty) finalImageUrl = null;
 
       await SalonService.createEmployeeAccount(
+        isAdminPeek: widget.isAdminPeek,
         salonId: widget.salonId, // Added salonId
         name: _empNameController.text.trim(),
         phoneNumber: _empPhoneController.text.trim(),
@@ -1864,6 +1874,8 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
       final passwordValue = _empPasswordController.text.trim();
 
       await SalonService.updateEmployeeAccount(
+        isAdminPeek: widget.isAdminPeek,
+        salonId: widget.salonId,
         employeeId: _editingEmployeeId!,
         name: _empNameController.text.trim(),
         phoneNumber: _empPhoneController.text.trim(),
@@ -1936,7 +1948,11 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
 
     try {
       setState(() => _isLoading = true);
-      await SalonService.deleteEmployeeAccount(employeeId: employeeId);
+      await SalonService.deleteEmployeeAccount(
+        isAdminPeek: widget.isAdminPeek,
+        salonId: widget.salonId,
+        employeeId: employeeId,
+      );
 
       if (!mounted) return;
       toastification.show(

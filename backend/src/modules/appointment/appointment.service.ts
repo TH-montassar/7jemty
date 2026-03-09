@@ -585,6 +585,8 @@ const assertUpdatePermission = async (
     if (userRole === 'PATRON' && appointment.salon.patronId !== userId) {
         throw new Error("Hetha rdv fi salon we5er, ma tnajemch tmesou");
     }
+
+    // ADMIN has bypass permission, so we don't throw an error for ADMIN
 };
 
 const getEmployeeSalonId = async (userId: number) => {
@@ -639,6 +641,19 @@ export const getSalonAppointments = async (patronId: number) => {
 
     return prisma.appointment.findMany({
         where: { salonId: salon.id },
+        include: {
+            client: { select: { fullName: true, phoneNumber: true, profile: { select: { avatarUrl: true } } } },
+            salon: { select: { name: true, address: true, coverImageUrl: true } },
+            barber: { select: { fullName: true, profile: { select: { avatarUrl: true } } } },
+            services: { include: { service: true } }
+        },
+        orderBy: { appointmentDate: 'asc' }
+    });
+};
+
+export const getAppointmentsBySalonId = async (salonId: number) => {
+    return prisma.appointment.findMany({
+        where: { salonId },
         include: {
             client: { select: { fullName: true, phoneNumber: true, profile: { select: { avatarUrl: true } } } },
             salon: { select: { name: true, address: true, coverImageUrl: true } },
