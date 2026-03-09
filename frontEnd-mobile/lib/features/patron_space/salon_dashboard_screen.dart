@@ -1169,6 +1169,27 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
 
   Widget _buildSpecialistesTab() {
     final employees = (_salonData?['employees'] as List<dynamic>?) ?? [];
+    final patron = _salonData?['patron'] as Map<String, dynamic>?;
+
+    final specialists = employees
+        .whereType<Map<String, dynamic>>()
+        .map((emp) => Map<String, dynamic>.from(emp))
+        .toList();
+
+    final patronId = (patron?['id'] as num?)?.toInt();
+    final patronAlreadyInList =
+        patronId != null &&
+        specialists.any((emp) => (emp['id'] as num?)?.toInt() == patronId);
+
+    if (patron != null && !patronAlreadyInList) {
+      specialists.insert(0, {
+        'id': patronId,
+        'name': (patron['name'] ?? 'Patron').toString(),
+        'role': 'Patron',
+        'bio': null,
+        'imageUrl': patron['imageUrl'],
+      });
+    }
 
     return Column(
       children: [
@@ -1214,7 +1235,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
               ),
             ),
           ),
-        if (employees.isEmpty)
+        if (specialists.isEmpty)
           Expanded(
             child: Center(
               child: Text(
@@ -1227,9 +1248,9 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.all(20),
-              itemCount: employees.length,
+              itemCount: specialists.length,
               itemBuilder: (context, index) {
-                final emp = employees[index] as Map<String, dynamic>;
+                final emp = specialists[index];
                 final name =
                     (emp['name'] ?? tr(context, 'specialist_role')) as String;
                 final role =
