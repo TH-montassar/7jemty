@@ -496,7 +496,7 @@ const emitStatusNotifications = async (
     if (status === 'CONFIRMED') {
         await notifyUsers({
             title: 'Rendez-vous confirmé',
-            body: `Votre rendez-vous a été accepté pour ${appointmentDate.toISOString()}`,
+            body: `Votre rendez-vous a été accepté pour le ${appointmentDate.toLocaleDateString('fr-FR')} à ${appointmentDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`,
             userIds: [clientId],
             appointmentId
         });

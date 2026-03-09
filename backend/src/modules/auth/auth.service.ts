@@ -44,7 +44,7 @@ export const registerUser = async (data: any) => {
         data: {
             userId: user.id,
             title: "Bienvenue sur 7jemty ! 🎉",
-            body: `Votre compte a été créé avec succès. Votre mot de passe par défaut est votre numéro de téléphone : ${data.phoneNumber}. Pensez à le modifier dans votre profil pour plus de sécurité.`,
+            body: `Votre compte a été créé avec succès.`,
         }
     });
     broadcastNotificationToUser(user.id, welcomeNotif);
