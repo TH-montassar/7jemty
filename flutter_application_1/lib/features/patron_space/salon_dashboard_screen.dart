@@ -16,6 +16,7 @@ import 'package:toastification/toastification.dart';
 import '../../features/client_space/salon_profile/presentation/widgets/salon_info_section.dart';
 import '../../features/client_space/salon_profile/presentation/widgets/about_tab.dart';
 import 'package:hjamty/features/client_space/salon_profile/presentation/widgets/reviews_tab.dart';
+import 'package:hjamty/features/client_space/salon_profile/presentation/widgets/portfolio_tab.dart';
 import 'package:hjamty/core/widgets/notification_bell.dart';
 import 'package:hjamty/features/auth/data/auth_service.dart';
 import 'package:hjamty/features/auth/signIn.dart';
@@ -260,6 +261,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
     if (widget.isPatron || widget.isAdminPeek) {
       tabs.add(Tab(text: tr(context, 'working_hours')));
     }
+    tabs.add(Tab(text: tr(context, 'portfolio')));
     tabs.add(Tab(text: tr(context, 'tab_reviews')));
 
     return DefaultTabController(
@@ -507,6 +509,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
               if (widget.isPatron) _buildReservationsTab(),
               if (widget.isPatron || widget.isAdminPeek)
                 _buildWorkingTimesTab(),
+              PortfolioTab(salonData: _salonData!),
               _buildAvisTab(),
             ],
           ),

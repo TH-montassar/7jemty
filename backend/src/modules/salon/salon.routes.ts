@@ -16,7 +16,9 @@ import {
     searchSalonHandler,
     toggleFavoriteSalonHandler,
     getFavoriteSalonsHandler,
-    checkFavoriteStatusHandler
+    checkFavoriteStatusHandler,
+    addPortfolioImageHandler,
+    removePortfolioImageHandler
 } from './salon.controller.js';
 import { protect, isPatron } from '../../middlewares/auth.middleware.js';
 
@@ -39,5 +41,7 @@ router.get('/favorites/all', protect, getFavoriteSalonsHandler);
 router.get('/:id', getSalonByIdHandler);
 router.post('/:id/favorite', protect, toggleFavoriteSalonHandler);
 router.get('/:id/favorite-status', protect, checkFavoriteStatusHandler);
+router.post('/portfolio', protect, isPatron, addPortfolioImageHandler);
+router.delete('/portfolio/:imageId', protect, isPatron, removePortfolioImageHandler);
 
 export default router;

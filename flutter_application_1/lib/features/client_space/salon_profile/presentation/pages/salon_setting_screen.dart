@@ -121,6 +121,10 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
   bool _isSrvUploading = false;
   double _empUploadProgress = 0.0;
   bool _isEmpUploading = false;
+
+  double _portfolioUploadProgress = 0.0;
+  bool _isPortfolioUploading = false;
+
   final ImagePicker _picker = ImagePicker();
 
   @override
@@ -451,6 +455,63 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
     }
   }
 
+  Future<void> _pickPortfolioImage() async {
+    final pickedFile = await _picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1024,
+      maxHeight: 1024,
+      imageQuality: 85,
+    );
+    if (pickedFile != null) {
+      setState(() {
+        _isPortfolioUploading = true;
+        _portfolioUploadProgress = 0.0;
+      });
+
+      try {
+        final bytes = await pickedFile.readAsBytes();
+        final String uploadedUrl = await AuthService.uploadImage(
+          bytes: bytes,
+          filename: pickedFile.name,
+          onProgress: (p) {
+            setState(() {
+              _portfolioUploadProgress = p;
+            });
+          },
+        );
+
+        // Call backend API to add image to portfolio
+        await SalonService.addPortfolioImage(
+          salonId: widget.salonId,
+          imageUrl: uploadedUrl,
+          isAdminPeek: widget.isAdminPeek,
+        );
+
+        setState(() {
+          _isPortfolioUploading = false;
+        });
+
+        toastification.show(
+          context: context,
+          type: ToastificationType.success,
+          title: const Text('Image ajoutée avec succès'),
+          autoCloseDuration: const Duration(seconds: 3),
+        );
+
+        // Refresh salon data to get new images
+        await _fetchSalonData();
+      } catch (e) {
+        setState(() => _isPortfolioUploading = false);
+        toastification.show(
+          context: context,
+          type: ToastificationType.error,
+          title: const Text('Erreur lors de l\'ajout de l\'image'),
+          description: Text(e.toString()),
+        );
+      }
+    }
+  }
+
   Future<void> _handleAddService() async {
     if (_srvNameController.text.isEmpty ||
         _srvPriceController.text.isEmpty ||
@@ -761,7 +822,7 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
       _buildServicesTabEditable(),
       _buildEquipeTabEditable(),
       _buildWorkingHoursTabEditable(),
-      Center(child: Text(tr(context, 'coming_soon', args: ['Galerie']))),
+      _buildGalleryTabEditable(),
       Center(
         child: Text(tr(context, 'coming_soon', args: ['Rendez-vous List'])),
       ),
@@ -2626,6 +2687,147 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
           ],
         ),
       ),
+    );
+  }
+
+  // ============================================
+  // GALLERY TAB - EDITABLE FOR PATRON/ADMIN
+  // ============================================
+  Widget _buildGalleryTabEditable() {
+    final images = _salonData?['portfolio'] as List? ?? [];
+
+    return Stack(
+      children: [
+        if (images.isEmpty)
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.photo_library_outlined,
+                  size: 64,
+                  color: Colors.grey.shade400,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  "Aucune image dans la galerie.",
+                  style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+                ),
+              ],
+            ),
+          )
+        else
+          GridView.builder(
+            padding: const EdgeInsets.all(20),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+            ),
+            itemCount: images.length,
+            itemBuilder: (context, index) {
+              final imgData = images[index];
+              final imgUrl = imgData['imageUrl'];
+              final imgId = imgData['id'];
+
+              return ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Image.network(imgUrl, fit: BoxFit.cover),
+                    Positioned(
+                      top: 4,
+                      right: 4,
+                      child: GestureDetector(
+                        onTap: () async {
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              title: const Text("Supprimer l'image"),
+                              content: const Text(
+                                "Voulez-vous vraiment supprimer cette image de la galerie?",
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(ctx, false),
+                                  child: Text(tr(context, 'cancel_btn')),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(ctx, true),
+                                  child: const Text(
+                                    "Supprimer",
+                                    style: TextStyle(color: Colors.red),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+
+                          if (confirm == true) {
+                            try {
+                              setState(() => _isPortfolioUploading = true);
+                              await SalonService.deletePortfolioImage(
+                                salonId: widget.salonId,
+                                imageId: imgId,
+                                isAdminPeek: widget.isAdminPeek,
+                              );
+                              await _fetchSalonData();
+                            } catch (e) {
+                              toastification.show(
+                                context: context,
+                                type: ToastificationType.error,
+                                title: const Text('Erreur de suppression'),
+                                description: Text(e.toString()),
+                              );
+                            } finally {
+                              setState(() => _isPortfolioUploading = false);
+                            }
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.black54,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.delete_outline,
+                            size: 16,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        if (_isPortfolioUploading)
+          Container(
+            color: Colors.white.withOpacity(0.7),
+            alignment: Alignment.center,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CircularProgressIndicator(),
+                const SizedBox(height: 16),
+                Text("${(_portfolioUploadProgress * 100).toInt()}%"),
+              ],
+            ),
+          ),
+        Positioned(
+          bottom: 24,
+          right: 24,
+          child: FloatingActionButton(
+            heroTag: 'add_gallery_image',
+            backgroundColor: AppColors.primaryBlue,
+            onPressed: _pickPortfolioImage,
+            child: const Icon(Icons.add_photo_alternate, color: Colors.white),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -959,6 +959,53 @@ export const getFavoriteSalons = async (clientId: number) => {
         ...fav.salon,
         image: fav.salon.coverImageUrl || 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=500&q=80',
         rating: (fav.salon as any)._count?.reviews > 0 && (fav.salon as any).rating ? ((fav.salon as any).rating as number).toFixed(1) : "0.0",
-        favoritedAt: fav.createdAt
     }));
+};
+
+export const createPortfolioImage = async (patronId: number, imageUrl: string) => {
+    const salon = await prisma.salon.findFirst({
+        where: { patronId }
+    });
+    if (!salon) {
+        throw new Error("Salon introuvable. Vous ne pouvez pas ajouter d'images.");
+    }
+    return await prisma.portfolioImage.create({
+        data: {
+            salonId: salon.id,
+            imageUrl: imageUrl
+        }
+    });
+};
+
+export const deletePortfolioImage = async (patronId: number, imageId: number) => {
+    const salon = await prisma.salon.findFirst({
+        where: { patronId }
+    });
+    if (!salon) {
+        throw new Error("Salon introuvable.");
+    }
+    return await prisma.portfolioImage.delete({
+        where: {
+            id: imageId,
+            salonId: salon.id
+        }
+    });
+};
+
+export const createPortfolioImageAdmin = async (salonId: number, imageUrl: string) => {
+    return await prisma.portfolioImage.create({
+        data: {
+            salonId,
+            imageUrl
+        }
+    });
+};
+
+export const deletePortfolioImageAdmin = async (salonId: number, imageId: number) => {
+    return await prisma.portfolioImage.delete({
+        where: {
+            id: imageId,
+            salonId
+        }
+    });
 };

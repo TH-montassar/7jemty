@@ -673,6 +673,79 @@ class SalonService {
     }
   }
 
+  // ðŸ“  Fonction bech nzidou Portfolio Image l'salon
+  static Future<Map<String, dynamic>> addPortfolioImage({
+    required int? salonId,
+    required String imageUrl,
+    required bool isAdminPeek,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token');
+
+      if (token == null) throw Exception('Token manquant');
+
+      final url = isAdminPeek && salonId != null
+          ? ApiConfig.endpoint('/api/admin/salons/$salonId/portfolio')
+          : '$baseUrl/portfolio';
+
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'imageUrl': imageUrl}),
+      );
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 201) {
+        return data;
+      } else {
+        throw Exception(data['message'] ?? 'Erreur upload image portfolio');
+      }
+    } catch (e) {
+      throw Exception(e.toString().replaceAll('Exception: ', ''));
+    }
+  }
+
+  // ðŸ“  Fonction bech nfas5ou Portfolio Image min salon
+  static Future<Map<String, dynamic>> deletePortfolioImage({
+    required int? salonId,
+    required int imageId,
+    required bool isAdminPeek,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token');
+
+      if (token == null) throw Exception('Token manquant');
+
+      final url = isAdminPeek && salonId != null
+          ? ApiConfig.endpoint('/api/admin/salons/$salonId/portfolio/$imageId')
+          : '$baseUrl/portfolio/$imageId';
+
+      final response = await http.delete(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        return data;
+      } else {
+        throw Exception(
+          data['message'] ?? 'Erreur suppression image portfolio',
+        );
+      }
+    } catch (e) {
+      throw Exception(e.toString().replaceAll('Exception: ', ''));
+    }
+  }
+
   // ðŸ“ Fonction bech njibou liste l'salonet l'favoris l'kol mta3 l'client
   static Future<List<dynamic>> getFavoriteSalons() async {
     try {

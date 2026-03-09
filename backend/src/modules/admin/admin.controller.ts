@@ -211,3 +211,45 @@ export const deleteSalonEmployeeHandler = async (req: AuthRequest, res: Response
         res.status(400).json({ success: false, message: error.message });
     }
 };
+
+export const addSalonPortfolioImageHandler = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const salonId = parseInt(req.params.id as string);
+        const { imageUrl } = req.body;
+
+        if (isNaN(salonId)) {
+            res.status(400).json({ success: false, message: "ID de salon invalide" });
+            return;
+        }
+        if (!imageUrl) {
+            res.status(400).json({ success: false, message: "L'URL de l'image est requise" });
+            return;
+        }
+
+        const { createPortfolioImageAdmin } = await import('../salon/salon.service.js');
+        const newImage = await createPortfolioImageAdmin(salonId, imageUrl);
+
+        res.status(201).json({ success: true, data: newImage });
+    } catch (error: any) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
+
+export const removeSalonPortfolioImageHandler = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const salonId = parseInt(req.params.id as string);
+        const imageId = parseInt(req.params.imageId as string);
+
+        if (isNaN(salonId) || isNaN(imageId)) {
+            res.status(400).json({ success: false, message: "ID invalide" });
+            return;
+        }
+
+        const { deletePortfolioImageAdmin } = await import('../salon/salon.service.js');
+        const deletedImage = await deletePortfolioImageAdmin(salonId, imageId);
+
+        res.status(200).json({ success: true, data: deletedImage });
+    } catch (error: any) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+};

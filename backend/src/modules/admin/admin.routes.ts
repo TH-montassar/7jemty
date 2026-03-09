@@ -4,7 +4,8 @@ import {
     getAllSalonsAdminHandler, updateSalonStatusHandler, updateSalonAdminHandler, deleteSalonHandler,
     getSalonStatsHandler, getSalonAppointmentsAdminHandler,
     createSalonServiceHandler, updateSalonServiceHandler, deleteSalonServiceHandler,
-    createSalonEmployeeHandler, updateSalonEmployeeHandler, deleteSalonEmployeeHandler
+    createSalonEmployeeHandler, updateSalonEmployeeHandler, deleteSalonEmployeeHandler,
+    addSalonPortfolioImageHandler, removeSalonPortfolioImageHandler
 } from './admin.controller.js';
 import { protect, isAdmin } from '../../middlewares/auth.middleware.js';
 
@@ -32,5 +33,8 @@ router.delete('/salons/:id/service/:serviceId', deleteSalonServiceHandler);
 router.post('/salons/:id/employee', createSalonEmployeeHandler);
 router.patch('/salons/:id/employee/:employeeId', updateSalonEmployeeHandler);
 router.delete('/salons/:id/employee/:employeeId', deleteSalonEmployeeHandler);
+// Admin Routes for managing Portfolio
+router.post('/salons/:id/portfolio', addSalonPortfolioImageHandler);
+router.delete('/salons/:id/portfolio/:imageId', removeSalonPortfolioImageHandler);
 
 export default router;

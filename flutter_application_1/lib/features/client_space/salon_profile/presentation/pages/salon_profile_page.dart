@@ -318,7 +318,7 @@ class _SalonProfilePageState extends State<SalonProfilePage> {
                   AboutTab(salonData: salonData),
                   ServicesTab(salonData: salonData),
                   ProductsTab(),
-                  PortfolioTab(),
+                  PortfolioTab(salonData: salonData),
                   ReviewsTab(salonData: salonData),
                 ],
               ),

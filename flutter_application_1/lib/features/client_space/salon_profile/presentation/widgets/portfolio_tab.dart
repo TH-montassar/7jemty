@@ -2,29 +2,43 @@ import 'package:flutter/material.dart';
 import 'package:hjamty/features/client_space/salon_profile/presentation/widgets/portfolio_gallery_page.dart';
 
 class PortfolioTab extends StatelessWidget {
-  const PortfolioTab({super.key});
+  final Map<String, dynamic> salonData;
+
+  const PortfolioTab({super.key, required this.salonData});
 
   @override
   Widget build(BuildContext context) {
-    // 💡 Mock Data: ليستة التصاور (حطيت نفس التصويرة باش نجربو، إنت تنجم تبدلهم)
-    final List<String> portfolioImages = [
-      'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=500&q=80',
-      'https://images.unsplash.com/photo-1503342394128-c104d54dba01?auto=format&fit=crop&w=500&q=80',
-      'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=500&q=80',
-      'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=500&q=80',
-      'https://images.unsplash.com/photo-1503342394128-c104d54dba01?auto=format&fit=crop&w=500&q=80',
-      'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=500&q=80',
-      'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=500&q=80',
-      'https://images.unsplash.com/photo-1503342394128-c104d54dba01?auto=format&fit=crop&w=500&q=80',
-      'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=500&q=80',
-    ];
+    final List<dynamic> portfolioList = salonData['portfolio'] ?? [];
+    final List<String> portfolioImages = portfolioList
+        .map((img) => img['imageUrl'] as String)
+        .toList();
+
+    if (portfolioImages.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.photo_library_outlined,
+              size: 64,
+              color: Colors.grey.shade300,
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              "Aucune image dans la galerie.",
+              style: TextStyle(color: Colors.grey),
+            ),
+          ],
+        ),
+      );
+    }
 
     return GridView.builder(
       padding: const EdgeInsets.all(20),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,        // 3 تصاور في السطر كيما الانستغرام
-        crossAxisSpacing: 10,     // الفراغ بالعرض
-        mainAxisSpacing: 10,      // الفراغ بالطول
+        crossAxisCount: 3, // 3 تصاور في السطر كيما الانستغرام
+        crossAxisSpacing: 10, // الفراغ بالعرض
+        mainAxisSpacing: 10, // الفراغ بالطول
       ),
       itemCount: portfolioImages.length,
       itemBuilder: (context, index) {
@@ -46,10 +60,7 @@ class PortfolioTab extends StatelessWidget {
             tag: 'portfolio_${portfolioImages[index]}',
             child: ClipRRect(
               borderRadius: BorderRadius.circular(15),
-              child: Image.network(
-                portfolioImages[index],
-                fit: BoxFit.cover,
-              ),
+              child: Image.network(portfolioImages[index], fit: BoxFit.cover),
             ),
           ),
         );

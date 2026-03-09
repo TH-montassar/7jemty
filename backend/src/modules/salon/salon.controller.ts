@@ -13,7 +13,8 @@ import {
     createEmployeeAccount, updateEmployeeAccount, removeEmployeeFromSalon, getAllSalons, createService,
     updateService, deleteService,
     getServices, getTopRatedSalons, getSalonById, searchSalons,
-    toggleFavoriteSalon, getFavoriteSalons, checkFavoriteStatus
+    toggleFavoriteSalon, getFavoriteSalons, checkFavoriteStatus,
+    createPortfolioImage, deletePortfolioImage
 } from './salon.service.js';
 
 export const createSalonHandler = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -248,17 +249,58 @@ export const toggleFavoriteSalonHandler = async (req: AuthRequest, res: Response
 export const checkFavoriteStatusHandler = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const clientId = req.user!.userId;
-        const salonId = parseInt(req.params.id as string);
+        const salonIdStr = req.query.salonId as string;
 
-        if (isNaN(salonId)) {
-            res.status(400).json({ success: false, message: 'ID invalide' });
+        if (!salonIdStr) {
+            res.status(400).json({ success: false, message: 'ID salon manquant' });
             return;
         }
 
-        const result = await checkFavoriteStatus(clientId, salonId);
-        res.status(200).json({ success: true, data: result });
+        const salonId = parseInt(salonIdStr);
+        if (isNaN(salonId)) {
+            res.status(400).json({ success: false, message: 'ID salon invalide' });
+            return;
+        }
+
+        const isFavorite = await checkFavoriteStatus(clientId, salonId);
+
+        res.status(200).json({ success: true, isFavorite });
     } catch (error: any) {
         res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+export const addPortfolioImageHandler = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const patronId = req.user!.userId;
+        const { imageUrl } = req.body;
+
+        if (!imageUrl) {
+            res.status(400).json({ success: false, message: 'L\'URL de l\'image est requise' });
+            return;
+        }
+
+        const newImage = await createPortfolioImage(patronId, imageUrl);
+        res.status(201).json({ success: true, data: newImage });
+    } catch (error: any) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
+
+export const removePortfolioImageHandler = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const patronId = req.user!.userId;
+        const imageId = parseInt(req.params.imageId as string);
+
+        if (isNaN(imageId)) {
+            res.status(400).json({ success: false, message: 'ID d\'image invalide' });
+            return;
+        }
+
+        const deletedImage = await deletePortfolioImage(patronId, imageId);
+        res.status(200).json({ success: true, data: deletedImage });
+    } catch (error: any) {
+        res.status(400).json({ success: false, message: error.message });
     }
 };
 
