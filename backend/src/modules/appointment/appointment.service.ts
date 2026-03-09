@@ -1,6 +1,6 @@
 import { prisma } from '../../lib/db.js';
 import { sendNotification } from '../notifications/notifications.service.js';
-import { broadcastNotificationToUser } from '../notifications/notifications.controller.js';
+import { broadcastNotificationToUser, broadcastToAll } from '../notifications/notifications.controller.js';
 
 type UserRole = 'CLIENT' | 'EMPLOYEE' | 'PATRON' | 'ADMIN';
 type AppointmentStatusInput = 'PENDING' | 'CONFIRMED' | 'IN_PROGRESS' | 'ARRIVED' | 'COMPLETED' | 'CANCELLED' | 'DECLINED';
@@ -424,6 +424,12 @@ export const createClientAppointment = async (
             });
         }
     }
+
+    // Broadcast availability change to all clients
+    broadcastToAll({
+        type: 'AVAILABILITY_CHANGED',
+        salonId
+    });
 
     return appointment;
 };

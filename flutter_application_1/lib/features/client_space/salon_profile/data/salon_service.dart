@@ -664,7 +664,7 @@ class SalonService {
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200 && data['success'] == true) {
-        return data['data']['isFavorite'] == true;
+        return data['isFavorite'] == true;
       } else {
         return false;
       }

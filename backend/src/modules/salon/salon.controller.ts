@@ -249,10 +249,10 @@ export const toggleFavoriteSalonHandler = async (req: AuthRequest, res: Response
 export const checkFavoriteStatusHandler = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const clientId = req.user!.userId;
-        const salonIdStr = req.query.salonId as string;
+        const salonIdStr = req.params.id as string;
 
         if (!salonIdStr) {
-            res.status(400).json({ success: false, message: 'ID salon manquant' });
+            res.status(400).json({ success: false, message: 'ID salon manquant dans l\'URL' });
             return;
         }
 

@@ -9,6 +9,9 @@ import 'package:hjamty/features/client_space/salon_profile/data/salon_service.da
 import 'package:hjamty/features/client_space/appointments/data/appointment_service.dart';
 import 'package:hjamty/features/auth/data/auth_service.dart';
 import 'package:hjamty/features/client_space/appointments/presentation/pages/booking_success_screen.dart';
+import 'package:hjamty/core/services/fcm_service.dart';
+import 'package:hjamty/core/services/notification_service.dart';
+import 'dart:async';
 
 class BookingFlowScreen extends StatefulWidget {
   final int salonId;
@@ -47,6 +50,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
   List<DateTime> _dates = [];
   late ScrollController _dateScrollController;
   bool _isFetchingDates = true;
+  StreamSubscription<Map<String, dynamic>>? _fcmSubscription;
 
   @override
   void initState() {
@@ -63,6 +67,19 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
 
     _checkCurrentUser();
     _fetchSalonDetails();
+    _setupFcmListener();
+    NotificationService.listenToNotificationsStream();
+  }
+
+  void _setupFcmListener() {
+    _fcmSubscription = FcmService.messageStream.listen((data) {
+      if (data['type'] == 'AVAILABILITY_CHANGED' &&
+          data['salonId']?.toString() == widget.salonId.toString()) {
+        if (mounted) {
+          _fetchAvailability();
+        }
+      }
+    });
   }
 
   Future<void> _checkCurrentUser() async {
@@ -85,6 +102,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
   @override
   void dispose() {
     _dateScrollController.dispose();
+    _fcmSubscription?.cancel();
     super.dispose();
   }
 
@@ -202,6 +220,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
       setState(() {
         _isCheckingAvailability = false;
         _availableSlots = [];
+        _selectedTime = null; // Important: Clear selection if no dates/slots
       });
       return;
     }
@@ -269,6 +288,11 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
     setState(() => _isSubmitting = true);
 
     try {
+      // Safety check for date index
+      if (_selectedDateIndex < 0 || _selectedDateIndex >= _dates.length) {
+        throw Exception(tr(context, 'please_select_date_validation'));
+      }
+
       final formattedDate = DateFormat(
         'yyyy-MM-dd',
       ).format(_dates[_selectedDateIndex]);
@@ -279,6 +303,15 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
       final selectedProfessional = matchingProfessionals.isNotEmpty
           ? matchingProfessionals.first
           : null;
+
+      // Store locally to prevent async race conditions with real-time FCM events
+      final barberId = _selectedBarberId;
+      final time = _selectedTime;
+
+      if (barberId == null || time == null) {
+        throw Exception(tr(context, 'missing_selection_error'));
+      }
+
       final String targetType =
           (selectedProfessional != null &&
               selectedProfessional['isPatron'] == true)
@@ -287,9 +320,9 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
 
       await AppointmentService.createAppointment(
         salonId: widget.salonId,
-        barberId: _selectedBarberId!,
+        barberId: barberId,
         date: formattedDate,
-        time: _selectedTime!,
+        time: time,
         serviceIds: _selectedServiceIds,
         targetType: targetType,
       );
@@ -309,19 +342,29 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
             .map((s) => Map<String, dynamic>.from(s))
             .toList();
 
+        // Capture current state values BEFORE executing the builder callback
+        // This prevents race conditions where FCM callbacks reset variables like _selectedTime
+        final String pushedSalonName = _salonName;
+        final String pushedSalonAddress = _salonAddress;
+        final DateTime pushedDate = _dates[_selectedDateIndex];
+        final String pushedTime = time; // IMPORTANT: use local captured `time`
+        final int pushedDuration = _totalDuration;
+        final double pushedPrice = _totalPrice;
+        final String pushedBarberName = selectedProfessional?['name'] ?? '';
+
         // Navigate to the Success Screen
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => BookingSuccessScreen(
-              salonName: _salonName,
-              salonAddress: _salonAddress,
-              date: _dates[_selectedDateIndex],
-              time: _selectedTime!,
-              durationMinutes: _totalDuration,
+              salonName: pushedSalonName,
+              salonAddress: pushedSalonAddress,
+              date: pushedDate,
+              time: pushedTime,
+              durationMinutes: pushedDuration,
               services: selectedServices,
-              totalPrice: _totalPrice,
-              barberName: selectedProfessional?['name'] ?? '',
+              totalPrice: pushedPrice,
+              barberName: pushedBarberName,
             ),
           ),
         );
@@ -502,6 +545,8 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                             await _checkCurrentUser();
                             if (mounted) {
                               Navigator.pop(context);
+                              // Re-fetch availability after login to account for client's own schedule
+                              await _fetchAvailability();
                               _submitBooking();
                             }
                           } else {
@@ -561,6 +606,8 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                                 autoCloseDuration: const Duration(seconds: 4),
                               );
                               Navigator.pop(context);
+                              // Re-fetch availability after registration
+                              await _fetchAvailability();
                               _submitBooking();
                             }
                           }
@@ -602,7 +649,12 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
     double total = 0.0;
     for (var svc in _services) {
       if (_selectedServiceIds.contains(svc['id'])) {
-        total += (svc['price'] ?? 0).toDouble();
+        final price = svc['price'];
+        if (price is num) {
+          total += price.toDouble();
+        } else if (price is String) {
+          total += double.tryParse(price) ?? 0.0;
+        }
       }
     }
     return total;
@@ -612,7 +664,14 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
     int total = 0;
     for (var svc in _services) {
       if (_selectedServiceIds.contains(svc['id'])) {
-        total += (svc['durationMinutes'] ?? 30) as int;
+        final duration = svc['durationMinutes'];
+        if (duration is num) {
+          total += duration.toInt();
+        } else if (duration is String) {
+          total += int.tryParse(duration) ?? 30;
+        } else {
+          total += 30;
+        }
       }
     }
     return total;

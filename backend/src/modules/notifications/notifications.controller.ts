@@ -127,3 +127,11 @@ export const broadcastNotificationToUser = (userId: number, notificationData: an
         clientRes.write(`data: ${JSON.stringify(notificationData)}\n\n`);
     });
 };
+
+export const broadcastToAll = (notificationData: any) => {
+    activeClients.forEach((clients) => {
+        clients.forEach(clientRes => {
+            clientRes.write(`data: ${JSON.stringify(notificationData)}\n\n`);
+        });
+    });
+};
