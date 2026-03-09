@@ -438,7 +438,7 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                                       ),
                                     ),
                                     child: Text(
-                                      tr(context, 'save_btn2'),
+                                      tr(context, 'save_btn'),
                                       style: const TextStyle(fontSize: 12),
                                     ),
                                   ),
