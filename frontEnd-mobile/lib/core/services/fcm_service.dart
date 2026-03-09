@@ -65,8 +65,8 @@ class FcmService {
             (message.notification?.title?.isNotEmpty == true ||
                 message.notification?.body?.isNotEmpty == true)) {
           _showLocalNotification(message);
-          // Instantly update badge count reactively
-          NotificationService.incrementUnreadCount();
+          // Instantly update badge count reactively by fetching the true count
+          NotificationService.refreshUnreadCount();
         }
       });
 

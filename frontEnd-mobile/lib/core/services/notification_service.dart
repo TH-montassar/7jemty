@@ -59,8 +59,8 @@ class NotificationService {
     }
   }
 
-  static void incrementUnreadCount() {
-    unreadCountNotifier.value += 1;
+  static void refreshUnreadCount() {
+    getUnreadCount();
   }
 
   static http.StreamedResponse? _streamResponse;
@@ -98,8 +98,9 @@ class NotificationService {
                       FcmService.dispatchMessage(data);
                     }
 
-                    if (data['id'] != null) {
-                      incrementUnreadCount();
+                    if (data['id'] != null ||
+                        data['type'] == 'NOTIFICATION_READ') {
+                      refreshUnreadCount();
                     }
                   } catch (e) {
                     debugPrint('SSE Decode Error: $e');
