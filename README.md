@@ -16,7 +16,7 @@ It connects:
 ## Project Structure
 
 - `backend/` : REST API (`/api/*`), Prisma schema/migrations, auth/business logic
-- `flutter_application_1/` : Flutter client app
+- `frontEnd-mobile/` : Flutter client app
 - `docker-compose.yml` : runs backend + Flutter web app together
 
 ## Prerequisites
@@ -90,7 +90,7 @@ Quick check:
 In another terminal:
 
 ```bash
-cd flutter_application_1
+cd frontEnd-mobile
 flutter pub get
 ```
 
@@ -115,7 +115,7 @@ flutter run --dart-define=API_BASE_URL=http://<YOUR_LAN_IP>:3000
 ```
 
 Optional helper script for Android devices:
-- `flutter_application_1/scripts/run_phone.sh`
+- `frontEnd-mobile/scripts/run_phone.sh`
 
 ## Useful Commands (Backend)
 
@@ -136,9 +136,9 @@ From `backend/`:
 
 ## Firebase (Flutter)
 
-The Flutter app now reads Firebase config from `flutter_application_1/.env`.
+The Flutter app now reads Firebase config from `frontEnd-mobile/.env`.
 
-1. Copy `flutter_application_1/.env.example` to `flutter_application_1/.env`
+1. Copy `frontEnd-mobile/.env.example` to `frontEnd-mobile/.env`
 2. Fill in your Firebase values
 
 The `.env` file is ignored by git.

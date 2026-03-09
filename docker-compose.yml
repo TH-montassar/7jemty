@@ -17,13 +17,13 @@ services:
 
   flutter:
     build:
-      context: ./flutter_application_1
+      context: ./frontEnd-mobile
       dockerfile: Dockerfile
     container_name: 7jemty-flutter
     ports:
       - "8080:8080"
     volumes:
-      - ./flutter_application_1:/app
+      - ./frontEnd-mobile:/app
       # Cache Flutter's internal directories to avoid overriding from host
       - /app/.dart_tool
       - /app/build
@@ -31,3 +31,4 @@ services:
       - /app/windows
       - /app/macos
     restart: unless-stopped
+

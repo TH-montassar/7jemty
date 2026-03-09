@@ -1,274 +1,325 @@
-# Rapport technique complet — Projet **7jemty / hjamty**
+# Rapport technique - Projet 7jemty / hjamty
 
-## 1) Vue d’ensemble (chneya l’app tawa)
+Mise a jour: 2026-03-09
 
-`7jemty` est un projet **multi-plateforme** avec :
-- un **backend Node.js/TypeScript + Express + Prisma + PostgreSQL**,
-- un **frontend mobile/web Flutter**,
-- une orientation métier autour des **salons**, **clients**, **patrons**, **employés**, **rendez-vous** et **services**.
+## 1) Perimetre audite
 
-Le backend expose une API REST montée sous `/api/*`, et l’app Flutter consomme directement ces endpoints via des services HTTP (`auth_service`, `salon_service`, `appointment_service`).
+Code lu pour cette mise a jour:
+- Backend: `backend/src`, `backend/prisma/schema.prisma`, `backend/scripts`
+- Frontend mobile/web: `frontEnd-mobile/lib`, `frontEnd-mobile/pubspec.yaml`, `frontEnd-mobile/.env.example`
 
----
+## 2) Resume executif
 
-## 2) Stack technique
+Le projet est un monorepo avec:
+- une API backend Node.js + TypeScript + Express + Prisma + PostgreSQL
+- une app Flutter multi-role (CLIENT, PATRON, EMPLOYEE, ADMIN)
+- une couche notification hybride (SSE temps reel + Firebase FCM)
+- une logique rendez-vous assez avancee (disponibilites, etats, rappels cron, reviews)
 
-## Backend
-- Runtime: Node.js (ESM)
-- Framework: Express 5
-- ORM: Prisma (+ adapter PostgreSQL `@prisma/adapter-pg`)
-- DB: PostgreSQL
-- Validation input: Zod
-- Auth: JWT (`jsonwebtoken`) + hash password (`bcryptjs`)
+L'architecture actuelle est orientee "modules par feature" cote backend (`auth`, `salon`, `appointment`, `notifications`, `upload`) et "features par espace utilisateur" cote Flutter.
 
-## Frontend
-- Framework: Flutter (Dart)
-- HTTP client: package `http`
-- Stockage local: `shared_preferences`, `flutter_secure_storage` (dépendance présente)
-- UI + navigation par espaces (client/patron/admin/employee)
-- Localisation custom via `TranslationService` (langue `tn` par défaut)
-
----
-
-## 3) Architecture globale
-
-## Backend (structure)
-- `backend/server.ts` : boot serveur + écoute sur `env.PORT`
-- `backend/src/app.ts` : création app Express + middlewares + montage des routes
-- `backend/src/config/env.ts` : config env (`PORT`, `DATABASE_URL`, `JWT_SECRET`)
-- `backend/src/lib/db.ts` : connexion Prisma + pool PG
-- `backend/src/middlewares/auth.middleware.ts` : `protect`, `isPatron`
-- `backend/src/modules/*` : modules métier (auth, salon, appointment)
-
-## Frontend (structure)
-- `flutter_application_1/lib/main.dart` : racine app + `SplashScreen`
-- `flutter_application_1/lib/pages/splash_screen.dart` : logique redirection selon token/role
-- `flutter_application_1/lib/services/*.dart` : appels API
-- `flutter_application_1/lib/features/*` : espaces fonctionnels (client, patron, admin, auth)
-- `flutter_application_1/lib/core/*` : couleurs + traduction
-
----
-
-## 4) Arbre de fichiers (résumé utile pour un prompt AI)
+## 3) Structure du repo
 
 ```text
-/workspace/7jemty
-├─ backend/
-│  ├─ server.ts
-│  ├─ package.json
-│  ├─ prisma/
-│  │  ├─ schema.prisma
-│  │  └─ migrations/
-│  └─ src/
-│     ├─ app.ts
-│     ├─ config/env.ts
-│     ├─ lib/db.ts
-│     ├─ middlewares/auth.middleware.ts
-│     └─ modules/
-│        ├─ auth/
-│        │  ├─ auth.routes.ts
-│        │  ├─ auth.controller.ts
-│        │  ├─ auth.service.ts
-│        │  └─ auth.schema.ts
-│        ├─ salon/
-│        │  ├─ salon.routes.ts
-│        │  ├─ salon.controller.ts
-│        │  ├─ salon.service.ts
-│        │  └─ salon.schema.ts
-│        └─ appointment/
-│           ├─ appointment.routes.ts
-│           ├─ appointment.controller.ts
-│           ├─ appointment.service.ts
-│           └─ appointment.schema.ts
-└─ flutter_application_1/
-   ├─ pubspec.yaml
-   ├─ lib/
-   │  ├─ main.dart
-   │  ├─ core/
-   │  ├─ services/
-   │  ├─ features/
-   │  │  ├─ auth/
-   │  │  ├─ client_space/
-   │  │  ├─ patron_space/
-   │  │  └─ admin_space/
-   │  └─ pages/
-   └─ assets/images/
+/7jemty
+|- backend/
+|  |- server.ts
+|  |- src/
+|  |  |- app.ts
+|  |  |- config/
+|  |  |- lib/
+|  |  |- middlewares/
+|  |  |- modules/
+|  |- prisma/schema.prisma
+|  |- scripts/create_admin.ts
+|  |- scripts/fast_forward.ts
+|- frontEnd-mobile/
+|  |- lib/
+|  |  |- main.dart
+|  |  |- config/
+|  |  |- core/
+|  |  |- features/
+|- docker-compose.yml
+|- README.md
+|- RAPPORT_TECHNIQUE.md
 ```
 
----
+## 4) Backend - architecture reelle
 
-## 5) API actuelle (ce qui existe vraiment)
+### 4.1 Boot et middleware
 
-Base backend: `http://localhost:3000`
+- `backend/server.ts`: lance Express sur `0.0.0.0:${PORT}`
+- `backend/src/app.ts`:
+  - initialise Firebase Admin
+  - demarre le scheduler cron
+  - active CORS + JSON/urlencoded
+  - monte les routes metier
+  - applique garde admin partagee sur `/api/admin` via `protect` + `isAdmin`
 
-## Auth (`/api/auth`)
+### 4.2 Modules backend
+
+- `auth`: inscription, login, profile, OTP, admin users CRUD
+- `salon`: creation/update salon, employes, services, favoris, portfolio, recherche, admin salon management
+- `appointment`: dispo, creation, transitions d'etat, extension, reviews, vues patron/client/employe, admin listing
+- `notifications`: historique, unread count, mark read, stream SSE
+- `upload`: upload fichier vers Cloudinary
+
+### 4.3 Endpoints exposes
+
+Base: `http://localhost:3000`
+
+Auth (`/api/auth`)
 - `POST /register`
-  - body attendu: `fullName, phoneNumber, password, role?, address?, latitude?, longitude?`
-  - action: crée user + profile, hash password, renvoie JWT
 - `POST /login`
-  - body: `phoneNumber, password`
-  - action: login + JWT + `hasSalon` pour rôle patron
+- `POST /check-phone`
+- `POST /request-otp`
+- `POST /verify-otp`
+- `GET /me` (auth)
+- `PATCH /me` (auth)
 
-## Salon (`/api/salon`)
-Public:
-- `GET /top-rated` : salons triés par note
-- `GET /all?lat=&lng=` : liste salons (distance calculée si coords fournies)
-- `GET /:id` : détail salon + services + équipe + social links + horaires
+Salon (`/api/salon`)
+- `GET /top-rated`
+- `GET /all`
+- `GET /search`
+- `GET /:id`
+- `POST /:id/favorite` (auth)
+- `GET /:id/favorite-status` (auth)
+- `GET /favorites/all` (auth)
+- `POST /create` (patron/admin)
+- `PUT /update` (patron/admin)
+- `GET /my-salon` (patron/admin)
+- `POST /employee/create-account` (patron/admin)
+- `PATCH /employee/:employeeId` (patron/admin)
+- `DELETE /employee/:employeeId` (patron/admin)
+- `POST /service/create` (patron/admin)
+- `GET /services` (patron/admin)
+- `PATCH /service/:serviceId` (patron/admin)
+- `DELETE /service/:serviceId` (patron/admin)
+- `POST /portfolio` (patron/admin)
+- `DELETE /portfolio/:imageId` (patron/admin)
 
-Protégé (JWT):
-- `POST /create` (patron)
-- `PUT /update` (patron)
-- `GET /my-salon` (patron)
-- `POST /employee/create-account` (patron)
-- `POST /service/create` (patron)
-- `GET /services` (patron)
+Appointment (`/api/appointment`)
+- `GET /availability`
+- `GET /available-dates`
+- `POST /` (client)
+- `PATCH /:id/status` (auth)
+- `PATCH /:id/extend` (patron/employe)
+- `GET /salon` (patron)
+- `GET /client` (client)
+- `GET /employee` (employe)
+- `GET /unreviewed` (client)
+- `POST /:id/review` (client)
 
-## Appointment (`/api/appointment`)
-Protégé:
-- `PATCH /:id/status`
-  - body: `{ status: CONFIRMED|DECLINED|COMPLETED|CANCELLED }`
-  - permissions selon rôle (CLIENT/EMPLOYEE/PATRON) + règles de transition
+Notifications (`/api/notifications`)
+- `GET /` (auth)
+- `GET /unread-count` (auth)
+- `GET /stream` (auth, SSE)
+- `PATCH /:id/read` (auth)
 
----
+Upload (`/api/upload`)
+- `POST /` (auth, multipart `file`)
 
-## 6) Data model (Prisma) — entités clés
+Admin prefix (`/api/admin`) applique globalement
+- Users: `GET /users`, `PATCH /users/:id`, `DELETE /users/:id`
+- Salons: `GET /salons`, `PATCH /salons/:id`, `PATCH /salons/:id/status`, `DELETE /salons/:id`, `GET /salons/:id/stats`
+- Salon services: `POST/PATCH/DELETE /salons/:id/service...`
+- Salon employees: `POST/PATCH/DELETE /salons/:id/employee...`
+- Salon portfolio: `POST/DELETE /salons/:id/portfolio...`
+- Appointment admin view: `GET /salons/:id/appointments`
 
-Enums:
-- `Role`: CLIENT, PATRON, EMPLOYEE, ADMIN
-- `AppointmentStatus`: PENDING, CONFIRMED, ARRIVED, COMPLETED, CANCELLED, DECLINED
-- `ApprovalStatus`: PENDING, APPROVED, SUSPENDED
+### 4.4 Logique metier notable
 
-Tables principales:
-- `User` (+ relation `Profile`)
-- `Salon` (owner patron + employees + services + appointments...)
-- `Service`
-- `Appointment` + `AppointmentService`
-- `Review`
-- `FavoriteSalon`
+- Rendez-vous:
+  - transitions d'etat controlees (`PENDING`, `CONFIRMED`, `IN_PROGRESS`, `ARRIVED`, `COMPLETED`, `CANCELLED`, `DECLINED`)
+  - verification permissions par role + ownership
+  - creation de rdv avec verif overlap client et disponibilite barbier
+  - gestion duree estimee/fin reelle + stats par service/barbier
+- Cron (`node-cron`, chaque minute):
+  - rappels T-1h et T-15m
+  - prompts de completion
+  - gestion fautes si ignore trop longtemps
+- Notifications:
+  - persistance DB
+  - push FCM si token present
+  - stream SSE pour mise a jour temps reel
+
+## 5) Data model Prisma
+
+Schema principal dans `backend/prisma/schema.prisma`.
+
+Entites coeur:
+- `User`, `Profile`, `Notification`, `OtpCode`
+- `Salon`, `WorkingHours`, `SalonSocialLink`, `PortfolioImage`, `Service`
+- `Appointment`, `AppointmentService`, `AppointmentFault`, `BarberServiceStat`
+- `Review`, `FavoriteSalon`
 - `Product`, `Order`, `OrderItem`
 
-=> DB conçue pour une app assez large (booking + avis + e-commerce produits), même si toutes les routes ne sont pas encore implémentées.
+Enums:
+- `Role`: `CLIENT`, `PATRON`, `EMPLOYEE`, `ADMIN`
+- `ApprovalStatus`: `PENDING`, `APPROVED`, `SUSPENDED`
+- `AppointmentStatus`: `PENDING`, `CONFIRMED`, `IN_PROGRESS`, `ARRIVED`, `COMPLETED`, `CANCELLED`, `DECLINED`
+- `AppointmentTarget`: `EMPLOYEE`, `PATRON`
 
----
+## 6) Frontend Flutter - architecture reelle
 
-## 7) Design & UX (frontend)
+### 6.1 Initialisation et config
 
-- Lancement via `SplashScreen` avec animation logo + redirection.
-- Navigation selon `user_role` stocké localement:
-  - non connecté -> `ClientMainLayout`
+- `main.dart`:
+  - charge `.env` via `flutter_dotenv`
+  - initialise Firebase (`firebase_options.dart`)
+  - initialise FCM (hors web)
+  - lance `SplashScreen`
+- `firebase_options.dart`:
+  - lit les valeurs Firebase depuis variables `FIREBASE_*` du `.env`
+  - fail fast si variable requise manquante
+- `config/api_config.dart`:
+  - support `--dart-define=API_BASE_URL=...`
+  - Android emulator default: `http://10.0.2.2:3000`
+
+### 6.2 Navigation role-based
+
+- `SplashScreen` lit `jwt_token` + `user_role` depuis `SharedPreferences`
+- Redirections:
+  - `CLIENT` -> `ClientMainLayout`
   - `PATRON` -> `MainPage`
-  - `ADMIN` -> `AdminHomePage`
-  - `EMPLOYEE` -> actuellement redirigé client layout
-- Séparation par espaces:
-  - `client_space`: home, booking, appointments, products, profile, salon profile
-  - `patron_space`: dashboard salon, gestion équipe/services/profil
-  - `admin_space`: page admin de base
-- Thème visuel centralisé (`AppColors`) + traduction locale massive (`TranslationService`)
+  - `ADMIN` -> `AdminMainScreen`
+  - `EMPLOYEE` -> `EmployeeMainLayout`
 
----
+### 6.3 Services Flutter
 
-## 8) Flux techniques importants
+- `AuthService`: auth, profile, OTP, upload image
+- `SalonService`: salons publics + gestion patron + actions admin peek
+- `AppointmentService`: rdv client/patron/employe + admin appointment list
+- `AdminService`: users/salons CRUD + stats
+- `NotificationService`: poll + SSE + unread notifier
+- `FcmService`: sync token backend + notifications locales
 
-## Auth flow
-1. Register/Login côté Flutter via `AuthService`
-2. Réponse backend retourne `token` + user
-3. Token sauvegardé dans `SharedPreferences`
-4. Requêtes protégées ajoutent `Authorization: Bearer <token>`
+## 7) Flux fonctionnels principaux
 
-## Salon flow
-1. Patron crée son salon (`/api/salon/create`)
-2. Peut enrichir infos (`/api/salon/update`)
-3. Peut ajouter employés (`/employee/create-account`)
-4. Peut ajouter services (`/service/create`)
-5. Client peut consulter `/all`, `/top-rated`, `/api/salon/:id`
+### 7.1 Auth
 
-## Appointment status flow
-- Un seul endpoint existe pour l’instant : update status
-- Contrôle permissions basé sur rôle + ownership
+1. Sign up/login via `/api/auth/*`
+2. stockage `jwt_token` et `user_role`
+3. redirection dynamique selon role
+4. profile update sur `/api/auth/me`
 
----
+### 7.2 Salon (patron)
 
-## 9) État actuel / gaps / incohérences à connaître
+1. creation salon
+2. update infos (social links, working hours, cover, etc.)
+3. gestion employees
+4. gestion services
+5. gestion portfolio
 
-1. **Coverage API partielle**
-   - Beaucoup de modèles DB existent (orders, products, reviews...) mais routes pas encore exposées.
+### 7.3 Appointment
 
-2. **Incohérence endpoint front/back détectée**
-   - Front `SalonService.getServices()` appelle `GET /api/salon/service/list`
-   - Back expose `GET /api/salon/services`
-   - Risque: 404 sur cet appel précis.
+1. client consulte `availability` / `available-dates`
+2. client cree un rdv
+3. patron/employe changent statut
+4. client depose review apres `COMPLETED`
 
-3. **Secret JWT par défaut en dur**
-   - Fallback hardcodé si variable env absente.
+### 7.4 Notification temps reel
 
-4. **Logs DB verbeux**
-   - Prisma log `query/info/warn/error` actif -> utile dev, à ajuster prod.
+- backend ecrit notification en DB
+- push FCM si possible
+- event SSE diffuse en temps reel
+- frontend incremente badge et peut refresh automatiquement
 
-5. **Rôle EMPLOYEE côté splash**
-   - Redirigé actuellement vers layout client (pas espace employee dédié au démarrage).
+## 8) Audit Clean Code / architecture
 
----
+### Points solides
 
-## 10) Prompt prêt à donner à une IA (copier/coller)
+- separation en modules par feature cote backend
+- separation par espaces fonctionnels cote Flutter
+- endpoint admin par feature (auth, salon, appointment) tout en gardant une garde admin centrale
+- Prisma schema riche et coherent avec roadmap produit
+- logique rdv assez complete (regles, overlap, transitions)
 
-```text
-Tu es mon assistant technique senior sur le projet 7jemty.
+### Points a ameliorer
 
-Contexte architecture:
-- Monorepo avec 2 apps:
-  1) backend Node.js/TypeScript/Express/Prisma/PostgreSQL dans /backend
-  2) frontend Flutter dans /flutter_application_1
-- API REST principale:
-  - /api/auth: register, login
-  - /api/salon: top-rated, all, :id, create/update/my-salon, employee/create-account, service/create, services
-  - /api/appointment: PATCH :id/status
-- Auth JWT Bearer.
-- Validation Zod côté backend.
-- DB Prisma avec rôles CLIENT/PATRON/EMPLOYEE/ADMIN et modèle salon/appointment/service/review/product/order.
+- services backend trop volumineux (surtout `salon.service.ts` et `appointment.service.ts`)
+- usage frequent de `any` dans controllers/services (perte de robustesse TS)
+- melange des responsabilites (ex: service notification importe un controller SSE)
+- reponses API non uniformes (`{success,data}` vs payload brut dans notifications)
+- textes/commentaires multilangues et encodage heterogene dans plusieurs fichiers
+- pas de suite de tests backend, test Flutter par defaut non lie au produit
 
-Convention de travail demandée:
-- Donne toujours un plan d’action avant modifications.
-- Propose des patches ciblés avec impact minimal.
-- Si tu touches API, mentionne contrat request/response et impacts Flutter.
-- Si tu touches Flutter, précise les écrans et flux utilisateur affectés.
-- Toujours lister risques, tests recommandés, et checklist de validation manuelle.
+## 9) Incoherences detectees (importantes)
 
-Objectif:
-Aide-moi à améliorer progressivement le projet (fiabilité, sécurité, cohérence API front/back, qualité code, et architecture évolutive).
-```
+1. Endpoint front/back non aligne
+- Front: `SalonService.getServices()` appelle `GET /api/salon/service/list`
+- Back: endpoint reel `GET /api/salon/services`
+- Impact: risque 404 sur cette action
 
----
+2. Secret JWT par defaut hardcode
+- `env.ts` garde une fallback string pour `JWT_SECRET`
+- Impact: risque securite si env mal configure
 
-## 11) Commandes utiles (quick start)
+3. Prisma log en mode verbeux
+- `db.ts` active `query/info/warn/error`
+- Impact: bruit et risque exposition logs sensibles en prod
 
-## Backend
+4. Identifiants projet Flutter non harmonises
+- dossier renomme `frontEnd-mobile`, mais certains identifiants natifs gardent `flutter_application_1` (ex package Android)
+- Impact: dette technique de naming (fonctionnel OK, mais confusion equipe)
+
+## 10) Plan d'amelioration recommande (ordre pragmatique)
+
+### Phase 1 (rapide, fort impact)
+
+- corriger endpoint Flutter `service/list` -> `services`
+- imposer `JWT_SECRET` requis en prod (supprimer fallback)
+- passer logs Prisma en mode env-driven (`warn/error` en prod)
+- normaliser format de reponse API
+
+### Phase 2 (stabilite)
+
+- extraire logique volumineuse appointment/salon en sous-services (`validators`, `policies`, `notifiers`)
+- typer strictement DTO request/response (plus de `any`)
+- ajouter tests backend sur:
+  - transitions de statut rdv
+  - permissions role-based
+  - disponibilite / overlap
+
+### Phase 3 (maintenabilite)
+
+- harmoniser naming projet Flutter (package id / namespaces)
+- centraliser erreurs API (codes + messages)
+- ajouter observabilite (structured logs, correlation id)
+
+## 11) Commandes utiles
+
+Backend:
 ```bash
 cd backend
-nodebox
+npm install
+npm run prsm:gen
 npm run dev
 ```
 
-## Prisma
+Prisma:
 ```bash
 cd backend
-npm run prisma:mig
-npm run prisma:gen
-npm run prisma:studio
+npm run prsm:mig
+npm run prsm:gen
+npm run prsm:std
 ```
 
-## Flutter
+Flutter:
 ```bash
-cd flutter_application_1
+cd frontEnd-mobile
 flutter pub get
 flutter run
 ```
 
----
+Docker (racine):
+```bash
+docker compose up --build
+```
 
-## 12) TL;DR (version courte)
+## 12) TL;DR
 
-- Projet solide en base: backend modulaire + Flutter structuré par espaces.
-- API déjà utilisable pour auth/salon/update status rdv.
-- Schéma DB riche (préparé pour features futures).
-- Point urgent: aligner endpoint `getServices` côté front/back.
-- Avec ce rapport + le prompt fourni, une IA peut comprendre rapidement l’architecture et proposer des évolutions concrètes.
+- L'app est deja bien avancee fonctionnellement, surtout sur le flux rendez-vous.
+- L'architecture est globalement modulaire, mais certaines couches sont encore trop chargees.
+- Le gap principal immediate a corriger: endpoint `GET /api/salon/service/list` cote Flutter.
+- Priorite suivante: securite env (`JWT_SECRET`), tests backend, et typage strict TS.

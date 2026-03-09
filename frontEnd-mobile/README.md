@@ -1,7 +1,7 @@
 
 ## Firebase environment
 
-Firebase options are loaded from `flutter_application_1/.env`.
+Firebase options are loaded from `frontEnd-mobile/.env`.
 
 1. Copy `.env.example` to `.env`
 2. Fill all `FIREBASE_*` values for your project
@@ -42,18 +42,18 @@ flutter run --dart-define=API_BASE_URL=http://192.168.1.100:3000
 1. **USB debugging mode (recommended for Android real device)**
 
 ```bash
-cd flutter_application_1
+cd frontEnd-mobile
 ./scripts/run_phone.sh --real-device --port 3000
 # or
 ./scripts/run_phone.sh --usb-only --port 3000
 ```
 
-This runs USB only (`adb reverse`) with `REAL_DEVICE=true`. If no USB device is detected, the script exits with an error (no Wiâ€‘Fi fallback).
+This runs USB only (`adb reverse`) with `REAL_DEVICE=true`. If no USB device is detected, the script exits with an error (no Wi-Fi fallback).
 
 2. **Wi-Fi mode (same network)**
 
 ```bash
-cd flutter_application_1
+cd frontEnd-mobile
 ./scripts/run_phone.sh --port 3000
 ```
 
@@ -62,7 +62,7 @@ This auto-detects your LAN IP and runs Flutter with `API_BASE_URL=http://<LAN_IP
 3. **Run on a phone over Wi-Fi (without keeping USB plugged)**
 
 ```bash
-cd flutter_application_1
+cd frontEnd-mobile
 ./scripts/run_phone.sh --wifi-connect 192.168.1.35:38899 --port 3000
 ```
 
