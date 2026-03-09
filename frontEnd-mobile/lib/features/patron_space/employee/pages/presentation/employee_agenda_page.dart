@@ -4,11 +4,11 @@ import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:flutter/material.dart';
 import 'package:hjamty/core/services/fcm_service.dart';
 import 'package:intl/intl.dart';
-import 'package:toastification/toastification.dart';
 import 'package:hjamty/core/constants/app_colors.dart';
 import 'package:hjamty/core/services/notification_service.dart';
 import 'package:hjamty/features/client_space/appointments/data/appointment_service.dart';
 import 'package:hjamty/features/client_space/appointments/presentation/widgets/appointment_details_bottom_sheet.dart';
+import 'package:hjamty/features/patron_space/appointments/presentation/widgets/no_show_flow.dart';
 
 class EmployeeAgendaPage extends StatefulWidget {
   const EmployeeAgendaPage({super.key});
@@ -128,68 +128,29 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
     }
   }
 
-  Future<void> _updateStatus(
-    int appointmentId,
-    String newStatus,
-    int index,
-  ) async {
-    try {
-      toastification.show(
-        context: context,
-        type: ToastificationType.info,
-        style: ToastificationStyle.fillColored,
-        alignment: Alignment.topCenter,
-        autoCloseDuration: const Duration(seconds: 2),
-        title: Text(
-          tr(context, 'updating'),
-          style: const TextStyle(color: Colors.white),
-        ),
-        primaryColor: AppColors.primaryBlue,
-        backgroundColor: AppColors.primaryBlue,
-      );
+  Future<void> _updateStatus(int appointmentId, String newStatus) async {
+    await updateAppointmentStatusFlow(
+      context: context,
+      appointmentId: appointmentId,
+      status: newStatus,
+      loadingMessage: tr(context, 'updating'),
+      successMessage: tr(context, 'status_updated_successfully'),
+      errorMessage: tr(context, 'error_issue'),
+      onUpdated: _fetchAppointments,
+    );
+  }
 
-      // Call Backend API
-      await AppointmentService.updateStatus(
-        appointmentId: appointmentId,
-        status: newStatus,
-      );
-
-      // Refresh list to get updated status from server
-      await _fetchAppointments();
-
-      toastification.show(
+  Future<void> _showNoShowDialog(int appointmentId) async {
+    await showNoShowDecisionDialog(
+      context: context,
+      appointmentId: appointmentId,
+      onConfirmNoShow: (id) => _updateStatus(id, 'CANCELLED'),
+      onPostpone15: (id) => postponeNoShowWithCascadeFlow(
         context: context,
-        type: ToastificationType.success,
-        style: ToastificationStyle.fillColored,
-        alignment: Alignment.topCenter,
-        autoCloseDuration: const Duration(seconds: 4),
-        title: Text(
-          tr(context, 'status_updated_successfully'),
-          style: const TextStyle(color: Colors.white),
-        ),
-        primaryColor: AppColors.successGreen,
-        backgroundColor: AppColors.successGreen,
-      );
-    } catch (e) {
-      if (!mounted) return;
-      toastification.show(
-        context: context,
-        type: ToastificationType.error,
-        style: ToastificationStyle.fillColored,
-        alignment: Alignment.topCenter,
-        autoCloseDuration: const Duration(seconds: 4),
-        title: Text(
-          tr(context, 'error_issue'),
-          style: TextStyle(color: Colors.white),
-        ),
-        description: Text(
-          e.toString(),
-          style: const TextStyle(color: Colors.white),
-        ),
-        primaryColor: AppColors.actionRed,
-        backgroundColor: AppColors.actionRed,
-      );
-    }
+        appointmentId: id,
+        onRefresh: _fetchAppointments,
+      ),
+    );
   }
 
   void _checkNotifications() {
@@ -473,7 +434,7 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () =>
-                          _updateStatus(apt['id'], 'DECLINED', index),
+                          _updateStatus(apt['id'], 'DECLINED'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.actionRed,
                         side: const BorderSide(color: AppColors.actionRed),
@@ -488,7 +449,7 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () =>
-                          _updateStatus(apt['id'], 'CONFIRMED', index),
+                          _updateStatus(apt['id'], 'CONFIRMED'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primaryBlue,
                         elevation: 0,
@@ -510,8 +471,7 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () =>
-                          _updateStatus(apt['id'], 'CANCELLED', index),
+                      onPressed: () => _showNoShowDialog(apt['id']),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.actionRed,
                         side: const BorderSide(color: AppColors.actionRed),
@@ -522,7 +482,7 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
                       ),
                       icon: const Icon(Icons.person_off, size: 18),
                       label: Text(
-                        tr(context, 'did_not_show_up'),
+                        tr(context, 'no_show_btn'),
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
@@ -531,7 +491,7 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: () =>
-                          _updateStatus(apt['id'], 'IN_PROGRESS', index),
+                          _updateStatus(apt['id'], 'IN_PROGRESS'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.purple,
                         elevation: 0,
@@ -546,7 +506,7 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
                         size: 18,
                       ),
                       label: Text(
-                        tr(context, 'client_arrived'),
+                        tr(context, 'start_service_btn'),
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -587,7 +547,7 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       onPressed: () =>
-                          _updateStatus(apt['id'], 'COMPLETED', index),
+                          _updateStatus(apt['id'], 'COMPLETED'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.successGreen,
                         padding: const EdgeInsets.symmetric(vertical: 12),

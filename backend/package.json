@@ -14,6 +14,7 @@
     "prsm:std": "prisma studio",
     "fast-forward": "tsx scripts/fast_forward.ts",
     "create-admin": "tsx scripts/create_admin.ts",
+    "seed-demo": "tsx scripts/seed_demo_data.ts",
     "start": "node dist/index.js",
     "start:prod": "prisma migrate deploy && node dist/index.js"
   },

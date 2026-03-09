@@ -40,6 +40,11 @@ const Map<String, String> en = {
   'status_declined': 'Declined',
   'start_service_btn': 'is client camee /Start Service',
   'no_show_btn': 'No Show',
+  'no_show_dialog_title': 'Client did not arrive?',
+  'no_show_dialog_desc': 'Choose to mark no-show now, or postpone this slot by 15 minutes and shift following specialist appointments.',
+  'no_show_confirm_btn': 'Confirm no-show',
+  'postpone_15_btn': 'Snooze 15 min',
+  'postpone_15_success': 'Appointment postponed by 15 minutes.',
 
   // Filters
   'all': 'All',

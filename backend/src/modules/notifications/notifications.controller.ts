@@ -97,6 +97,12 @@ export const streamNotifications = (req: AuthRequest, res: Response) => {
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
+
+    // Crucial: disable the default 5-second socket timeout in Node
+    req.socket.setTimeout(0);
+    req.socket.setNoDelay(true);
+    req.socket.setKeepAlive(true);
+
     // Flush headers to establish stream
     res.flushHeaders?.();
 

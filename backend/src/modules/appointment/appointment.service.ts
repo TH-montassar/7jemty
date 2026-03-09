@@ -788,6 +788,115 @@ export const extendAppointment = async (appointmentId: number, minutes: number, 
     });
 };
 
+export const postponeNoShowWithCascade = async (
+    appointmentId: number,
+    minutes: number,
+    userId: number,
+    role: 'PATRON' | 'EMPLOYEE'
+) => {
+    const appointment = await prisma.appointment.findUnique({
+        where: { id: appointmentId },
+        include: { salon: true }
+    });
+
+    if (!appointment) {
+        throw new Error('Rendez-vous moch mawjoud');
+    }
+
+    await assertUpdatePermission(appointment, userId, role);
+
+    if (appointment.status !== 'CONFIRMED') {
+        throw new Error('Tnajem t3adel no-show postpone ken lel rendez-vous CONFIRMED');
+    }
+
+    if (!appointment.barberId) {
+        throw new Error('Mafamech specialist ma3youne lel rendez-vous hetha');
+    }
+
+    const shiftMs = minutes * 60000;
+    const startOfDay = new Date(appointment.appointmentDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(startOfDay);
+    endOfDay.setDate(endOfDay.getDate() + 1);
+
+    const shiftedAppointments = await prisma.$transaction(async (tx: any) => {
+        const appointmentsToShift = await tx.appointment.findMany({
+            where: {
+                salonId: appointment.salonId,
+                barberId: appointment.barberId,
+                appointmentDate: {
+                    gte: appointment.appointmentDate,
+                    lt: endOfDay
+                },
+                status: {
+                    in: ['PENDING', 'CONFIRMED', 'ARRIVED']
+                }
+            },
+            include: {
+                salon: {
+                    select: {
+                        patronId: true
+                    }
+                }
+            },
+            orderBy: {
+                appointmentDate: 'asc'
+            }
+        });
+
+        const updatedAppointments: any[] = [];
+
+        for (const appt of appointmentsToShift) {
+            const newAppointmentDate = new Date(appt.appointmentDate.getTime() + shiftMs);
+            const newEstimatedEndTime = new Date(appt.estimatedEndTime.getTime() + shiftMs);
+
+            const updated = await tx.appointment.update({
+                where: { id: appt.id },
+                data: {
+                    appointmentDate: newAppointmentDate,
+                    estimatedEndTime: newEstimatedEndTime
+                },
+                include: {
+                    salon: {
+                        select: {
+                            patronId: true
+                        }
+                    }
+                }
+            });
+
+            updatedAppointments.push(updated);
+        }
+
+        return updatedAppointments;
+    });
+
+    for (const appt of shiftedAppointments) {
+        const recipients = [appt.clientId, appt.barberId, appt.salon.patronId]
+            .filter((id, idx, arr): id is number => Boolean(id) && arr.indexOf(id) === idx);
+
+        await notifyUsers({
+            title: 'Rendez-vous decale',
+            body: `Rendez-vous decale de ${minutes} minutes.`,
+            userIds: recipients,
+            appointmentId: appt.id,
+            type: 'APPOINTMENT_UPDATED'
+        });
+    }
+
+    broadcastToAll({
+        type: 'AVAILABILITY_CHANGED',
+        salonId: appointment.salonId
+    });
+
+    return {
+        appointmentId,
+        minutes,
+        shiftedCount: shiftedAppointments.length,
+        shiftedAppointmentIds: shiftedAppointments.map((appt: any) => appt.id)
+    };
+};
+
 export const getUnreviewedAppointments = async (clientId: number) => {
     return prisma.appointment.findMany({
         where: {
