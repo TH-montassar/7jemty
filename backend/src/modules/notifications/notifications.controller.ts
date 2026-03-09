@@ -68,6 +68,11 @@ export const markNotificationAsRead = async (req: AuthRequest, res: Response) =>
             return;
         }
 
+        broadcastNotificationToUser(req.user.userId, {
+            type: 'NOTIFICATION_READ',
+            id: notificationId
+        });
+
         res.json({ message: 'Notification marquée comme lue' });
     } catch (e) {
         console.error("Failed marking notification as read:", e);
