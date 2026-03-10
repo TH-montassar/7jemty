@@ -4,6 +4,7 @@ import 'package:hjamty/core/constants/app_colors.dart';
 import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:hjamty/features/client_space/appointments/data/appointment_service.dart';
 import 'package:hjamty/features/client_space/appointments/presentation/widgets/appointment_details_bottom_sheet.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class UpcomingTab extends StatefulWidget {
   const UpcomingTab({super.key});
@@ -114,6 +115,57 @@ class _UpcomingTabState extends State<UpcomingTab> {
           backgroundColor: AppColors.actionRed,
         ),
       );
+    }
+  }
+
+  Future<void> _openMaps(Map<String, dynamic> salon) async {
+    final String? googleMapsUrl = salon['googleMapsUrl'];
+    final dynamic latVal = salon['latitude'];
+    final dynamic lngVal = salon['longitude'];
+    final String? address = salon['address'];
+    final String? name = salon['name'];
+
+    List<Uri> possibleUris = [];
+
+    // 1. Direct Google Maps URL
+    if (googleMapsUrl != null && googleMapsUrl.isNotEmpty) {
+      try {
+        possibleUris.add(Uri.parse(googleMapsUrl));
+      } catch (_) {}
+    }
+
+    // 2. Latitude and Longitude
+    if (latVal != null && lngVal != null) {
+      possibleUris.add(
+        Uri.parse(
+          "https://www.google.com/maps/search/?api=1&query=$latVal,$lngVal",
+        ),
+      );
+    }
+
+    // 3. Address
+    if (address != null && address.isNotEmpty) {
+      possibleUris.add(
+        Uri.parse(
+          "https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(address)}",
+        ),
+      );
+    }
+
+    // 4. Name
+    if (name != null && name.isNotEmpty) {
+      possibleUris.add(
+        Uri.parse(
+          "https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(name)}",
+        ),
+      );
+    }
+
+    for (var uri in possibleUris) {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+        return;
+      }
     }
   }
 
@@ -356,7 +408,9 @@ class _UpcomingTabState extends State<UpcomingTab> {
                                   Expanded(
                                     child: ElevatedButton.icon(
                                       onPressed: () {
-                                        // Implement navigation to salon location if Google Maps URL is available -> MVP Phase
+                                        if (apt['salon'] != null) {
+                                          _openMaps(apt['salon']);
+                                        }
                                       },
                                       icon: const Icon(
                                         Icons.map_outlined,
