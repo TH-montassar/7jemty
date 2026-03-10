@@ -52,6 +52,9 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
   bool _isFavorite = false;
   bool _isLoadingFavorite = false;
   StreamSubscription<Map<String, dynamic>>? _fcmSubscription;
+  String _reservationStatusFilter = 'ALL';
+  String _reservationSortField = 'APPOINTMENT_DATE';
+  bool _reservationSortAscending = true;
 
   @override
   void initState() {
@@ -575,6 +578,237 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
     );
   }
 
+  DateTime? _safeDate(dynamic raw) {
+    if (raw == null) return null;
+    return DateTime.tryParse(raw.toString())?.toLocal();
+  }
+
+  DateTime? _reservationCreatedDate(dynamic appointment) {
+    return _safeDate(appointment['createdAt']) ??
+        _safeDate(appointment['created_at']) ??
+        _safeDate(appointment['createdDate']);
+  }
+
+  String _reservationStatusLabel(String status) {
+    if (status == 'ALL') {
+      final statusLabel = tr(context, 'status');
+      return statusLabel == 'status' ? 'Status' : statusLabel;
+    }
+    if (status == 'ARRIVED') return 'Arrived';
+    final key = 'status_${status.toLowerCase()}';
+    final translated = tr(context, key);
+    if (translated == key) {
+      return status.replaceAll('_', ' ');
+    }
+    return translated;
+  }
+
+  void _clearReservationFilters() {
+    setState(() {
+      _reservationStatusFilter = 'ALL';
+      _reservationSortField = 'APPOINTMENT_DATE';
+      _reservationSortAscending = true;
+    });
+  }
+
+  List<dynamic> _applyReservationFiltersAndSort(List<dynamic> source) {
+    final filtered = source.where((appointment) {
+      final status = (appointment['status'] ?? '').toString().toUpperCase();
+      if (_reservationStatusFilter != 'ALL' &&
+          status != _reservationStatusFilter) {
+        return false;
+      }
+
+      return true;
+    }).toList();
+
+    filtered.sort((a, b) {
+      DateTime getSortDate(dynamic appointment) {
+        if (_reservationSortField == 'CREATED_AT') {
+          return _reservationCreatedDate(appointment) ??
+              _safeDate(appointment['appointmentDate']) ??
+              DateTime.fromMillisecondsSinceEpoch(0);
+        }
+        return _safeDate(appointment['appointmentDate']) ??
+            _reservationCreatedDate(appointment) ??
+            DateTime.fromMillisecondsSinceEpoch(0);
+      }
+
+      final compare = getSortDate(a).compareTo(getSortDate(b));
+      if (compare != 0) {
+        return _reservationSortAscending ? compare : -compare;
+      }
+      final statusA = (a['status'] ?? '').toString();
+      final statusB = (b['status'] ?? '').toString();
+      return statusA.compareTo(statusB);
+    });
+
+    return filtered;
+  }
+
+  Widget _buildReservationsFilters({
+    required int totalCount,
+    required int shownCount,
+  }) {
+    final hasActiveFilters = _reservationStatusFilter != 'ALL' ||
+        _reservationSortField != 'APPOINTMENT_DATE' ||
+        !_reservationSortAscending;
+
+    Widget chip({
+      required Widget child,
+      bool active = false,
+      EdgeInsetsGeometry padding =
+          const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    }) {
+      return Container(
+        padding: padding,
+        decoration: BoxDecoration(
+          color: active ? AppColors.primaryBlue.withValues(alpha: 0.1) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: active ? AppColors.primaryBlue : Colors.grey.shade300,
+            width: active ? 1.5 : 1,
+          ),
+        ),
+        child: child,
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                PopupMenuButton<String>(
+                  onSelected: (value) =>
+                      setState(() => _reservationStatusFilter = value),
+                  itemBuilder: (context) => [
+                    'ALL',
+                    'PENDING',
+                    'CONFIRMED',
+                    'IN_PROGRESS',
+                    'ARRIVED',
+                    'COMPLETED',
+                    'CANCELLED',
+                    'DECLINED',
+                  ]
+                      .map(
+                        (status) => PopupMenuItem<String>(
+                          value: status,
+                          child: Text(_reservationStatusLabel(status)),
+                        ),
+                      )
+                      .toList(),
+                  child: chip(
+                    active: _reservationStatusFilter != 'ALL',
+                    child: Row(
+                      children: [
+                        Text(
+                          _reservationStatusLabel(_reservationStatusFilter),
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        const SizedBox(width: 4),
+                        const Icon(Icons.keyboard_arrow_down, size: 16),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                PopupMenuButton<String>(
+                  onSelected: (value) =>
+                      setState(() => _reservationSortField = value),
+                  itemBuilder: (context) => const [
+                    PopupMenuItem<String>(
+                      value: 'APPOINTMENT_DATE',
+                      child: Text('Date RDV'),
+                    ),
+                    PopupMenuItem<String>(
+                      value: 'CREATED_AT',
+                      child: Text('Date creation'),
+                    ),
+                  ],
+                  child: chip(
+                    active: _reservationSortField != 'APPOINTMENT_DATE',
+                    child: Row(
+                      children: [
+                        Text(
+                          _reservationSortField == 'CREATED_AT'
+                              ? 'Date creation'
+                              : 'Date RDV',
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        const SizedBox(width: 4),
+                        const Icon(Icons.keyboard_arrow_down, size: 16),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                InkWell(
+                  borderRadius: BorderRadius.circular(20),
+                  onTap: () => setState(
+                    () => _reservationSortAscending = !_reservationSortAscending,
+                  ),
+                  child: chip(
+                    active: !_reservationSortAscending,
+                    child: Row(
+                      children: [
+                        Icon(
+                          _reservationSortAscending
+                              ? Icons.arrow_upward
+                              : Icons.arrow_downward,
+                          size: 14,
+                          color: AppColors.textDark,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          _reservationSortAscending ? 'Asc' : 'Desc',
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                if (hasActiveFilters) ...[
+                  const SizedBox(width: 8),
+                  InkWell(
+                    borderRadius: BorderRadius.circular(20),
+                    onTap: _clearReservationFilters,
+                    child: chip(
+                      child: const Row(
+                        children: [
+                          Icon(Icons.close, size: 14, color: Colors.red),
+                          SizedBox(width: 4),
+                          Text(
+                            'Clear',
+                            style: TextStyle(fontSize: 12, color: Colors.red),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Affichage: $shownCount / $totalCount',
+            style: TextStyle(
+              color: Colors.grey.shade600,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // TABS BUILDERS
   // ============================================
 
@@ -779,28 +1013,10 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
           );
         }
 
-        final appointments = List<dynamic>.from(snapshot.data ?? []);
-        appointments.sort((a, b) {
-          int getPriority(String? s) {
-            final st = (s ?? '').toUpperCase();
-            if (st == 'CONFIRMED' || st == 'IN_PROGRESS' || st == 'ARRIVED')
-              return 1;
-            if (st == 'PENDING') return 2;
-            return 3;
-          }
+        final allAppointments = List<dynamic>.from(snapshot.data ?? []);
+        final appointments = _applyReservationFiltersAndSort(allAppointments);
 
-          final pA = getPriority(a['status']);
-          final pB = getPriority(b['status']);
-          if (pA != pB) return pA.compareTo(pB);
-
-          final dateA =
-              DateTime.tryParse(a['appointmentDate'] ?? '') ?? DateTime.now();
-          final dateB =
-              DateTime.tryParse(b['appointmentDate'] ?? '') ?? DateTime.now();
-          return dateA.compareTo(dateB);
-        });
-
-        if (appointments.isEmpty) {
+        if (allAppointments.isEmpty) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -820,11 +1036,39 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
           );
         }
 
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: appointments.length,
-          itemBuilder: (context, index) {
-            final apt = appointments[index];
+        return Column(
+          children: [
+            _buildReservationsFilters(
+              totalCount: allAppointments.length,
+              shownCount: appointments.length,
+            ),
+            if (appointments.isEmpty)
+              Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.filter_alt_off,
+                        size: 56,
+                        color: Colors.grey.shade300,
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'Ma fama hata resultat bel filtres',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: appointments.length,
+                  itemBuilder: (context, index) {
+                    final apt = appointments[index];
             final clientName = apt['client']['fullName'] ?? 'Client';
             final clientPhone = apt['client']['phoneNumber'] ?? '';
             final aptDate = apt['appointmentDate'];
@@ -1167,7 +1411,10 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                 ),
               ),
             );
-          },
+                  },
+                ),
+              ),
+          ],
         );
       },
     );
