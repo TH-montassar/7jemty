@@ -208,20 +208,36 @@ class _AboutTabState extends State<AboutTab> {
     final dynamic latVal = widget.salonData['latitude'] ?? _lat;
     final dynamic lngVal = widget.salonData['longitude'] ?? _lng;
 
-    Uri uri;
+    List<Uri> possibleUris = [];
 
+    // 1. Direct Google Maps URL
     if (googleMapsUrl != null && googleMapsUrl.isNotEmpty) {
-      uri = Uri.parse(googleMapsUrl);
-    } else if (latVal != null && lngVal != null) {
-      uri = Uri.parse(
-        "https://www.google.com/maps/search/?api=1&query=$latVal,$lngVal",
-      );
-    } else {
-      uri = Uri.parse("https://www.google.com/maps/search/?api=1&query=$query");
+      try {
+        possibleUris.add(Uri.parse(googleMapsUrl));
+      } catch (_) {}
     }
 
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    // 2. Latitude and Longitude
+    if (latVal != null && lngVal != null) {
+      possibleUris.add(
+        Uri.parse(
+          "https://www.google.com/maps/search/?api=1&query=$latVal,$lngVal",
+        ),
+      );
+    }
+
+    // 3. Search query (Address/Name)
+    possibleUris.add(
+      Uri.parse(
+        "https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(query)}",
+      ),
+    );
+
+    for (var uri in possibleUris) {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+        return;
+      }
     }
   }
 
