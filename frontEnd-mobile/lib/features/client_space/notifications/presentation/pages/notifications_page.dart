@@ -13,6 +13,7 @@ class NotificationsPage extends StatefulWidget {
 
 class _NotificationsPageState extends State<NotificationsPage> {
   bool _isLoading = true;
+  bool _showAll = false;
   List<dynamic> _notifications = [];
 
   @override
@@ -56,6 +57,10 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final displayedNotifications = _showAll
+        ? _notifications
+        : _notifications.where((n) => n['isRead'] != true).toList();
+
     return Scaffold(
       backgroundColor: AppColors.bgColor,
       appBar: AppBar(
@@ -78,100 +83,148 @@ class _NotificationsPageState extends State<NotificationsPage> {
           ? const Center(
               child: CircularProgressIndicator(color: AppColors.primaryBlue),
             )
-          : _notifications.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.notifications_off_outlined,
-                    size: 80,
-                    color: Colors.grey.withOpacity(0.5),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    "Pas de nouvelles notifications",
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.grey,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    "Vos alertes apparaîtront ici.",
-                    style: TextStyle(fontSize: 14, color: Colors.grey),
-                  ),
-                ],
-              ),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _notifications.length,
-              itemBuilder: (context, index) {
-                final notif = _notifications[index];
-                final isRead = notif['isRead'] ?? false;
-
-                return GestureDetector(
-                  onTap: () => _markAsRead(notif['id'], index),
-                  child: Card(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    color: isRead
-                        ? Colors.white
-                        : AppColors.primaryBlue.withOpacity(0.05),
-                    elevation: 0,
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.all(16),
-                      leading: CircleAvatar(
-                        backgroundColor: isRead
-                            ? AppColors.primaryBlue.withOpacity(0.1)
-                            : AppColors.primaryBlue,
-                        child: Icon(
-                          isRead
-                              ? Icons.notifications_none
-                              : Icons.notifications_active,
-                          color: isRead ? AppColors.primaryBlue : Colors.white,
-                        ),
-                      ),
-                      title: Text(
-                        notif['title'] ?? 'Notification',
-                        style: TextStyle(
-                          fontWeight: isRead
-                              ? FontWeight.normal
-                              : FontWeight.bold,
-                          color: AppColors.textDark,
-                        ),
-                      ),
-                      subtitle: Padding(
-                        padding: const EdgeInsets.only(top: 8.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              notif['body'] ?? '',
-                              style: TextStyle(color: Colors.grey.shade700),
-                            ),
-                            const SizedBox(height: 8),
-                            if (notif['createdAt'] != null)
-                              Text(
-                                DateFormat(
-                                  'dd MMM yyyy à HH:mm',
-                                ).format(DateTime.parse(notif['createdAt'])),
-                                style: const TextStyle(
-                                  fontSize: 11,
+          : Column(
+              children: [
+                Expanded(
+                  child: displayedNotifications.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.notifications_off_outlined,
+                                size: 80,
+                                color: Colors.grey.withOpacity(0.5),
+                              ),
+                              const SizedBox(height: 16),
+                              const Text(
+                                "Pas de nouvelles notifications",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              const Text(
+                                "Vos alertes apparaîtront ici.",
+                                style: TextStyle(
+                                  fontSize: 14,
                                   color: Colors.grey,
                                 ),
                               ),
-                          ],
+                            ],
+                          ),
+                        )
+                      : ListView.builder(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: displayedNotifications.length,
+                          itemBuilder: (context, index) {
+                            final notif = displayedNotifications[index];
+                            final isRead = notif['isRead'] ?? false;
+                            final originalIndex = _notifications.indexWhere(
+                              (n) => n['id'] == notif['id'],
+                            );
+
+                            return GestureDetector(
+                              onTap: () {
+                                if (originalIndex != -1) {
+                                  _markAsRead(notif['id'], originalIndex);
+                                }
+                              },
+                              child: Card(
+                                margin: const EdgeInsets.only(bottom: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(15),
+                                ),
+                                color: isRead
+                                    ? Colors.white
+                                    : AppColors.primaryBlue.withOpacity(0.05),
+                                elevation: 0,
+                                child: ListTile(
+                                  contentPadding: const EdgeInsets.all(16),
+                                  leading: CircleAvatar(
+                                    backgroundColor: isRead
+                                        ? AppColors.primaryBlue.withOpacity(0.1)
+                                        : AppColors.primaryBlue,
+                                    child: Icon(
+                                      isRead
+                                          ? Icons.notifications_none
+                                          : Icons.notifications_active,
+                                      color: isRead
+                                          ? AppColors.primaryBlue
+                                          : Colors.white,
+                                    ),
+                                  ),
+                                  title: Text(
+                                    notif['title'] ?? 'Notification',
+                                    style: TextStyle(
+                                      fontWeight: isRead
+                                          ? FontWeight.normal
+                                          : FontWeight.bold,
+                                      color: AppColors.textDark,
+                                    ),
+                                  ),
+                                  subtitle: Padding(
+                                    padding: const EdgeInsets.only(top: 8.0),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          notif['body'] ?? '',
+                                          style: TextStyle(
+                                            color: Colors.grey.shade700,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        if (notif['createdAt'] != null)
+                                          Text(
+                                            DateFormat(
+                                              'dd MMM yyyy à HH:mm',
+                                            ).format(
+                                              DateTime.parse(
+                                                notif['createdAt'],
+                                              ),
+                                            ),
+                                            style: const TextStyle(
+                                              fontSize: 11,
+                                              color: Colors.grey,
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
                         ),
+                ),
+                if (!_showAll && _notifications.any((n) => n['isRead'] == true))
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: OutlinedButton(
+                      onPressed: () {
+                        setState(() {
+                          _showAll = true;
+                        });
+                      },
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.primaryBlue,
+                        side: const BorderSide(color: AppColors.primaryBlue),
+                        minimumSize: const Size(double.infinity, 50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: const Text(
+                        'Voir tous',
+                        style: TextStyle(fontSize: 16),
                       ),
                     ),
                   ),
-                );
-              },
+              ],
             ),
     );
   }
