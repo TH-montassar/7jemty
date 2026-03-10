@@ -41,7 +41,8 @@ const Map<String, String> en = {
   'start_service_btn': 'is client camee /Start Service',
   'no_show_btn': 'No Show',
   'no_show_dialog_title': 'Client did not arrive?',
-  'no_show_dialog_desc': 'Choose to mark no-show now, or postpone this slot by 15 minutes and shift following specialist appointments.',
+  'no_show_dialog_desc':
+      'Choose to mark no-show now, or postpone this slot by 15 minutes and shift following specialist appointments.',
   'no_show_confirm_btn': 'Confirm no-show',
   'postpone_15_btn': 'Snooze 15 min',
   'postpone_15_success': 'Appointment postponed by 15 minutes.',
@@ -455,4 +456,22 @@ const Map<String, String> en = {
   'send': 'Send',
   'decline_btn': 'Decline',
   'status_rebooked': 'Rebooked',
+
+  // Profile Edits
+  'personal_info': 'Personal Information',
+  'first_name': 'First Name',
+  'last_name': 'Last Name',
+  'email_address': 'Email Address',
+  'address': 'Address',
+  'profile_photo': 'Profile Photo',
+  'uploading_progress': 'Uploading... {0}%',
+  'choose_image': 'Choose Image',
+  'or_paste_url': 'Or paste URL',
+  'processing': 'Processing...',
+  'success': 'Success',
+  'image_uploaded_success': 'Image uploaded successfully',
+  'upload_error': 'Upload Error',
+  'feature_soon': 'Coming Soon',
+  'profile_updated': 'Profile updated successfully',
+  'no_email': 'No email',
 };

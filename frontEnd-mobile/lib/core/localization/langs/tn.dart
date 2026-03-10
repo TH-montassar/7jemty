@@ -388,7 +388,8 @@ const Map<String, String> tn = {
   'start_service_btn': 'jee lclient',
   'no_show_btn': 'majech lclient',
   'no_show_dialog_title': 'El client majech?',
-  'no_show_dialog_desc': 'T7eb tlaghi rendez-vous wala tzid 15mn lel client w lel specialist planning?',
+  'no_show_dialog_desc':
+      'T7eb tlaghi rendez-vous wala tzid 15mn lel client w lel specialist planning?',
   'no_show_confirm_btn': 'Mta2ked, majech',
   'postpone_15_btn': 'Nsanoh 15mn',
   'postpone_15_success': 'Rendez-vous t2ajal 15mn w planning etbadel.',
@@ -450,4 +451,22 @@ const Map<String, String> tn = {
   'rate_this_salon': '9ayyem hal saloun',
   'thank_you_for_review': 'Yaatik essa7a ala rayek! ⭐',
   'send_the_review': 'Ab3ath l\'avi',
+
+  // Profile Edits
+  'personal_info': 'Maaloumet chakhsiya',
+  'first_name': 'Esm',
+  'last_name': 'Laqab',
+  'email_address': 'Adresse e-mail',
+  'address': 'Adresse',
+  'profile_photo': 'Taswiret l\'profil',
+  'uploading_progress': 'Gaad ytalla3... {0}%',
+  'choose_image': 'Ekhtar taswira',
+  'or_paste_url': 'Wala hot l\'URL',
+  'processing': 'Gaad yriguel...',
+  'success': 'Temm binajeh',
+  'image_uploaded_success': 'Taswira tzadit mriguel',
+  'upload_error': 'Ghalta fel téléchargement',
+  'feature_soon': 'Mazel ma rakebnehech',
+  'profile_updated': 'Profil tbadel mriguel',
+  'no_email': 'Ma famech e-mail',
 };

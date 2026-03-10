@@ -40,6 +40,9 @@ class _ProfileHeaderState extends State<ProfileHeader> {
     final TextEditingController emailController = TextEditingController(
       text: widget.userData?['profile']?['email'] ?? '',
     );
+    final TextEditingController addressController = TextEditingController(
+      text: widget.userData?['profile']?['address'] ?? '',
+    );
     final TextEditingController urlController = TextEditingController(
       text: widget.userData?['profile']?['avatarUrl'] ?? '',
     );
@@ -177,6 +180,20 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                             decoration: InputDecoration(
                               labelText: tr(context, 'email_address'),
                               prefixIcon: const Icon(Icons.email_outlined),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+
+                          TextField(
+                            controller: addressController,
+                            decoration: InputDecoration(
+                              labelText: tr(context, 'address'),
+                              prefixIcon: const Icon(
+                                Icons.location_on_outlined,
+                              ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
@@ -386,6 +403,8 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                                                     .trim(),
                                                 email: emailController.text
                                                     .trim(),
+                                                address: addressController.text
+                                                    .trim(),
                                                 avatarUrl: urlController.text
                                                     .trim(),
                                               );
@@ -524,7 +543,10 @@ class _ProfileHeaderState extends State<ProfileHeader> {
                 ),
                 const SizedBox(height: 6),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.bgColor,
                     borderRadius: BorderRadius.circular(12),

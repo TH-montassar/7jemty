@@ -92,6 +92,7 @@ class AuthService {
     String? email,
     String? avatarUrl,
     String? bio,
+    String? address,
   }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -113,6 +114,7 @@ class AuthService {
           if (email != null) 'email': email,
           if (avatarUrl != null) 'avatarUrl': avatarUrl,
           if (bio != null) 'bio': bio,
+          if (address != null) 'address': address,
         }),
       );
 

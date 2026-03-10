@@ -135,7 +135,7 @@ export const getMe = async (userId: number) => {
     return userWithoutPassword;
 };
 
-export const updateProfile = async (userId: number, data: { fullName?: string; phoneNumber?: string; email?: string; avatarUrl?: string; bio?: string; fcmToken?: string }) => {
+export const updateProfile = async (userId: number, data: { fullName?: string; phoneNumber?: string; email?: string; avatarUrl?: string; bio?: string; fcmToken?: string; address?: string }) => {
     return await prisma.$transaction(async (tx) => {
         if (data.fullName !== undefined || data.phoneNumber !== undefined) {
             await tx.user.update({
@@ -153,7 +153,8 @@ export const updateProfile = async (userId: number, data: { fullName?: string; p
                 ...(data.avatarUrl !== undefined && { avatarUrl: data.avatarUrl }),
                 ...(data.bio !== undefined && { bio: data.bio }),
                 ...(data.email !== undefined && { email: data.email }),
-                ...(data.fcmToken !== undefined && { fcmToken: data.fcmToken })
+                ...(data.fcmToken !== undefined && { fcmToken: data.fcmToken }),
+                ...(data.address !== undefined && { address: data.address })
             }
         });
 
