@@ -120,27 +120,52 @@ class _UpcomingTabState extends State<UpcomingTab> {
 
   Future<void> _openMaps(Map<String, dynamic> salon) async {
     final String? googleMapsUrl = salon['googleMapsUrl'];
+    final dynamic latVal = salon['latitude'];
+    final dynamic lngVal = salon['longitude'];
     final String? address = salon['address'];
     final String? name = salon['name'];
 
-    Uri uri;
+    List<Uri> possibleUris = [];
 
+    // 1. Direct Google Maps URL
     if (googleMapsUrl != null && googleMapsUrl.isNotEmpty) {
-      uri = Uri.parse(googleMapsUrl);
-    } else if (address != null && address.isNotEmpty) {
-      uri = Uri.parse(
-        "https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(address)}",
-      );
-    } else if (name != null && name.isNotEmpty) {
-      uri = Uri.parse(
-        "https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(name)}",
-      );
-    } else {
-      return;
+      try {
+        possibleUris.add(Uri.parse(googleMapsUrl));
+      } catch (_) {}
     }
 
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    // 2. Latitude and Longitude
+    if (latVal != null && lngVal != null) {
+      possibleUris.add(
+        Uri.parse(
+          "https://www.google.com/maps/search/?api=1&query=$latVal,$lngVal",
+        ),
+      );
+    }
+
+    // 3. Address
+    if (address != null && address.isNotEmpty) {
+      possibleUris.add(
+        Uri.parse(
+          "https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(address)}",
+        ),
+      );
+    }
+
+    // 4. Name
+    if (name != null && name.isNotEmpty) {
+      possibleUris.add(
+        Uri.parse(
+          "https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(name)}",
+        ),
+      );
+    }
+
+    for (var uri in possibleUris) {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+        return;
+      }
     }
   }
 

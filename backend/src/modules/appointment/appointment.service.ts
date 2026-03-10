@@ -738,7 +738,7 @@ export const getClientAppointments = async (clientId: number) => {
         where: { clientId },
         include: {
             client: { select: { fullName: true, phoneNumber: true } },
-            salon: { select: { id: true, name: true, address: true, coverImageUrl: true, googleMapsUrl: true } },
+            salon: { select: { id: true, name: true, address: true, coverImageUrl: true, googleMapsUrl: true, latitude: true, longitude: true } },
             barber: { select: { fullName: true, profile: { select: { avatarUrl: true } } } },
             services: { include: { service: true } }
         },
