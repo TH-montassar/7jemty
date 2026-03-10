@@ -447,6 +447,7 @@ const Map<String, String> tn = {
   'active': 'Active',
   'deactivated': 'Desactivé',
   'waiting_approval': 'Waiting for approval',
+  'salon_not_active_popup_desc': 'Salon mte3ek mazel mouch active w mahouch bech yban fel accueil hata yetsada9 men admin.',
   'based_on_n_reviews': 'Based on {0} reviews',
   'no_reviews_yet': 'Ma famma 7atta avi ltaw',
   'rate_this_salon': '9ayyem hal saloun',
@@ -470,4 +471,8 @@ const Map<String, String> tn = {
   'feature_soon': 'Mazel ma rakebnehech',
   'profile_updated': 'Profil tbadel mriguel',
   'no_email': 'Ma famech e-mail',
+
+  // Calendar Specialists
+  'moi_patron': 'Ena (Moi)',
+  'all_specialists': 'Kol el 7ajjema',
 };

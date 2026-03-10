@@ -17,14 +17,14 @@ class _NearYouListState extends State<NearYouList> {
   @override
   void initState() {
     super.initState();
-    // 💡 Houni njibou l'salons mel backend. Tnajem t3adi lat w lng ken 3andek e-position.
+    // ðŸ’¡ Houni njibou l'salons mel backend. Tnajem t3adi lat w lng ken 3andek e-position.
     _salonsFuture = SalonService.getAllSalons();
   }
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 190, // طول الكارطة
+      height: 190, // Ø·ÙˆÙ„ Ø§Ù„ÙƒØ§Ø±Ø·Ø©
       child: FutureBuilder<List<dynamic>>(
         future: _salonsFuture,
         builder: (context, snapshot) {
@@ -48,7 +48,23 @@ class _NearYouListState extends State<NearYouList> {
             );
           }
 
-          final salons = snapshot.data!;
+          final salons = snapshot.data!
+              .whereType<Map>()
+              .map((salon) => Map<String, dynamic>.from(salon))
+              .where((salon) =>
+                  (salon['approvalStatus']?.toString().toUpperCase() ??
+                      'APPROVED') ==
+                  'APPROVED')
+              .toList();
+
+          if (salons.isEmpty) {
+            return const Center(
+              child: Text(
+                'Ma famech salons 9rab ltawa.',
+                style: TextStyle(color: Colors.grey),
+              ),
+            );
+          }
 
           return ListView.builder(
             scrollDirection: Axis.horizontal,
@@ -69,7 +85,7 @@ class _NearYouListState extends State<NearYouList> {
                   );
                 },
                 child: Container(
-                  width: 150, // عرض الكارطة
+                  width: 150, // Ø¹Ø±Ø¶ Ø§Ù„ÙƒØ§Ø±Ø·Ø©
                   margin: const EdgeInsets.only(right: 15),
                   decoration: BoxDecoration(
                     color: Colors.white,
@@ -85,7 +101,7 @@ class _NearYouListState extends State<NearYouList> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // --- التصويرة الفوقانية ---
+                      // --- Ø§Ù„ØªØµÙˆÙŠØ±Ø© Ø§Ù„ÙÙˆÙ‚Ø§Ù†ÙŠØ© ---
                       Expanded(
                         child: ClipRRect(
                           borderRadius: const BorderRadius.vertical(
@@ -113,7 +129,7 @@ class _NearYouListState extends State<NearYouList> {
                         ),
                       ),
 
-                      // --- المعلومات اللوطانية ---
+                      // --- Ø§Ù„Ù…Ø¹Ù„ÙˆÙ…Ø§Øª Ø§Ù„Ù„ÙˆØ·Ø§Ù†ÙŠØ© ---
                       Padding(
                         padding: const EdgeInsets.all(12),
                         child: Column(
@@ -133,7 +149,7 @@ class _NearYouListState extends State<NearYouList> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                // المسافة (Icon + Distance)
+                                // Ø§Ù„Ù…Ø³Ø§ÙØ© (Icon + Distance)
                                 Row(
                                   children: [
                                     const Icon(
@@ -151,7 +167,7 @@ class _NearYouListState extends State<NearYouList> {
                                     ),
                                   ],
                                 ),
-                                // التقييم (Icon + Note)
+                                // Ø§Ù„ØªÙ‚ÙŠÙŠÙ… (Icon + Note)
                                 Row(
                                   children: [
                                     const Icon(

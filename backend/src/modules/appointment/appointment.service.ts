@@ -268,7 +268,7 @@ export const getAvailableDatesForRange = async (
 
     // Limit to max 31 days to prevent overload
     if ((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24) > 31) {
-        throw new Error("La plage de dates ne peut pas dÃ©passer 31 jours.");
+        throw new Error("La plage de dates ne peut pas dépasser 31 jours.");
     }
 
     const dateStrings: string[] = [];
@@ -331,7 +331,7 @@ export const createClientAppointment = async (
     const appointmentDate = parseTime(timeString, new Date(dateString));
     const now = new Date();
     if (appointmentDate <= now) {
-        throw new Error('Impossible de rÃ©server un crÃ©neau dans le passÃ©');
+        throw new Error('Impossible de réserver un créneau dans le passé');
     }
 
     const estimatedEndTime = new Date(appointmentDate);
@@ -339,7 +339,7 @@ export const createClientAppointment = async (
 
     const [openHour, closeHour] = await getSalonOpenCloseForDate(salonId, appointmentDate);
     if (appointmentDate < openHour || estimatedEndTime > closeHour) {
-        throw new Error('Le crÃ©neau dÃ©passe les horaires du salon');
+        throw new Error('Le créneau dépasse les horaires du salon');
     }
 
     const availability = await getBarberAvailability(salonId, dateString, barberId, serviceIds);
@@ -393,7 +393,7 @@ export const createClientAppointment = async (
 
     await notifyUsers({
         title: 'Nouvelle demande de rendez-vous',
-        body: `Service rÃ©servÃ© Ã  ${timeString}`,
+        body: `Service réservé à ${timeString}`,
         userIds: recipients,
         appointmentId: appointment.id,
         type: 'APPOINTMENT_UPDATED'
@@ -446,8 +446,8 @@ export const processInProgressReminders = async () => {
 
     for (const appointment of appointments) {
         await notifyUsers({
-            title: 'Le client est-il arrivÃ© ?',
-            body: 'Confirmez son arrivÃ©e pour dÃ©marrer la prestation.',
+            title: 'Le client est-il arrivé ?',
+            body: 'Confirmez son arrivée pour démarrer la prestation.',
             userIds: [appointment.barberId ?? appointment.salon.patronId],
             appointmentId: appointment.id
         });
@@ -476,8 +476,8 @@ export const processCompletionAlerts = async () => {
         });
 
         await notifyUsers({
-            title: 'Temps Ã©coulÃ©',
-            body: 'As-tu terminÃ© ? (Oui / Snooze +15min)',
+            title: 'Temps écoulé',
+            body: 'As-tu terminé ? (Oui / Snooze +15min)',
             userIds: [appointment.barberId ?? appointment.salon.patronId],
             appointmentId: appointment.id
         });
@@ -534,8 +534,8 @@ const emitStatusNotifications = async (
 ) => {
     if (status === 'CONFIRMED') {
         await notifyUsers({
-            title: 'Rendez-vous confirmÃ©',
-            body: `Votre rendez-vous a Ã©tÃ© acceptÃ© pour le ${appointmentDate.toLocaleDateString('fr-FR')} Ã  ${appointmentDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`,
+            title: 'Rendez-vous confirmé',
+            body: `Votre rendez-vous a été accepté pour le ${appointmentDate.toLocaleDateString('fr-FR')} à ${appointmentDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`,
             userIds: [clientId, barberId, patronId].filter((id): id is number => Boolean(id)),
             appointmentId,
             type: 'APPOINTMENT_UPDATED'
@@ -547,8 +547,8 @@ const emitStatusNotifications = async (
         const recipients = potentialRecipients.filter((id, idx, arr): id is number => Boolean(id) && arr.indexOf(id) === idx);
 
         await notifyUsers({
-            title: 'Rendez-vous annulÃ©',
-            body: 'Une modification a Ã©tÃ© effectuÃ©e sur le rendez-vous.',
+            title: 'Rendez-vous annulé',
+            body: 'Une modification a été effectuée sur le rendez-vous.',
             userIds: recipients,
             appointmentId,
             type: 'APPOINTMENT_UPDATED'
@@ -557,8 +557,8 @@ const emitStatusNotifications = async (
 
     if (status === 'DECLINED') {
         await notifyUsers({
-            title: 'Rendez-vous refusÃ©',
-            body: 'Malheureusement, le salon a refusÃ© ce crÃ©neau. Veuillez en choisir un autre.',
+            title: 'Rendez-vous refusé',
+            body: 'Malheureusement, le salon a refusé ce créneau. Veuillez en choisir un autre.',
             userIds: [clientId, barberId, patronId].filter((id): id is number => Boolean(id)),
             appointmentId,
             type: 'APPOINTMENT_UPDATED'
@@ -572,7 +572,7 @@ const emitStatusNotifications = async (
         });
         await notifyUsers({
             title: 'Laissez votre avis',
-            body: 'Votre prestation est terminÃ©e, partagez votre review.',
+            body: 'Votre prestation est terminée, partagez votre review.',
             userIds: [clientId, barberId, patronId].filter((id): id is number => Boolean(id)),
             appointmentId,
             type: 'APPOINTMENT_UPDATED'
@@ -633,7 +633,7 @@ const assertStatusTransition = (
     if (nextStatus === 'CANCELLED' && userRole === 'CLIENT') {
         const oneHourBefore = new Date(appointmentDate.getTime() - 60 * 60 * 1000);
         if (new Date() >= oneHourBefore) {
-            throw new Error('Annulation client impossible Ã  moins de 1h du rendez-vous');
+            throw new Error('Annulation client impossible à moins de 1h du rendez-vous');
         }
     }
 };
@@ -676,7 +676,7 @@ const getSalonOpenCloseForDate = async (salonId: number, date: Date): Promise<[D
     let closeTime = '17:00';
 
     if (workingHours?.isDayOff) {
-        throw new Error('Salon fermÃ© ce jour');
+        throw new Error('Salon fermé ce jour');
     }
 
     if (workingHours?.openTime) {
@@ -740,7 +740,8 @@ export const getClientAppointments = async (clientId: number) => {
             client: { select: { fullName: true, phoneNumber: true } },
             salon: { select: { id: true, name: true, address: true, coverImageUrl: true, googleMapsUrl: true, latitude: true, longitude: true } },
             barber: { select: { fullName: true, profile: { select: { avatarUrl: true } } } },
-            services: { include: { service: true } }
+            services: { include: { service: true } },
+            review: { select: { rating: true, comment: true, createdAt: true } }
         },
         orderBy: [{ appointmentDate: 'desc' }]
     });
@@ -769,10 +770,10 @@ export const extendAppointment = async (appointmentId: number, minutes: number, 
     if (!appointment) throw new Error("Rendez-vous moch mawjoud");
 
     if (role === 'EMPLOYEE' && appointment.barberId !== userId) {
-        throw new Error("Non autorisÃ© bch tzid wa9t");
+        throw new Error("Non autorisé bch tzid wa9t");
     }
     if (role === 'PATRON' && appointment.salon.patronId !== userId) {
-        throw new Error("Non autorisÃ© bch tzid wa9t");
+        throw new Error("Non autorisé bch tzid wa9t");
     }
 
     if (appointment.status !== 'IN_PROGRESS') {

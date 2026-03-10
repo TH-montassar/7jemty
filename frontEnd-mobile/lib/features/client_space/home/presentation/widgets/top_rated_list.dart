@@ -60,7 +60,26 @@ class _TopRatedListState extends State<TopRatedList> {
           );
         }
 
-        final topSalons = snapshot.data!;
+        final topSalons = snapshot.data!
+            .whereType<Map>()
+            .map((salon) => Map<String, dynamic>.from(salon))
+            .where((salon) =>
+                (salon['approvalStatus']?.toString().toUpperCase() ??
+                    'APPROVED') ==
+                'APPROVED')
+            .toList();
+
+        if (topSalons.isEmpty) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(20.0),
+              child: Text(
+                'Mawasalnech 7ata salon m9ayem tawa.',
+                style: TextStyle(color: Colors.grey),
+              ),
+            ),
+          );
+        }
 
         return ListView.builder(
           shrinkWrap: true,
@@ -98,7 +117,7 @@ class _TopRatedListState extends State<TopRatedList> {
                 ),
                 child: Row(
                   children: [
-                    // --- 1. التصويرة اللّي على اليسار ---
+                    // --- 1. Ø§Ù„ØªØµÙˆÙŠØ±Ø© Ø§Ù„Ù„Ù‘ÙŠ Ø¹Ù„Ù‰ Ø§Ù„ÙŠØ³Ø§Ø± ---
                     ClipRRect(
                       borderRadius: BorderRadius.circular(15),
                       child: Image.network(
@@ -126,7 +145,7 @@ class _TopRatedListState extends State<TopRatedList> {
                     ),
                     const SizedBox(width: 15),
 
-                    // --- 2. المعلومات (الاسم، العنوان، السوم، Rating) ---
+                    // --- 2. Ø§Ù„Ù…Ø¹Ù„ÙˆÙ…Ø§Øª (Ø§Ù„Ø§Ø³Ù…ØŒ Ø§Ù„Ø¹Ù†ÙˆØ§Ù†ØŒ Ø§Ù„Ø³ÙˆÙ…ØŒ Rating) ---
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -188,7 +207,7 @@ class _TopRatedListState extends State<TopRatedList> {
                     ),
                     const SizedBox(width: 10),
 
-                    // --- 3. فلسة Réserver ---
+                    // --- 3. ÙÙ„Ø³Ø© RÃ©server ---
                     SizedBox(
                       height: 35,
                       child: ElevatedButton(
