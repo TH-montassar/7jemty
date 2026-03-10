@@ -4,6 +4,7 @@ import 'package:hjamty/core/constants/app_colors.dart';
 import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:hjamty/features/client_space/appointments/data/appointment_service.dart';
 import 'package:hjamty/features/client_space/appointments/presentation/widgets/appointment_details_bottom_sheet.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class UpcomingTab extends StatefulWidget {
   const UpcomingTab({super.key});
@@ -114,6 +115,32 @@ class _UpcomingTabState extends State<UpcomingTab> {
           backgroundColor: AppColors.actionRed,
         ),
       );
+    }
+  }
+
+  Future<void> _openMaps(Map<String, dynamic> salon) async {
+    final String? googleMapsUrl = salon['googleMapsUrl'];
+    final String? address = salon['address'];
+    final String? name = salon['name'];
+
+    Uri uri;
+
+    if (googleMapsUrl != null && googleMapsUrl.isNotEmpty) {
+      uri = Uri.parse(googleMapsUrl);
+    } else if (address != null && address.isNotEmpty) {
+      uri = Uri.parse(
+        "https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(address)}",
+      );
+    } else if (name != null && name.isNotEmpty) {
+      uri = Uri.parse(
+        "https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(name)}",
+      );
+    } else {
+      return;
+    }
+
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
   }
 
@@ -356,7 +383,9 @@ class _UpcomingTabState extends State<UpcomingTab> {
                                   Expanded(
                                     child: ElevatedButton.icon(
                                       onPressed: () {
-                                        // Implement navigation to salon location if Google Maps URL is available -> MVP Phase
+                                        if (apt['salon'] != null) {
+                                          _openMaps(apt['salon']);
+                                        }
                                       },
                                       icon: const Icon(
                                         Icons.map_outlined,

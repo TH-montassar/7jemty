@@ -102,7 +102,7 @@ const Map<String, String> tn = {
   'barber_king_name': 'Barber King 👑',
   'haircut_beard_price': 'Hjema + Lihya - 25 DT',
   'barber_sami': 'Hajem: Sami',
-  'directions': 'Thneya',
+  'directions': 'Voir en maps',
   'attention': 'Rod belek',
   'confirm_cancel_appointment':
       'Met\'aked theb tbatel e-rendez-vous?\n\n⚠️ Kan tbatel 3 marrat wra baadhom comptek yetbloka.',
