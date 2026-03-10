@@ -21,6 +21,7 @@ class _AboutTabState extends State<AboutTab> {
   double? _lat;
   double? _lng;
   bool _isLoadingMap = true;
+  bool _isMapInteractive = false;
   final MapController _mapController = MapController();
 
   @override
@@ -326,8 +327,10 @@ class _AboutTabState extends State<AboutTab> {
                     options: MapOptions(
                       initialCenter: ll.LatLng(_lat!, _lng!),
                       initialZoom: 16.5,
-                      interactionOptions: const InteractionOptions(
-                        flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+                      interactionOptions: InteractionOptions(
+                        flags: _isMapInteractive 
+                            ? (InteractiveFlag.all & ~InteractiveFlag.rotate) 
+                            : InteractiveFlag.none,
                       ),
                     ),
                     children: [
@@ -360,50 +363,71 @@ class _AboutTabState extends State<AboutTab> {
                       color: AppColors.primaryBlue,
                     ),
                   ),
-                Positioned(
-                  bottom: 12,
-                  left: 0,
-                  right: 0,
-                  child: Center(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withAlpha(20),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.touch_app,
-                            size: 16,
-                            color: AppColors.primaryBlue,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            tr(context, 'click_to_interact').toUpperCase(),
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w900,
-                              color: AppColors.primaryBlue,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ],
+                if (!_isMapInteractive)
+                  Positioned.fill(
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _isMapInteractive = true;
+                        });
+                      },
+                      child: Container(
+                        color: Colors.transparent,
                       ),
                     ),
                   ),
-                ),
+                if (!_isMapInteractive)
+                  Positioned(
+                    bottom: 12,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _isMapInteractive = true;
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withAlpha(20),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.touch_app,
+                                size: 16,
+                                color: AppColors.primaryBlue,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                tr(context, 'click_to_interact').toUpperCase(),
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w900,
+                                  color: AppColors.primaryBlue,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),

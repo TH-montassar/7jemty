@@ -9,6 +9,7 @@ import 'package:hjamty/core/services/notification_service.dart';
 import 'package:hjamty/features/client_space/appointments/data/appointment_service.dart';
 import 'package:hjamty/features/client_space/appointments/presentation/widgets/appointment_details_bottom_sheet.dart';
 import 'package:hjamty/features/patron_space/appointments/presentation/widgets/no_show_flow.dart';
+import 'package:hjamty/features/patron_space/employee/pages/presentation/employee_calendar_page.dart';
 
 class EmployeeAgendaPage extends StatefulWidget {
   const EmployeeAgendaPage({super.key});
@@ -199,6 +200,20 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
             fontWeight: FontWeight.bold,
           ),
         ),
+        actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const EmployeeCalendarPage(),
+                ),
+              );
+            },
+            icon: const Icon(Icons.calendar_month, color: AppColors.primaryBlue),
+            tooltip: 'Voir en calendrier',
+          ),
+        ],
       ),
       body: _isLoading
           ? const Center(

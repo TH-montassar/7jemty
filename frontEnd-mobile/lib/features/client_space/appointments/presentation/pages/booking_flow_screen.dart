@@ -16,11 +16,15 @@ import 'dart:async';
 class BookingFlowScreen extends StatefulWidget {
   final int salonId;
   final List<int>? initialServiceIds;
+  final int? initialBarberId;
+  final bool lockInitialSelections;
 
   const BookingFlowScreen({
     super.key,
     required this.salonId,
     this.initialServiceIds,
+    this.initialBarberId,
+    this.lockInitialSelections = false,
   });
 
   @override
@@ -43,6 +47,8 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
   // User Selections
   List<int> _selectedServiceIds = [];
   int? _selectedBarberId;
+  bool _lockServicesForRebook = false;
+  bool _lockBarberForRebook = false;
   int _selectedDateIndex = 0;
   String? _selectedTime;
 
@@ -62,8 +68,10 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
     _dateScrollController = ScrollController();
 
     if (widget.initialServiceIds != null) {
-      _selectedServiceIds = List.from(widget.initialServiceIds!);
+      _selectedServiceIds = widget.initialServiceIds!.toSet().toList();
     }
+    _lockServicesForRebook =
+        widget.lockInitialSelections && _selectedServiceIds.isNotEmpty;
 
     _checkCurrentUser();
     _fetchSalonDetails();
@@ -121,6 +129,24 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
             }).toList() ??
             [];
 
+        final availableServiceIds = _services
+            .map<int?>((svc) {
+              if (svc is! Map) return null;
+              final rawId = svc['id'];
+              if (rawId is int) return rawId;
+              if (rawId is num) return rawId.toInt();
+              return int.tryParse(rawId?.toString() ?? '');
+            })
+            .whereType<int>()
+            .toSet();
+        _selectedServiceIds = _selectedServiceIds
+            .where(availableServiceIds.contains)
+            .toList();
+
+        if (_lockServicesForRebook && _selectedServiceIds.isEmpty) {
+          _lockServicesForRebook = false;
+        }
+
         // Add Patron to professional list if present in data
         if (salonData['patron'] != null) {
           _professionals.insert(0, {
@@ -131,9 +157,19 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
           });
         }
 
-        // Default to the first professional if available
+        // Keep the same barber when coming from rebook (if still available)
         if (_professionals.isNotEmpty) {
-          _selectedBarberId = _professionals.first['id'];
+          final hasInitialBarber =
+              widget.initialBarberId != null &&
+              _professionals.any((p) => p['id'] == widget.initialBarberId);
+
+          _selectedBarberId = hasInitialBarber
+              ? widget.initialBarberId
+              : _professionals.first['id'];
+          _lockBarberForRebook =
+              widget.lockInitialSelections && hasInitialBarber;
+        } else {
+          _lockBarberForRebook = false;
         }
         _isLoading = false;
       });
@@ -332,7 +368,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
         toastification.show(
           context: context,
           type: ToastificationType.success,
-          title: Text('${tr(context, 'appointment_confirmed')} âœ…'),
+          title: Text(tr(context, 'appointment_confirmed')),
           description: Text(tr(context, 'booking_created_success')),
           autoCloseDuration: const Duration(seconds: 4),
         );
@@ -453,7 +489,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                       }
 
                       if (!isPhoneChecked) {
-                        // Ã‰tape 1 : VÃ©rifier si le numÃ©ro existe
+                        // Étape 1 : Vérifier si le numéro existe
                         setDialogState(() => dialogLoading = true);
                         try {
                           final result = await AuthService.checkPhone(
@@ -468,7 +504,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
                                   content: Text(
-                                    "Ce numÃ©ro est rÃ©servÃ© . Veuillez utiliser un autre numÃ©ro client.",
+                                    "Ce numéro est réservé . Veuillez utiliser un autre numéro client.",
                                   ),
                                   backgroundColor: Colors.red,
                                 ),
@@ -513,7 +549,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                           );
                         }
                       } else {
-                        // Ã‰tape 2 : L'utilisateur existe ou veut vÃ©rifier l'OTP
+                        // Étape 2 : L'utilisateur existe ou veut vérifier l'OTP
                         setDialogState(() => dialogLoading = true);
                         try {
                           if (phoneExists) {
@@ -550,7 +586,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                               _submitBooking();
                             }
                           } else {
-                            // C'est une vÃ©rification OTP
+                            // C'est une vérification OTP
                             if (passwordController.text.length != 6) {
                               setDialogState(() => dialogLoading = false);
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -564,13 +600,13 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                               return;
                             }
 
-                            // 1. VÃ©rifier OTP
+                            // 1. Vérifier OTP
                             await AuthService.verifyOtp(
                               phoneController.text,
                               passwordController.text,
                             );
 
-                            // 2. Si Ã§a passe, on crÃ©e le compte avec l'OTP comme mot de passe et on se log.
+                            // 2. Si ça passe, on crée le compte avec l'OTP comme mot de passe et on se log.
                             final phone = phoneController.text;
                             final code = passwordController.text;
                             final generatedName =
@@ -580,7 +616,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                               fullName: generatedName,
                               phoneNumber: phone,
                               password:
-                                  code, // Utiliser le code validÃ© comme mot de passe initial
+                                  code, // Utiliser le code validé comme mot de passe initial
                             );
 
                             final result = await AuthService.loginUser(
@@ -738,16 +774,18 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                         ),
                         value: _selectedServiceIds.contains(svc['id']),
                         activeColor: AppColors.primaryBlue,
-                        onChanged: (bool? value) {
-                          setState(() {
-                            if (value == true) {
-                              _selectedServiceIds.add(svc['id']);
-                            } else {
-                              _selectedServiceIds.remove(svc['id']);
-                            }
-                          });
-                          _fetchAvailableDates(); // Re-fetch to apply duration limits
-                        },
+                        onChanged: _lockServicesForRebook
+                            ? null
+                            : (bool? value) {
+                                setState(() {
+                                  if (value == true) {
+                                    _selectedServiceIds.add(svc['id']);
+                                  } else {
+                                    _selectedServiceIds.remove(svc['id']);
+                                  }
+                                });
+                                _fetchAvailableDates(); // Re-fetch to apply duration limits
+                              },
                       ),
                     ),
                   const SizedBox(height: 25),
@@ -860,10 +898,12 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
           final p = _professionals[index];
           final isSelected = _selectedBarberId == p['id'];
           return GestureDetector(
-            onTap: () {
-              setState(() => _selectedBarberId = p['id']);
-              _fetchAvailableDates(); // Re-fetch availability for the specific barber
-            },
+            onTap: _lockBarberForRebook
+                ? null
+                : () {
+                    setState(() => _selectedBarberId = p['id']);
+                    _fetchAvailableDates(); // Re-fetch availability for the specific barber
+                  },
             child: Container(
               margin: const EdgeInsets.only(right: 20),
               child: Column(

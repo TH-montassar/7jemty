@@ -325,6 +325,8 @@ const Map<String, String> en = {
   'zero_reviews': '(0 reviews)',
   'verified_status': 'Verified',
   'status_active': 'Status: Active',
+  'waiting_approval': 'Waiting for approval',
+  'salon_not_active_popup_desc': 'Your salon is not active yet and will not appear on Home until it is approved by admin.',
   'starting_from': 'Starting from...',
   'no_reviews_yet': 'No reviews yet',
   'tab_reviews': 'Reviews',
@@ -475,4 +477,8 @@ const Map<String, String> en = {
   'feature_soon': 'Coming Soon',
   'profile_updated': 'Profile updated successfully',
   'no_email': 'No email',
+
+  // Calendar Specialists
+  'moi_patron': 'Me',
+  'all_specialists': 'All specialists',
 };

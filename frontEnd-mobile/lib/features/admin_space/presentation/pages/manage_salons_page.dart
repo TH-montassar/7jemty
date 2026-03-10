@@ -2,6 +2,7 @@ import 'package:hjamty/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:hjamty/features/admin_space/data/admin_service.dart';
+import 'package:hjamty/features/admin_space/presentation/widgets/edit_salon_dialog.dart';
 import 'package:hjamty/features/patron_space/salon_dashboard_screen.dart';
 
 class ManageSalonsPage extends StatefulWidget {
@@ -155,19 +156,11 @@ class _ManageSalonsPageState extends State<ManageSalonsPage> {
                             ),
                             IconButton(
                               icon: const Icon(Icons.edit, color: Colors.blue),
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => SalonDashboardScreen(
-                                      isPatron: true,
-                                      salonId: salon['id'],
-                                      showBackButton: true,
-                                      isAdminPeek: true,
-                                    ),
-                                  ),
-                                );
-                              },
+                              onPressed: () => showEditSalonDialog(
+                                context: context,
+                                salon: salon,
+                                onUpdateSuccess: _fetchSalons,
+                              ),
                               tooltip: 'Modifier',
                             ),
 

@@ -16,6 +16,8 @@ class SalonScreenUnifiee extends StatefulWidget {
   final bool openAddForm;
   final int? salonId;
   final bool isAdminPeek;
+  final Map<String, dynamic>? initialEditService;
+  final Map<String, dynamic>? initialEditEmployee;
 
   const SalonScreenUnifiee({
     super.key,
@@ -23,6 +25,8 @@ class SalonScreenUnifiee extends StatefulWidget {
     this.openAddForm = false,
     this.salonId,
     this.isAdminPeek = false,
+    this.initialEditService,
+    this.initialEditEmployee,
   });
 
   @override
@@ -45,6 +49,8 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
   final TextEditingController _websiteController = TextEditingController();
   final TextEditingController _descController = TextEditingController();
   final TextEditingController _specialityController = TextEditingController();
+  final TextEditingController _latController = TextEditingController();
+  final TextEditingController _lngController = TextEditingController();
 
   // Image cover
   final TextEditingController _coverImageController = TextEditingController();
@@ -140,11 +146,27 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
       initialIndex: safeIndex,
     );
 
-    if (widget.openAddForm && widget.initialTabIndex == 1) {
+    if (widget.openAddForm && widget.initialTabIndex == 1 && widget.initialEditService == null) {
       _isAddingService = true;
+    } else if (widget.initialEditService != null) {
+      _isAddingService = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _openEditServiceForm(widget.initialEditService!);
+      });
     }
-    if (widget.openAddForm && widget.initialTabIndex == 2) {
+    
+    if (widget.openAddForm && widget.initialTabIndex == 2 && widget.initialEditEmployee == null) {
       _isAddingSpecialist = true;
+    } else if (widget.initialEditEmployee != null) {
+      _isAddingSpecialist = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        // Need to ensure _openEditSpecialistForm is correctly called
+        // Since it's private and might have a different name, I'll use it
+        // Wait! Let me check if `_openEditSpecialistForm` exists.
+        // Yes, my grep search earlier showed:
+        // void _openEditSpecialistForm(Map<String, dynamic> emp) {
+        _openEditSpecialistForm(widget.initialEditEmployee!);
+      });
     }
 
     _fetchSalonData();
@@ -161,6 +183,8 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
     _coverImageController.dispose();
     _websiteController.dispose();
     _specialityController.dispose();
+    _latController.dispose();
+    _lngController.dispose();
 
     _srvNameController.dispose();
     _srvDescController.dispose();
@@ -197,6 +221,8 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
           _phoneController.text = data['contactPhone']?.toString() ?? '';
           _addressController.text = data['address']?.toString() ?? '';
           _googleMapsController.text = data['googleMapsUrl']?.toString() ?? '';
+          _latController.text = data['latitude']?.toString() ?? '';
+          _lngController.text = data['longitude']?.toString() ?? '';
           _websiteController.text = data['websiteUrl']?.toString() ?? '';
           _coverImageController.text = data['coverImageUrl']?.toString() ?? '';
           _specialityController.text = data['speciality']?.toString() ?? '';
@@ -255,6 +281,8 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
         contactPhone: _phoneController.text.trim(),
         address: _addressController.text.trim(),
         googleMapsUrl: _googleMapsController.text.trim(),
+        latitude: double.tryParse(_latController.text.trim()),
+        longitude: double.tryParse(_lngController.text.trim()),
         websiteUrl: _websiteController.text.trim(),
         coverImageUrl: _coverImageController.text.trim().isEmpty
             ? null
@@ -1170,10 +1198,44 @@ class _SalonScreenUnifieeState extends State<SalonScreenUnifiee>
               ),
             ],
           ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildLabelInput("Latitude"),
+                    _buildInputField(
+                      _latController,
+                      "Ex: 36.8065",
+                      Icons.location_searching,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildLabelInput("Longitude"),
+                    _buildInputField(
+                      _lngController,
+                      "Ex: 10.1815",
+                      Icons.location_searching,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 30),
 
           // ── Web & Réseaux sociaux ──
-          _buildLabelInput(tr(context, 'account_type')),
+          _buildLabelInput(tr(context, 'website_label')),
           _buildInputField(
             _websiteController,
             "https://www.mon-salon.com",

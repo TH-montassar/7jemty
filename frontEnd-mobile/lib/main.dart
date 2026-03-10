@@ -4,6 +4,8 @@ import 'package:hjamty/features/splash/presentation/pages/splash_screen.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:syncfusion_localizations/syncfusion_localizations.dart';
 import 'package:hjamty/core/localization/translation_service.dart';
 
 import 'package:firebase_core/firebase_core.dart';
@@ -62,6 +64,17 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: '7jemty APPP .',
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        SfGlobalLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('en', 'US'),
+        Locale('fr', 'FR'),
+        Locale('ar', 'TN'),
+      ],
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),

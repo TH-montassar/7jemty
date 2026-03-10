@@ -5,6 +5,7 @@ import 'package:hjamty/core/constants/app_colors.dart';
 import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:hjamty/core/services/fcm_service.dart';
 import 'package:hjamty/features/client_space/appointments/data/appointment_service.dart';
+import 'package:hjamty/features/client_space/appointments/presentation/pages/booking_flow_screen.dart';
 import 'package:toastification/toastification.dart';
 
 class HistoryTab extends StatefulWidget {
@@ -102,6 +103,60 @@ class _HistoryTabState extends State<HistoryTab> {
     });
   }
 
+  void _handleRebook(Map<String, dynamic> apt) {
+    final dynamic rawSalonId = apt['salonId'] ?? apt['salon']?['id'];
+    final int? salonId = rawSalonId is int
+        ? rawSalonId
+        : int.tryParse(rawSalonId?.toString() ?? '');
+
+    if (salonId == null) {
+      toastification.show(
+        context: context,
+        type: ToastificationType.error,
+        title: Text(tr(context, 'error_title')),
+        description: const Text('Mochkla fil ma3loumet mta3 rendez-vous.'),
+        autoCloseDuration: const Duration(seconds: 3),
+      );
+      return;
+    }
+
+    final services = apt['services'] as List<dynamic>? ?? [];
+    final serviceIds = services
+        .map<int?>((s) {
+          if (s is! Map) return null;
+          final serviceMap = Map<String, dynamic>.from(s);
+          final dynamic nestedService = serviceMap['service'];
+          final dynamic rawServiceId =
+              serviceMap['serviceId'] ??
+              (nestedService is Map
+                  ? Map<String, dynamic>.from(nestedService)['id']
+                  : null);
+
+          if (rawServiceId is int) return rawServiceId;
+          return int.tryParse(rawServiceId?.toString() ?? '');
+        })
+        .whereType<int>()
+        .toSet()
+        .toList();
+
+    final dynamic rawBarberId = apt['barberId'] ?? apt['barber']?['id'];
+    final int? barberId = rawBarberId is int
+        ? rawBarberId
+        : int.tryParse(rawBarberId?.toString() ?? '');
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BookingFlowScreen(
+          salonId: salonId,
+          initialServiceIds: serviceIds.isEmpty ? null : serviceIds,
+          initialBarberId: barberId,
+          lockInitialSelections: true,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -154,6 +209,11 @@ class _HistoryTabState extends State<HistoryTab> {
                       final statusText = isCancelled
                           ? tr(context, 'status_cancelled')
                           : tr(context, 'status_completed');
+                      final review = apt['review'] as Map<String, dynamic>?;
+                      final reviewRating =
+                          (review?['rating'] as num?)?.toInt() ?? 0;
+                      final reviewComment =
+                          (review?['comment'] ?? '').toString().trim();
 
                       return Container(
                         margin: const EdgeInsets.only(bottom: 15),
@@ -238,7 +298,7 @@ class _HistoryTabState extends State<HistoryTab> {
                               const SizedBox(height: 15),
                               Row(
                                 children: [
-                                  if (apt['review'] == null) ...[
+                                  if (review == null) ...[
                                     Expanded(
                                       child: OutlinedButton(
                                         onPressed: () async {
@@ -285,10 +345,72 @@ class _HistoryTabState extends State<HistoryTab> {
                                       ),
                                     ),
                                     const SizedBox(width: 10),
+                                  ] else ...[
+                                    Expanded(
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 10,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.amber.withValues(
+                                            alpha: 0.1,
+                                          ),
+                                          borderRadius: BorderRadius.circular(10),
+                                          border: Border.all(
+                                            color: Colors.amber.withValues(
+                                              alpha: 0.4,
+                                            ),
+                                          ),
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                const Icon(
+                                                  Icons.star,
+                                                  color: Colors.amber,
+                                                  size: 16,
+                                                ),
+                                                const SizedBox(width: 6),
+                                                Text(
+                                                  reviewRating > 0
+                                                      ? '$reviewRating/5'
+                                                      : tr(
+                                                          context,
+                                                          'thank_you_for_review',
+                                                        ),
+                                                  style: TextStyle(
+                                                    color: Colors.amber[800],
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 12,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            if (reviewComment.isNotEmpty) ...[
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                reviewComment,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: const TextStyle(
+                                                  color: Colors.black54,
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                            ],
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
                                   ],
                                   Expanded(
                                     child: ElevatedButton(
-                                      onPressed: () {},
+                                      onPressed: () => _handleRebook(apt),
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: AppColors.primaryBlue
                                             .withValues(alpha: 0.1),

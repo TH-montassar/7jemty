@@ -52,6 +52,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
   bool _isFavorite = false;
   bool _isLoadingFavorite = false;
   StreamSubscription<Map<String, dynamic>>? _fcmSubscription;
+  bool _hasShownInactiveSalonPopup = false;
 
   @override
   void initState() {
@@ -80,6 +81,35 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
     super.dispose();
   }
 
+  void _maybeShowInactiveSalonPopup(Map<String, dynamic> salonData) {
+    if (!mounted || _hasShownInactiveSalonPopup) return;
+    if (!widget.isPatron || widget.salonId != null) return;
+
+    final status =
+        (salonData['approvalStatus'] ?? 'PENDING').toString().toUpperCase();
+    if (status == 'APPROVED') return;
+
+    _hasShownInactiveSalonPopup = true;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          title: Text(tr(context, 'information_title')),
+          content: Text(tr(context, 'salon_not_active_popup_desc')),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(tr(context, 'ok_btn')),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
   Future<void> _fetchSalonData() async {
     try {
       final response = (widget.isPatron && widget.salonId == null)
@@ -99,6 +129,8 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
         _isFavorite = isFav;
         _isLoading = false;
       });
+
+      _maybeShowInactiveSalonPopup(response);
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
@@ -641,109 +673,113 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
         final String? description = service['description'];
         final String? imageUrl = service['imageUrl'];
 
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              // Image or icon
-              ClipRRect(
-                borderRadius: const BorderRadius.horizontal(
-                  left: Radius.circular(16),
+        return GestureDetector(
+          onTap: () => _showServiceDialog(context, service),
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
                 ),
-                child: imageUrl != null && imageUrl.isNotEmpty
-                    ? Image.network(
-                        CloudinaryUtils.getOptimizedUrl(imageUrl, width: 300) ??
-                            '',
-                        width: 90,
-                        height: 90,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => _servicePlaceholder(),
-                      )
-                    : _servicePlaceholder(),
-              ),
-              // Info
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 12,
+              ],
+            ),
+            child: Row(
+              children: [
+                // Image or icon
+                ClipRRect(
+                  borderRadius: const BorderRadius.horizontal(
+                    left: Radius.circular(16),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        name,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                          color: AppColors.textDark,
-                        ),
-                      ),
-                      if (description != null && description.isNotEmpty) ...[
-                        const SizedBox(height: 4),
+                  child: imageUrl != null && imageUrl.isNotEmpty
+                      ? Image.network(
+                          CloudinaryUtils.getOptimizedUrl(
+                                imageUrl,
+                                width: 300,
+                              ) ??
+                              '',
+                          width: 90,
+                          height: 90,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => _servicePlaceholder(),
+                        )
+                      : _servicePlaceholder(),
+                ),
+                // Info
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 12,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                         Text(
-                          description,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                          name,
                           style: const TextStyle(
-                            color: Colors.grey,
-                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                            color: AppColors.textDark,
                           ),
                         ),
-                      ],
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.primaryBlue.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              "${price.toStringAsFixed(0)} DT",
-                              style: const TextStyle(
-                                color: AppColors.primaryBlue,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Icon(
-                            Icons.access_time,
-                            size: 14,
-                            color: Colors.grey.shade500,
-                          ),
-                          const SizedBox(width: 4),
+                        if (description != null && description.isNotEmpty) ...[
+                          const SizedBox(height: 4),
                           Text(
-                            "$duration min",
-                            style: TextStyle(
-                              color: Colors.grey.shade500,
+                            description,
+                            style: const TextStyle(
+                              color: Colors.grey,
                               fontSize: 12,
                             ),
                           ),
                         ],
-                      ),
-                    ],
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.primaryBlue.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                "${price.toStringAsFixed(0)} DT",
+                                style: const TextStyle(
+                                  color: AppColors.primaryBlue,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Icon(
+                              Icons.access_time,
+                              size: 14,
+                              color: Colors.grey.shade500,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              "$duration min",
+                              style: TextStyle(
+                                color: Colors.grey.shade500,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
@@ -1259,99 +1295,66 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                 final emp = specialists[index];
                 final name =
                     (emp['name'] ?? tr(context, 'specialist_role')) as String;
-                final role =
-                    (emp['role'] ?? tr(context, 'specialist_role')) as String;
-                final bio = emp['bio'] as String?;
                 final imageUrl = emp['imageUrl'] as String?;
 
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 15),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 28,
-                        backgroundColor: AppColors.primaryBlue.withOpacity(0.1),
-                        backgroundImage: imageUrl != null
-                            ? NetworkImage(
-                                CloudinaryUtils.getOptimizedUrl(
-                                      imageUrl,
-                                      width: 200,
-                                    ) ??
-                                    '',
-                              )
-                            : null,
-                        child: imageUrl == null
-                            ? Text(
-                                name.isNotEmpty
-                                    ? name.substring(0, 1).toUpperCase()
-                                    : '?',
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.primaryBlue,
-                                ),
-                              )
-                            : null,
-                      ),
-                      const SizedBox(width: 15),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              name,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                                color: AppColors.textDark,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 3,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.primaryBlue.withOpacity(0.08),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                role,
-                                style: const TextStyle(
-                                  color: AppColors.primaryBlue,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                            if (bio != null) ...[
-                              const SizedBox(height: 6),
-                              Text(
-                                bio,
-                                style: const TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 13,
-                                  height: 1.4,
-                                ),
-                              ),
-                            ],
-                          ],
+                return GestureDetector(
+                  onTap: () => _showSpecialistDialog(context, emp),
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 15),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.04),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 28,
+                          backgroundColor: AppColors.primaryBlue.withOpacity(
+                            0.1,
+                          ),
+                          backgroundImage: imageUrl != null
+                              ? NetworkImage(
+                                  CloudinaryUtils.getOptimizedUrl(
+                                        imageUrl,
+                                        width: 200,
+                                      ) ??
+                                      '',
+                                )
+                              : null,
+                          child: imageUrl == null
+                              ? Text(
+                                  name.isNotEmpty
+                                      ? name.substring(0, 1).toUpperCase()
+                                      : '?',
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.primaryBlue,
+                                  ),
+                                )
+                              : null,
+                        ),
+                        const SizedBox(width: 15),
+                        Expanded(
+                          child: Text(
+                            name,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: AppColors.textDark,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 );
               },
@@ -1597,4 +1600,358 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
       ],
     );
   }
+
+  void _showServiceDialog(BuildContext context, Map<String, dynamic> service) {
+    final String name = service['name'] ?? 'Service';
+    final double price = (service['price'] as num?)?.toDouble() ?? 0.0;
+    final int duration = (service['durationMinutes'] as num?)?.toInt() ?? 0;
+    final String? description = service['description'];
+    final String? imageUrl = service['imageUrl'];
+
+    showDialog(
+      context: context,
+      builder: (BuildContext ctx) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (imageUrl != null && imageUrl.isNotEmpty)
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(20),
+                  ),
+                  child: Image.network(
+                    CloudinaryUtils.getOptimizedUrl(imageUrl, width: 400) ?? '',
+                    height: 200,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) =>
+                        SizedBox(height: 120, child: _servicePlaceholder()),
+                  ),
+                )
+              else
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(20),
+                  ),
+                  child: SizedBox(height: 120, child: _servicePlaceholder()),
+                ),
+              Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textDark,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryBlue.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            "${price.toStringAsFixed(0)} DT",
+                            style: const TextStyle(
+                              color: AppColors.primaryBlue,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Icon(
+                          Icons.access_time,
+                          size: 18,
+                          color: Colors.grey.shade500,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          "$duration min",
+                          style: TextStyle(
+                            color: Colors.grey.shade500,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (description != null && description.isNotEmpty) ...[
+                      const SizedBox(height: 16),
+                      Text(
+                        description,
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 15,
+                          height: 1.5,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 24),
+                    if (widget.isPatron || widget.isAdminPeek)
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.pop(ctx);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => SalonScreenUnifiee(
+                                  initialTabIndex: 1, // Services tab
+                                  salonId: widget.salonId,
+                                  isAdminPeek: widget.isAdminPeek,
+                                  initialEditService: service,
+                                ),
+                              ),
+                            ).then((_) => _fetchSalonData());
+                          },
+                          icon: const Icon(Icons.edit, color: Colors.white),
+                          label: Text(
+                            tr(context, 'edit'),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryBlue,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                        ),
+                      )
+                    else
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.grey.shade200,
+                            foregroundColor: Colors.black87,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                          child: const Text('Fermer'),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showSpecialistDialog(BuildContext context, Map<String, dynamic> emp) {
+    final String name =
+        (emp['name'] ?? tr(context, 'specialist_role')) as String;
+    final String role =
+        (emp['role'] ?? tr(context, 'specialist_role')) as String;
+    final String? bio = emp['bio'] as String?;
+    final String? imageUrl = emp['imageUrl'] as String?;
+    final String? phone = emp['phoneNumber'] as String?;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext ctx) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            name,
+                            style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textDark,
+                            ),
+                            textAlign: TextAlign.left,
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryBlue.withOpacity(0.08),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              role,
+                              style: const TextStyle(
+                                color: AppColors.primaryBlue,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          if (phone != null && phone.isNotEmpty) ...[
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primaryBlue.withOpacity(
+                                      0.1,
+                                    ),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.phone,
+                                    color: AppColors.primaryBlue,
+                                    size: 18,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    phone,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.textDark,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                          if (bio != null && bio.isNotEmpty) ...[
+                            const SizedBox(height: 14),
+                            Text(
+                              bio,
+                              style: const TextStyle(
+                                color: Colors.grey,
+                                fontSize: 15,
+                                height: 1.5,
+                              ),
+                              textAlign: TextAlign.left,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    CircleAvatar(
+                      radius: 50,
+                      backgroundColor: AppColors.primaryBlue.withOpacity(0.1),
+                      backgroundImage: imageUrl != null && imageUrl.isNotEmpty
+                          ? NetworkImage(
+                              CloudinaryUtils.getOptimizedUrl(
+                                    imageUrl,
+                                    width: 300,
+                                  ) ??
+                                  '',
+                            )
+                          : null,
+                      child: (imageUrl == null || imageUrl.isEmpty)
+                          ? Text(
+                              name.isNotEmpty
+                                  ? name.substring(0, 1).toUpperCase()
+                                  : '?',
+                              style: const TextStyle(
+                                fontSize: 40,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primaryBlue,
+                              ),
+                            )
+                          : null,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                if (widget.isPatron || widget.isAdminPeek)
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => SalonScreenUnifiee(
+                              initialTabIndex: 2, // Equipe tab
+                              salonId: widget.salonId,
+                              isAdminPeek: widget.isAdminPeek,
+                              initialEditEmployee: emp,
+                            ),
+                          ),
+                        ).then((_) => _fetchSalonData());
+                      },
+                      icon: const Icon(Icons.edit, color: Colors.white),
+                      label: Text(
+                        tr(context, 'edit'),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primaryBlue,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey.shade200,
+                        foregroundColor: Colors.black87,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: const Text('Fermer'),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
+
+
