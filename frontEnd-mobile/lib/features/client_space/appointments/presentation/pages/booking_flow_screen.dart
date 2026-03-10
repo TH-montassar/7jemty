@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+ï»¿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -489,7 +489,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                       }
 
                       if (!isPhoneChecked) {
-                        // Étape 1 : Vérifier si le numéro existe
+                        // Ã‰tape 1 : VÃ©rifier si le numÃ©ro existe
                         setDialogState(() => dialogLoading = true);
                         try {
                           final result = await AuthService.checkPhone(
@@ -504,7 +504,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
                                   content: Text(
-                                    "Ce numéro est réservé . Veuillez utiliser un autre numéro client.",
+                                    "Ce numÃ©ro est rÃ©servÃ© . Veuillez utiliser un autre numÃ©ro client.",
                                   ),
                                   backgroundColor: Colors.red,
                                 ),
@@ -549,7 +549,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                           );
                         }
                       } else {
-                        // Étape 2 : L'utilisateur existe ou veut vérifier l'OTP
+                        // Ã‰tape 2 : L'utilisateur existe ou veut vÃ©rifier l'OTP
                         setDialogState(() => dialogLoading = true);
                         try {
                           if (phoneExists) {
@@ -586,7 +586,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                               _submitBooking();
                             }
                           } else {
-                            // C'est une vérification OTP
+                            // C'est une vÃ©rification OTP
                             if (passwordController.text.length != 6) {
                               setDialogState(() => dialogLoading = false);
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -600,13 +600,13 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                               return;
                             }
 
-                            // 1. Vérifier OTP
+                            // 1. VÃ©rifier OTP
                             await AuthService.verifyOtp(
                               phoneController.text,
                               passwordController.text,
                             );
 
-                            // 2. Si ça passe, on crée le compte avec l'OTP comme mot de passe et on se log.
+                            // 2. Si Ã§a passe, on crÃ©e le compte avec l'OTP comme mot de passe et on se log.
                             final phone = phoneController.text;
                             final code = passwordController.text;
                             final generatedName =
@@ -616,7 +616,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                               fullName: generatedName,
                               phoneNumber: phone,
                               password:
-                                  code, // Utiliser le code validé comme mot de passe initial
+                                  code, // Utiliser le code validÃ© comme mot de passe initial
                             );
 
                             final result = await AuthService.loginUser(
