@@ -28,14 +28,15 @@ class NextRdvCard extends StatelessWidget {
 
     final formattedDate = DateFormat('dd MMM - HH:mm', 'fr_FR').format(date);
 
-    final status = (apt['status'] as String? ?? 'PENDING').toUpperCase();
+    final rawStatus = (apt['status'] as String? ?? 'PENDING').toUpperCase();
+    final status = rawStatus == 'ARRIVED' ? 'IN_PROGRESS' : rawStatus;
     Color statusColor = status == 'CONFIRMED'
         ? const Color(0xFF2ECA7F)
         : (status == 'IN_PROGRESS' ? AppColors.primaryBlue : Colors.orange);
     String statusText = status == 'CONFIRMED'
         ? tr(context, 'status_confirmed')
         : (status == 'IN_PROGRESS'
-              ? tr(context, 'status_in_progress', args: [])
+              ? tr(context, 'status_in_progress')
               : tr(context, 'status_pending'));
 
     // Countdown logic

@@ -20,6 +20,19 @@ class _UpcomingTabState extends State<UpcomingTab> {
   String _selectedStatus = 'All';
   DateTime? _selectedDate;
 
+  String _normalizeStatus(dynamic rawStatus) {
+    final status = (rawStatus as String? ?? '').toUpperCase();
+    // Client UI does not expose ARRIVED, so treat it as in-progress.
+    return status == 'ARRIVED' ? 'IN_PROGRESS' : status;
+  }
+
+  bool _isUpcomingStatus(dynamic rawStatus) {
+    final status = _normalizeStatus(rawStatus);
+    return status == 'PENDING' ||
+        status == 'CONFIRMED' ||
+        status == 'IN_PROGRESS';
+  }
+
   @override
   void initState() {
     super.initState();
@@ -31,13 +44,7 @@ class _UpcomingTabState extends State<UpcomingTab> {
       final data = await AppointmentService.getClientAppointments();
       if (!mounted) return;
       _allAppointments = data
-          .where(
-            (a) => [
-              'PENDING',
-              'CONFIRMED',
-              'ARRIVED',
-            ].contains((a['status'] as String).toUpperCase()),
-          )
+          .where((a) => _isUpcomingStatus(a['status']))
           .toList();
 
       _applyFilters();
@@ -54,7 +61,7 @@ class _UpcomingTabState extends State<UpcomingTab> {
     // Filter by Status
     if (_selectedStatus != 'All') {
       filtered = filtered.where((a) {
-        final status = (a['status'] as String).toUpperCase();
+        final status = _normalizeStatus(a['status']);
         return status == _selectedStatus.toUpperCase();
       }).toList();
     }
@@ -74,8 +81,8 @@ class _UpcomingTabState extends State<UpcomingTab> {
     // Sort
     filtered.sort((a, b) {
       int getPriority(String? s) {
-        final st = (s ?? '').toUpperCase();
-        if (st == 'CONFIRMED' || st == 'IN_PROGRESS' || st == 'ARRIVED') {
+        final st = _normalizeStatus(s);
+        if (st == 'CONFIRMED' || st == 'IN_PROGRESS') {
           return 1;
         }
         if (st == 'PENDING') return 2;
@@ -207,7 +214,7 @@ class _UpcomingTabState extends State<UpcomingTab> {
                         'fr_FR',
                       ).format(date);
 
-                      final status = (apt['status'] as String).toUpperCase();
+                      final status = _normalizeStatus(apt['status']);
                       Color statusColor = status == 'CONFIRMED'
                           ? const Color(0xFF2ECA7F)
                           : (status == 'IN_PROGRESS'
@@ -216,7 +223,7 @@ class _UpcomingTabState extends State<UpcomingTab> {
                       String statusText = status == 'CONFIRMED'
                           ? tr(context, 'status_confirmed')
                           : (status == 'IN_PROGRESS'
-                                ? tr(context, 'status_in_progress', args: [])
+                                ? tr(context, 'status_in_progress')
                                 : tr(context, 'status_pending'));
 
                       // Countdown logic
@@ -686,6 +693,20 @@ class _UpcomingTabState extends State<UpcomingTab> {
                         ? AppColors.primaryBlue
                         : AppColors.textDark,
                     fontWeight: _selectedStatus == 'Pending'
+                        ? FontWeight.bold
+                        : FontWeight.w500,
+                  ),
+                ),
+              ),
+              PopupMenuItem<String>(
+                value: 'In_Progress',
+                child: Text(
+                  tr(context, 'status_in_progress'),
+                  style: TextStyle(
+                    color: _selectedStatus == 'In_Progress'
+                        ? AppColors.primaryBlue
+                        : AppColors.textDark,
+                    fontWeight: _selectedStatus == 'In_Progress'
                         ? FontWeight.bold
                         : FontWeight.w500,
                   ),

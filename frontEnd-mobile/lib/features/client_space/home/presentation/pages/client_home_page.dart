@@ -50,19 +50,61 @@ class _ClientHomePageState extends State<ClientHomePage> {
     super.dispose();
   }
 
+  String _normalizeStatus(dynamic rawStatus) {
+    final status = (rawStatus as String? ?? '').toUpperCase();
+    return status == 'ARRIVED' ? 'IN_PROGRESS' : status;
+  }
+
+  int _statusPriority(String status) {
+    if (status == 'IN_PROGRESS') return 0;
+    if (status == 'CONFIRMED') return 1;
+    return 2;
+  }
+
+  DateTime _safeAppointmentDate(Map<String, dynamic> appt) {
+    return DateTime.tryParse((appt['appointmentDate'] ?? '').toString())
+            ?.toLocal() ??
+        DateTime.fromMillisecondsSinceEpoch(0);
+  }
+
+  Map<String, dynamic>? _pickNextAppointment(List<dynamic> appointments) {
+    final activeAppointments = appointments
+        .whereType<Map>()
+        .map((a) => Map<String, dynamic>.from(a))
+        .where((a) {
+          final status = _normalizeStatus(a['status']);
+          return status == 'IN_PROGRESS' || status == 'CONFIRMED';
+        })
+        .toList();
+
+    if (activeAppointments.isEmpty) {
+      return null;
+    }
+
+    activeAppointments.sort((a, b) {
+      final statusA = _normalizeStatus(a['status']);
+      final statusB = _normalizeStatus(b['status']);
+      final priorityCompare = _statusPriority(statusA).compareTo(
+        _statusPriority(statusB),
+      );
+      if (priorityCompare != 0) {
+        return priorityCompare;
+      }
+
+      final dateA = _safeAppointmentDate(a);
+      final dateB = _safeAppointmentDate(b);
+      return dateA.compareTo(dateB);
+    });
+
+    return activeAppointments.first;
+  }
+
   Future<void> _fetchAppointmentsSilent() async {
     if (!_isLoggedIn) return;
 
     try {
       final appointments = await AppointmentService.getClientAppointments();
-
-      Map<String, dynamic>? upcoming;
-      for (var appt in appointments) {
-        if (appt['status'] == 'CONFIRMED') {
-          upcoming = appt;
-          break;
-        }
-      }
+      final upcoming = _pickNextAppointment(appointments);
 
       if (mounted) {
         setState(() {
@@ -99,14 +141,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
         final userDataResp = await AuthService.getMe();
         final appointments = await AppointmentService.getClientAppointments();
 
-        // Find nearest CONFIRMED appointment
-        Map<String, dynamic>? upcoming;
-        for (var appt in appointments) {
-          if (appt['status'] == 'CONFIRMED') {
-            upcoming = appt;
-            break;
-          }
-        }
+        final upcoming = _pickNextAppointment(appointments);
 
         if (mounted) {
           setState(() {

@@ -50,6 +50,7 @@ class _AppointmentDetailsSheet extends StatelessWidget {
     final barberName = barber['fullName'] ?? 'Non assigné';
 
     final statusStr = (appointment['status'] ?? '').toString().toUpperCase();
+    final normalizedStatus = statusStr == 'ARRIVED' ? 'IN_PROGRESS' : statusStr;
     final totalPrice = appointment['totalPrice'] ?? 0;
     final totalDuration = appointment['totalDurationMinutes'] ?? 0;
 
@@ -109,9 +110,9 @@ class _AppointmentDetailsSheet extends StatelessWidget {
 
     // Status config
     Color statusColor = Colors.grey;
-    String statusText = statusStr;
+    String statusText = normalizedStatus;
 
-    switch (statusStr) {
+    switch (normalizedStatus) {
       case 'PENDING':
         statusColor = Colors.orange;
         statusText = tr(context, 'status_pending');
