@@ -20,13 +20,25 @@ class _UpcomingTabState extends State<UpcomingTab> {
   List<dynamic> _allAppointments = [];
   List<dynamic> _appointments = [];
   String _selectedStatus = 'All';
-  DateTime? _selectedDate;
+  String _sortField = 'APPOINTMENT_DATE';
+  bool _sortAscending = true;
   StreamSubscription<Map<String, dynamic>>? _fcmSubscription;
 
   String _normalizeStatus(dynamic rawStatus) {
     final status = (rawStatus as String? ?? '').toUpperCase();
     // Client UI does not expose ARRIVED, so treat it as in-progress.
     return status == 'ARRIVED' ? 'IN_PROGRESS' : status;
+  }
+
+  DateTime? _safeDate(dynamic raw) {
+    if (raw == null) return null;
+    return DateTime.tryParse(raw.toString())?.toLocal();
+  }
+
+  DateTime? _createdDate(dynamic appointment) {
+    return _safeDate(appointment['createdAt']) ??
+        _safeDate(appointment['created_at']) ??
+        _safeDate(appointment['createdDate']);
   }
 
   bool _isUpcomingStatus(dynamic rawStatus) {
@@ -84,38 +96,27 @@ class _UpcomingTabState extends State<UpcomingTab> {
       }).toList();
     }
 
-    // Filter by Date
-    if (_selectedDate != null) {
-      filtered = filtered.where((a) {
-        final dateStr = a['appointmentDate'];
-        if (dateStr == null) return false;
-        final date = DateTime.parse(dateStr).toLocal();
-        return date.year == _selectedDate!.year &&
-            date.month == _selectedDate!.month &&
-            date.day == _selectedDate!.day;
-      }).toList();
-    }
-
     // Sort
     filtered.sort((a, b) {
-      int getPriority(String? s) {
-        final st = _normalizeStatus(s);
-        if (st == 'CONFIRMED' || st == 'IN_PROGRESS') {
-          return 1;
+      DateTime getSortDate(dynamic appointment) {
+        if (_sortField == 'CREATED_AT') {
+          return _createdDate(appointment) ??
+              _safeDate(appointment['appointmentDate']) ??
+              DateTime.fromMillisecondsSinceEpoch(0);
         }
-        if (st == 'PENDING') return 2;
-        return 3;
+        return _safeDate(appointment['appointmentDate']) ??
+            _createdDate(appointment) ??
+            DateTime.fromMillisecondsSinceEpoch(0);
       }
 
-      final pA = getPriority(a['status']);
-      final pB = getPriority(b['status']);
-      if (pA != pB) return pA.compareTo(pB);
+      final compare = getSortDate(a).compareTo(getSortDate(b));
+      if (compare != 0) {
+        return _sortAscending ? compare : -compare;
+      }
 
-      final dateA =
-          DateTime.tryParse(a['appointmentDate'] ?? '') ?? DateTime.now();
-      final dateB =
-          DateTime.tryParse(b['appointmentDate'] ?? '') ?? DateTime.now();
-      return dateA.compareTo(dateB);
+      final statusA = _normalizeStatus(a['status']);
+      final statusB = _normalizeStatus(b['status']);
+      return statusA.compareTo(statusB);
     });
 
     setState(() {
@@ -579,77 +580,13 @@ class _UpcomingTabState extends State<UpcomingTab> {
         padding: const EdgeInsets.symmetric(horizontal: 20),
         physics: const BouncingScrollPhysics(),
         children: [
-          // Date Filter Chip
-          GestureDetector(
-            onTap: () async {
-              final date = await showDatePicker(
-                context: context,
-                initialDate: _selectedDate ?? DateTime.now(),
-                firstDate: DateTime.now().subtract(const Duration(days: 30)),
-                lastDate: DateTime.now().add(const Duration(days: 365)),
-                builder: (context, child) {
-                  return Theme(
-                    data: Theme.of(context).copyWith(
-                      colorScheme: const ColorScheme.light(
-                        primary: AppColors.primaryBlue,
-                        onPrimary: Colors.white,
-                        onSurface: AppColors.textDark,
-                      ),
-                    ),
-                    child: child!,
-                  );
-                },
-              );
-              if (date != null) {
-                setState(() => _selectedDate = date);
-                _applyFilters();
-              }
-            },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              margin: const EdgeInsets.only(right: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: _selectedDate != null
-                      ? AppColors.primaryBlue
-                      : Colors.grey.shade300,
-                  width: _selectedDate != null ? 1.5 : 1,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Text(
-                    _selectedDate != null
-                        ? DateFormat('dd MMM yyyy').format(_selectedDate!)
-                        : tr(context, 'filter_by_date'),
-                    style: TextStyle(
-                      color: AppColors.textDark,
-                      fontWeight: _selectedDate != null
-                          ? FontWeight.bold
-                          : FontWeight.w500,
-                      fontSize: 13,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Icon(
-                    Icons.keyboard_arrow_down,
-                    size: 20,
-                    color: AppColors.textDark,
-                  ),
-                ],
-              ),
-            ),
-          ),
-
           // All Chip
           GestureDetector(
             onTap: () {
               setState(() {
                 _selectedStatus = 'All';
-                _selectedDate = null;
+                _sortField = 'APPOINTMENT_DATE';
+                _sortAscending = true;
               });
               _applyFilters();
             },
@@ -770,6 +707,108 @@ class _UpcomingTabState extends State<UpcomingTab> {
                     Icons.keyboard_arrow_down,
                     size: 20,
                     color: AppColors.textDark,
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Sort Field Dropdown
+          PopupMenuButton<String>(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
+            color: Colors.white,
+            offset: const Offset(0, 45),
+            onSelected: (String value) {
+              setState(() => _sortField = value);
+              _applyFilters();
+            },
+            itemBuilder: (BuildContext context) => const <PopupMenuEntry<String>>[
+              PopupMenuItem<String>(
+                value: 'APPOINTMENT_DATE',
+                child: Text('Date RDV'),
+              ),
+              PopupMenuItem<String>(
+                value: 'CREATED_AT',
+                child: Text('Date creation'),
+              ),
+            ],
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              margin: const EdgeInsets.only(right: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: _sortField != 'APPOINTMENT_DATE'
+                      ? AppColors.primaryBlue
+                      : Colors.grey.shade300,
+                  width: _sortField != 'APPOINTMENT_DATE' ? 1.5 : 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    _sortField == 'CREATED_AT' ? 'Date creation' : 'Date RDV',
+                    style: TextStyle(
+                      color: AppColors.textDark,
+                      fontWeight: _sortField != 'APPOINTMENT_DATE'
+                          ? FontWeight.bold
+                          : FontWeight.w500,
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.keyboard_arrow_down,
+                    size: 20,
+                    color: AppColors.textDark,
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Sort Direction
+          GestureDetector(
+            onTap: () {
+              setState(() => _sortAscending = !_sortAscending);
+              _applyFilters();
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              margin: const EdgeInsets.only(right: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: !_sortAscending
+                      ? AppColors.primaryBlue
+                      : Colors.grey.shade300,
+                  width: !_sortAscending ? 1.5 : 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    _sortAscending
+                        ? Icons.arrow_upward
+                        : Icons.arrow_downward,
+                    size: 16,
+                    color: AppColors.textDark,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    _sortAscending ? 'Asc' : 'Desc',
+                    style: TextStyle(
+                      color: AppColors.textDark,
+                      fontWeight:
+                          !_sortAscending ? FontWeight.bold : FontWeight.w500,
+                      fontSize: 13,
+                    ),
                   ),
                 ],
               ),
