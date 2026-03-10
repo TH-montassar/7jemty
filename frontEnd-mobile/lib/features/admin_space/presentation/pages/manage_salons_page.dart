@@ -153,6 +153,23 @@ class _ManageSalonsPageState extends State<ManageSalonsPage> {
                                   _showStatsDialog(salon['id'], salon['name']),
                               tooltip: 'Statistiques',
                             ),
+                            IconButton(
+                              icon: const Icon(Icons.edit, color: Colors.blue),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => SalonDashboardScreen(
+                                      isPatron: true,
+                                      salonId: salon['id'],
+                                      showBackButton: true,
+                                      isAdminPeek: true,
+                                    ),
+                                  ),
+                                );
+                              },
+                              tooltip: 'Modifier',
+                            ),
 
                             const Spacer(),
                             if (status == 'PENDING')
