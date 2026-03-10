@@ -56,11 +56,17 @@ class NextRdvCard extends StatelessWidget {
             (difference.inMinutes % 60).toString(),
           ],
         );
-      } else {
+      } else if (difference.inMinutes > 0) {
         countdownText = tr(
           context,
           'time_remaining_min',
           args: [difference.inMinutes.toString()],
+        );
+      } else {
+        countdownText = tr(
+          context,
+          'time_remaining_sec',
+          args: [difference.inSeconds.toString()],
         );
       }
     }

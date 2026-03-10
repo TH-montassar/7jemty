@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:hjamty/core/constants/app_colors.dart';
 import 'package:hjamty/core/localization/translation_service.dart';
+import 'package:hjamty/core/services/fcm_service.dart';
 import 'package:hjamty/features/client_space/appointments/data/appointment_service.dart';
 import 'package:hjamty/features/client_space/appointments/presentation/widgets/appointment_details_bottom_sheet.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -19,6 +21,7 @@ class _UpcomingTabState extends State<UpcomingTab> {
   List<dynamic> _appointments = [];
   String _selectedStatus = 'All';
   DateTime? _selectedDate;
+  StreamSubscription<Map<String, dynamic>>? _fcmSubscription;
 
   String _normalizeStatus(dynamic rawStatus) {
     final status = (rawStatus as String? ?? '').toUpperCase();
@@ -36,7 +39,22 @@ class _UpcomingTabState extends State<UpcomingTab> {
   @override
   void initState() {
     super.initState();
+    _setupFcmListener();
     _fetchAppointments();
+  }
+
+  void _setupFcmListener() {
+    _fcmSubscription = FcmService.messageStream.listen((data) {
+      if (data['type'] == 'APPOINTMENT_UPDATED') {
+        _fetchAppointments();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _fcmSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _fetchAppointments() async {
@@ -245,11 +263,17 @@ class _UpcomingTabState extends State<UpcomingTab> {
                               (difference.inMinutes % 60).toString(),
                             ],
                           );
-                        } else {
+                        } else if (difference.inMinutes > 0) {
                           countdownText = tr(
                             context,
                             'time_remaining_min',
                             args: [difference.inMinutes.toString()],
+                          );
+                        } else {
+                          countdownText = tr(
+                            context,
+                            'time_remaining_sec',
+                            args: [difference.inSeconds.toString()],
                           );
                         }
                       }

@@ -69,6 +69,7 @@ const Map<String, String> en = {
   'time_passed': 'Time has passed',
   'time_remaining_hours_min': '{0}h {1}min remaining',
   'time_remaining_min': '{0}min remaining',
+  'time_remaining_sec': '{0}s remaining',
 
   // Search Page
   'search_hint': 'Search for a salon, service...',
