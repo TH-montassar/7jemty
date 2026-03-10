@@ -37,6 +37,7 @@ const Map<String, String> tn = {
   'time_passed': 'L\'wa9t r7el',
   'time_remaining_hours_min': 'Mazal {0}h {1}min',
   'time_remaining_min': 'Mazal {0}min',
+  'time_remaining_sec': 'Mazal {0}s',
 
   // Filters
   'all': 'Lkol',

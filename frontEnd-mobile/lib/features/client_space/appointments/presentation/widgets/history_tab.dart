@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:hjamty/core/constants/app_colors.dart';
 import 'package:hjamty/core/localization/translation_service.dart';
+import 'package:hjamty/core/services/fcm_service.dart';
 import 'package:hjamty/features/client_space/appointments/data/appointment_service.dart';
 import 'package:toastification/toastification.dart';
 
@@ -18,11 +20,27 @@ class _HistoryTabState extends State<HistoryTab> {
   List<dynamic> _appointments = [];
   String _selectedStatus = 'All';
   DateTime? _selectedDate;
+  StreamSubscription<Map<String, dynamic>>? _fcmSubscription;
 
   @override
   void initState() {
     super.initState();
+    _setupFcmListener();
     _fetchAppointments();
+  }
+
+  void _setupFcmListener() {
+    _fcmSubscription = FcmService.messageStream.listen((data) {
+      if (data['type'] == 'APPOINTMENT_UPDATED') {
+        _fetchAppointments();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _fcmSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _fetchAppointments() async {
