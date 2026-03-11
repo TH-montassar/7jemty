@@ -1,0 +1,22 @@
+import type { Response, Request } from 'express';
+import type { AuthRequest } from '../../middlewares/auth.middleware.js';
+export declare const createSalonHandler: (req: AuthRequest, res: Response) => Promise<void>;
+export declare const updateSalonHandler: (req: AuthRequest, res: Response) => Promise<void>;
+export declare const getMySalonHandler: (req: AuthRequest, res: Response) => Promise<void>;
+export declare const createEmployeeAccountHandler: (req: AuthRequest, res: Response) => Promise<void>;
+export declare const updateEmployeeAccountHandler: (req: AuthRequest, res: Response) => Promise<void>;
+export declare const deleteEmployeeAccountHandler: (req: AuthRequest, res: Response) => Promise<void>;
+export declare const getAllSalonsHandler: (req: AuthRequest, res: Response) => Promise<void>;
+export declare const createServiceHandler: (req: AuthRequest, res: Response) => Promise<void>;
+export declare const getServicesHandler: (req: AuthRequest, res: Response) => Promise<void>;
+export declare const updateServiceHandler: (req: AuthRequest, res: Response) => Promise<void>;
+export declare const deleteServiceHandler: (req: AuthRequest, res: Response) => Promise<void>;
+export declare const getTopRatedSalonsHandler: (req: AuthRequest, res: Response) => Promise<void>;
+export declare const getSalonByIdHandler: (req: AuthRequest, res: Response) => Promise<void>;
+export declare const searchSalonHandler: (req: Request, res: Response) => Promise<void>;
+export declare const toggleFavoriteSalonHandler: (req: AuthRequest, res: Response) => Promise<void>;
+export declare const checkFavoriteStatusHandler: (req: AuthRequest, res: Response) => Promise<void>;
+export declare const addPortfolioImageHandler: (req: AuthRequest, res: Response) => Promise<void>;
+export declare const removePortfolioImageHandler: (req: AuthRequest, res: Response) => Promise<void>;
+export declare const getFavoriteSalonsHandler: (req: AuthRequest, res: Response) => Promise<void>;
+//# sourceMappingURL=salon.controller.d.ts.map

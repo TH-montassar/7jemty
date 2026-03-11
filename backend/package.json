@@ -15,8 +15,9 @@
     "fast-forward": "tsx scripts/fast_forward.ts",
     "create-admin": "tsx scripts/create_admin.ts",
     "seed-demo": "tsx scripts/seed_demo_data.ts",
-    "start": "node dist/index.js",
-    "start:prod": "prisma migrate deploy && node dist/index.js"
+    "start": "node dist/server.js",
+    "start:prod": "node dist/server.js",
+    "build": "tsc"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.4.1",
@@ -24,6 +25,7 @@
     "bcryptjs": "^3.0.3",
     "cloudinary": "^2.9.0",
     "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
     "express": "^5.2.1",
     "firebase-admin": "^13.7.0",
     "jsonwebtoken": "^9.0.3",
@@ -39,7 +41,6 @@
     "@types/multer": "^2.0.0",
     "@types/node": "^25.3.0",
     "@types/pg": "^8.16.0",
-    "dotenv": "^17.3.1",
     "nodemon": "^3.1.14",
     "prisma": "^7.5.0",
     "ts-node": "^10.9.2",

@@ -5,6 +5,8 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      args:
+        - NODE_ENV=development
     container_name: 7jemty-backend
     env_file:
       - ./backend/.env
@@ -34,4 +36,3 @@ services:
       - /app/windows
       - /app/macos
     restart: unless-stopped
-

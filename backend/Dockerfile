@@ -14,6 +14,16 @@ COPY . .
 # Generate Prisma client
 RUN npx prisma generate
 
+# Define an argument for the environment, default to production for Render
+ARG NODE_ENV=production
+ENV NODE_ENV=${NODE_ENV}
+
+# Build the TypeScript code (Only in production)
+RUN if [ "$NODE_ENV" = "production" ]; then npm run build; fi
+
+# Copy the generated Prisma client to the dist directory (Only in production)
+RUN if [ "$NODE_ENV" = "production" ]; then cp -r generated dist/generated; fi
+
 # Expose the API port (defaulting to 3000, adjust if your server uses a different port)
 EXPOSE 3000
 COPY entrypoint.sh /entrypoint.sh
