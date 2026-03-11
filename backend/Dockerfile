@@ -14,6 +14,9 @@ COPY . .
 # Generate Prisma client
 RUN npx prisma generate
 
+# Build the TypeScript code
+RUN npm run build
+
 # Expose the API port (defaulting to 3000, adjust if your server uses a different port)
 EXPOSE 3000
 COPY entrypoint.sh /entrypoint.sh

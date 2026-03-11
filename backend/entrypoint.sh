@@ -9,4 +9,4 @@ echo "🗄️ Running migrations..."
 npx prisma migrate deploy
 
 echo "🚀 Starting dev server..."
-exec npm run dev
+exec npm run start:prod
