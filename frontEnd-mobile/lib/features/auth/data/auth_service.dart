@@ -140,6 +140,7 @@ class AuthService {
     required String phoneNumber,
     required String password,
     String role = 'CLIENT', // ديما نحطوه CLIENT بار ديفو
+    String? phoneVerificationToken,
   }) async {
     try {
       final response = await http.post(
@@ -150,6 +151,8 @@ class AuthService {
           'phoneNumber': phoneNumber,
           'password': password,
           'role': role,
+          if (phoneVerificationToken != null)
+            'phoneVerificationToken': phoneVerificationToken,
         }),
       );
 
@@ -219,7 +222,8 @@ class AuthService {
     }
   }
 
-  static Future<bool> verifyOtp(String phoneNumber, String code) async {
+  static Future<Map<String, dynamic>> verifyOtp(
+      String phoneNumber, String code) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/verify-otp'),
@@ -230,7 +234,7 @@ class AuthService {
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200 && data['success'] == true) {
-        return true;
+        return data; // returns { success: true, message, phoneVerificationToken }
       } else {
         throw Exception(_extractErrorMessage(data['message'], 'Code invalide'));
       }

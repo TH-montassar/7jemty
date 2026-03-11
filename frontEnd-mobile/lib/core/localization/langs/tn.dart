@@ -475,4 +475,9 @@ const Map<String, String> tn = {
   // Calendar Specialists
   'moi_patron': 'Ena (Moi)',
   'all_specialists': 'Kol el 7ajjema',
+  'verify_phone': 'Vérifier le numéro',
+  'otp_sent_to': 'Un code OTP a été envoyé au',
+  'verify': 'Vérifier',
+  'resend_code': 'Renvoyer le code',
+  'wait_before_resend': 'Renvoyer dans {0}s',
 };

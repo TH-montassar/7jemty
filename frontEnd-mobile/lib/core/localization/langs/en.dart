@@ -481,4 +481,9 @@ const Map<String, String> en = {
   // Calendar Specialists
   'moi_patron': 'Me',
   'all_specialists': 'All specialists',
+  'verify_phone': 'Verify Phone',
+  'otp_sent_to': 'An OTP code has been sent to',
+  'verify': 'Verify',
+  'resend_code': 'Resend Code',
+  'wait_before_resend': 'Resend in {0}s',
 };

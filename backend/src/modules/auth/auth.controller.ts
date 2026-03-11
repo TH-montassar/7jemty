@@ -3,6 +3,7 @@ import * as authService from './auth.service.js';
 import { registerSchema, loginSchema, requestOtpSchema, verifyOtpSchema } from './auth.schema.js';
 
 export const register = async (req: Request, res: Response): Promise<void> => {
+    console.log(`[AUTH] Incoming REGISTER request for:`, req.body?.phoneNumber);
     try {
         const validatedData = registerSchema.parse(req.body);
 
@@ -63,6 +64,7 @@ export const checkPhone = async (req: Request, res: Response): Promise<void> => 
 };
 
 export const requestOtp = async (req: Request, res: Response): Promise<void> => {
+    console.log(`[AUTH] Incoming REQUEST-OTP request for:`, req.body?.phoneNumber);
     try {
         const validatedData = requestOtpSchema.parse(req.body);
         const result = await authService.requestOtp(validatedData.phoneNumber);

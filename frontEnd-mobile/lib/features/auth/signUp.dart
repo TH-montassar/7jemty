@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:hjamty/core/constants/app_colors.dart';
 import 'package:hjamty/core/localization/translation_service.dart';
 import 'signIn.dart';
@@ -51,11 +52,31 @@ class _SignUpScreenState extends State<SignUpScreen> {
     });
 
     try {
+      final phoneNumber = _phoneController.text.trim();
+
+      // 1. Request OTP
+      await AuthService.requestOtp(phoneNumber);
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      // 2. Show OTP Dialog
+      final verificationToken = await _showOtpDialog(phoneNumber);
+
+      if (verificationToken == null) return; // User cancelled or failed
+
+      setState(() {
+        _isLoading = true;
+      });
+
+      // 3. Complete Registration
       final result = await AuthService.registerUser(
         fullName: _nameController.text.trim(),
-        phoneNumber: _phoneController.text.trim(),
+        phoneNumber: phoneNumber,
         password: _passwordController.text,
         role: _isPatron ? 'PATRON' : 'CLIENT',
+        phoneVerificationToken: verificationToken,
       );
 
       // Ba3d l'inscription, na5dhou l'token w l'user ml base de donnees
@@ -165,6 +186,174 @@ class _SignUpScreenState extends State<SignUpScreen> {
         });
       }
     }
+  }
+
+  Future<String?> _showOtpDialog(String phoneNumber) async {
+    final TextEditingController otpController = TextEditingController();
+    bool isDialogLoading = false;
+    int timeLeft = 60;
+    Timer? countdownTimer;
+
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            // Function to handle code submission
+            Future<void> submitCode(String code) async {
+              if (code.length != 6) return;
+              
+              setDialogState(() => isDialogLoading = true);
+              try {
+                final verifyResult = await AuthService.verifyOtp(
+                  phoneNumber,
+                  code,
+                );
+
+                final token = verifyResult['phoneVerificationToken'];
+                if (!context.mounted) return;
+                countdownTimer?.cancel();
+                Navigator.pop(context, token); // Return the token
+              } catch (e) {
+                setDialogState(() => isDialogLoading = false);
+                otpController.clear(); // Clear input on error
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(e.toString()),
+                    backgroundColor: AppColors.actionRed,
+                  ),
+                );
+              }
+            }
+
+            // Start timer if not started
+            if (countdownTimer == null) {
+              countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+                if (timeLeft > 0) {
+                  setDialogState(() => timeLeft--);
+                } else {
+                  timer.cancel();
+                }
+              });
+            }
+
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              title: Text(
+                tr(context, 'verify_phone'),
+                textAlign: TextAlign.center,
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    "${tr(context, 'otp_sent_to')} $phoneNumber",
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.black54),
+                  ),
+                  const SizedBox(height: 20),
+                  TextField(
+                    controller: otpController,
+                    keyboardType: TextInputType.number,
+                    textAlign: TextAlign.center,
+                    maxLength: 6,
+                    onChanged: (value) {
+                      // Auto-submit when 6 digits are reached
+                      if (value.length == 6 && !isDialogLoading) {
+                        submitCode(value);
+                      }
+                    },
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 8,
+                    ),
+                    decoration: InputDecoration(
+                      counterText: "",
+                      hintText: "000000",
+                      hintStyle: TextStyle(color: Colors.grey.shade300),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 15),
+                  // Resend Button
+                  TextButton(
+                    onPressed: timeLeft == 0 && !isDialogLoading
+                        ? () async {
+                            setDialogState(() => isDialogLoading = true);
+                            try {
+                              await AuthService.requestOtp(phoneNumber);
+                              // Reset Timer
+                              setDialogState(() {
+                                timeLeft = 60;
+                                isDialogLoading = false;
+                                countdownTimer = null; // Forces restart
+                              });
+                            } catch (e) {
+                              setDialogState(() => isDialogLoading = false);
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(e.toString().replaceAll('Exception: ', '')),
+                                  backgroundColor: AppColors.actionRed,
+                                ),
+                              );
+                            }
+                          }
+                        : null,
+                    child: Text(
+                      timeLeft > 0
+                          ? tr(context, 'wait_before_resend', args: [timeLeft.toString()])
+                          : tr(context, 'resend_code'),
+                      style: TextStyle(
+                        color: timeLeft > 0 ? Colors.grey : AppColors.primaryBlue,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isDialogLoading 
+                      ? null 
+                      : () {
+                          countdownTimer?.cancel();
+                          Navigator.pop(context);
+                        },
+                  child: Text(tr(context, 'cancel')),
+                ),
+                ElevatedButton(
+                  onPressed: isDialogLoading ? null : () => submitCode(otpController.text.trim()),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryBlue,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: isDialogLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Text(tr(context, 'verify')),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   // ما تنساش تفسخ الـ Controllers كي تخرج من الشاشة باش ما تاكلش الميموار
