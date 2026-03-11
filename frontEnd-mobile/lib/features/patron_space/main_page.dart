@@ -1,5 +1,6 @@
 import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:hjamty/features/patron_space/main_layout/presentation/pages/home_page.dart';
 import 'package:hjamty/features/patron_space/appointments/presentation/pages/calendar_page.dart';
 import 'salon_dashboard_screen.dart';
@@ -7,6 +8,7 @@ import 'package:hjamty/features/client_space/profile/presentation/pages/client_p
 import 'package:hjamty/features/auth/data/auth_service.dart';
 import 'package:hjamty/core/constants/app_colors.dart';
 import 'package:hjamty/core/widgets/notification_bell.dart';
+import 'package:hjamty/core/services/fcm_service.dart';
 
 class MainPage extends StatefulWidget {
   final int initialIndex;
@@ -19,12 +21,14 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   late int _selectedIndex;
   Map<String, dynamic>? _userData;
+  StreamSubscription<Map<String, dynamic>>? _notificationTapSubscription;
 
   @override
   void initState() {
     super.initState();
     _selectedIndex = widget.initialIndex;
     _fetchUserData();
+    _setupNotificationTapListener();
   }
 
   Future<void> _fetchUserData() async {
@@ -48,10 +52,53 @@ class _MainPageState extends State<MainPage> {
     const ProfilePage(), // Index 3
   ];
 
+  void _setupNotificationTapListener() {
+    final pendingPayload = FcmService.consumePendingNotificationTap();
+    if (pendingPayload != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _handleNotificationTap(pendingPayload);
+      });
+    }
+
+    _notificationTapSubscription = FcmService.notificationTapStream.listen(
+      _handleNotificationTap,
+    );
+  }
+
+  void _handleNotificationTap(Map<String, dynamic> payload) {
+    if (!FcmService.isAppointmentPayload(payload)) return;
+
+    final appointmentId = FcmService.extractAppointmentId(payload);
+    if (appointmentId == null || !mounted) return;
+
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      navigator.popUntil((route) => route.isFirst);
+    }
+
+    final rebuildMarker = DateTime.now().microsecondsSinceEpoch;
+    setState(() {
+      _pages[2] = SalonDashboardScreen(
+        key: ValueKey('patron_notif_${appointmentId}_$rebuildMarker'),
+        isPatron: true,
+        initialTabIndex: 3,
+        focusAppointmentId: appointmentId,
+      );
+      _selectedIndex = 2;
+    });
+  }
+
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
+  }
+
+  @override
+  void dispose() {
+    _notificationTapSubscription?.cancel();
+    super.dispose();
   }
 
   @override

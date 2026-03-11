@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hjamty/core/constants/app_colors.dart';
 
 import 'package:hjamty/core/services/notification_service.dart';
+import 'package:hjamty/core/services/fcm_service.dart';
 import 'package:intl/intl.dart';
 
 class NotificationsPage extends StatefulWidget {
@@ -53,6 +54,42 @@ class _NotificationsPageState extends State<NotificationsPage> {
     } catch (e) {
       // Fail silently for read receipts
     }
+  }
+
+  Map<String, dynamic>? _extractTapPayload(Map<String, dynamic> notif) {
+    final payload = <String, dynamic>{};
+
+    final appointmentId = notif['appointmentId'];
+    if (appointmentId != null) {
+      payload['appointmentId'] = appointmentId.toString();
+    }
+
+    final deeplink = notif['deeplink']?.toString();
+    if (deeplink != null && deeplink.isNotEmpty) {
+      payload['deeplink'] = deeplink;
+
+      if (!payload.containsKey('appointmentId')) {
+        final match = RegExp(r'/appointments/(\d+)').firstMatch(deeplink);
+        if (match != null) {
+          payload['appointmentId'] = match.group(1)!;
+        }
+      }
+    }
+
+    if (notif['eventType'] != null) {
+      payload['eventType'] = notif['eventType'].toString();
+    }
+    if (notif['status'] != null) {
+      payload['status'] = notif['status'].toString();
+    }
+    if (notif['newStatus'] != null) {
+      payload['newStatus'] = notif['newStatus'].toString();
+    }
+
+    if (!FcmService.isAppointmentPayload(payload)) {
+      return null;
+    }
+    return payload;
   }
 
   @override
@@ -130,6 +167,15 @@ class _NotificationsPageState extends State<NotificationsPage> {
                               onTap: () {
                                 if (originalIndex != -1) {
                                   _markAsRead(notif['id'], originalIndex);
+                                }
+                                final payload = _extractTapPayload(
+                                  Map<String, dynamic>.from(notif as Map),
+                                );
+                                if (payload != null) {
+                                  FcmService.dispatchNotificationTapPayload(
+                                    payload,
+                                  );
+                                  Navigator.pop(context);
                                 }
                               },
                               child: Card(

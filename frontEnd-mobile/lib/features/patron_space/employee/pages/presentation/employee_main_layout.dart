@@ -1,25 +1,78 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:hjamty/core/constants/app_colors.dart';
+import 'package:hjamty/core/services/fcm_service.dart';
 import 'package:hjamty/features/client_space/profile/presentation/pages/client_profile_page.dart';
 import 'package:hjamty/core/widgets/notification_bell.dart';
 import 'employee_agenda_page.dart';
 
 class EmployeeMainLayout extends StatefulWidget {
-  const EmployeeMainLayout({super.key});
+  final int initialIndex;
+
+  const EmployeeMainLayout({super.key, this.initialIndex = 0});
 
   @override
   State<EmployeeMainLayout> createState() => _EmployeeMainLayoutState();
 }
 
 class _EmployeeMainLayoutState extends State<EmployeeMainLayout> {
-  int _selectedIndex = 0;
+  late int _selectedIndex;
+  StreamSubscription<Map<String, dynamic>>? _notificationTapSubscription;
 
   final List<Widget> _pages = [const EmployeeAgendaPage(), const ProfilePage()];
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.initialIndex;
+    _setupNotificationTapListener();
+  }
+
+  void _setupNotificationTapListener() {
+    final pendingPayload = FcmService.consumePendingNotificationTap();
+    if (pendingPayload != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _handleNotificationTap(pendingPayload);
+      });
+    }
+
+    _notificationTapSubscription = FcmService.notificationTapStream.listen(
+      _handleNotificationTap,
+    );
+  }
+
+  void _handleNotificationTap(Map<String, dynamic> payload) {
+    if (!FcmService.isAppointmentPayload(payload)) return;
+
+    final appointmentId = FcmService.extractAppointmentId(payload);
+    if (appointmentId == null || !mounted) return;
+
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      navigator.popUntil((route) => route.isFirst);
+    }
+
+    final rebuildMarker = DateTime.now().microsecondsSinceEpoch;
+    setState(() {
+      _pages[0] = EmployeeAgendaPage(
+        key: ValueKey('employee_notif_${appointmentId}_$rebuildMarker'),
+        focusAppointmentId: appointmentId,
+      );
+      _selectedIndex = 0;
+    });
+  }
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
+  }
+
+  @override
+  void dispose() {
+    _notificationTapSubscription?.cancel();
+    super.dispose();
   }
 
   @override

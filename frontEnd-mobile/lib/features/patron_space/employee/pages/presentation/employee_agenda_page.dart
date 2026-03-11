@@ -12,7 +12,9 @@ import 'package:hjamty/features/patron_space/appointments/presentation/widgets/n
 import 'package:hjamty/features/patron_space/employee/pages/presentation/employee_calendar_page.dart';
 
 class EmployeeAgendaPage extends StatefulWidget {
-  const EmployeeAgendaPage({super.key});
+  final int? focusAppointmentId;
+
+  const EmployeeAgendaPage({super.key, this.focusAppointmentId});
 
   @override
   State<EmployeeAgendaPage> createState() => _EmployeeAgendaPageState();
@@ -27,6 +29,7 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
   String _statusFilter = 'ALL';
   String _sortField = 'APPOINTMENT_DATE';
   bool _sortAscending = true;
+  bool _focusHandled = false;
 
   @override
   void initState() {
@@ -45,6 +48,15 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
         setState(() {}); // Just redraw the UI
       }
     });
+  }
+
+  @override
+  void didUpdateWidget(covariant EmployeeAgendaPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.focusAppointmentId != widget.focusAppointmentId) {
+      _focusHandled = false;
+      _tryOpenFocusedAppointment();
+    }
   }
 
   void _setupFcmListener() {
@@ -73,9 +85,11 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
         _appointments = data;
         _isLoading = false;
       });
+      _tryOpenFocusedAppointment();
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
+      _tryOpenFocusedAppointment();
     }
   }
 
@@ -87,9 +101,42 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
       setState(() {
         _appointments = data;
       });
+      _tryOpenFocusedAppointment();
     } catch (e) {
       // Ignore errors on silent poll to not interrupt the user's flow
     }
+  }
+
+  int? _appointmentId(dynamic appointment) {
+    final raw = appointment is Map ? appointment['id'] : null;
+    if (raw is int) return raw;
+    if (raw is num) return raw.toInt();
+    return int.tryParse(raw?.toString() ?? '');
+  }
+
+  void _tryOpenFocusedAppointment() {
+    if (_focusHandled || !mounted || _isLoading) return;
+    final focusId = widget.focusAppointmentId;
+    if (focusId == null) return;
+
+    dynamic target;
+    for (final apt in _appointments) {
+      if (_appointmentId(apt) == focusId) {
+        target = apt;
+        break;
+      }
+    }
+    if (target == null) return;
+
+    _focusHandled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      showAppointmentDetailsBottomSheet(
+        context: context,
+        appointment: Map<String, dynamic>.from(target as Map),
+        showBarberDetails: false,
+      );
+    });
   }
 
   Future<void> _updateStatus(int appointmentId, String newStatus) async {

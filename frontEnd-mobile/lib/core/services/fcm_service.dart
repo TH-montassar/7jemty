@@ -21,9 +21,58 @@ class FcmService {
   static Stream<Map<String, dynamic>> get messageStream =>
       _messageStreamController.stream;
 
+  static final StreamController<Map<String, dynamic>>
+  _notificationTapStreamController = StreamController.broadcast();
+  static Stream<Map<String, dynamic>> get notificationTapStream =>
+      _notificationTapStreamController.stream;
+
+  static Map<String, dynamic>? _pendingNotificationTapPayload;
+
   // Manual dispatch for SSE or other sources
   static void dispatchMessage(Map<String, dynamic> data) {
     _messageStreamController.add(data);
+  }
+
+  static Map<String, dynamic>? consumePendingNotificationTap() {
+    final payload = _pendingNotificationTapPayload;
+    _pendingNotificationTapPayload = null;
+    return payload;
+  }
+
+  static int? extractAppointmentId(Map<String, dynamic> payload) {
+    return _toInt(payload['appointmentId']);
+  }
+
+  static String? extractStatus(Map<String, dynamic> payload) {
+    final dynamic rawStatus =
+        payload['newStatus'] ?? payload['status'] ?? payload['appointmentStatus'];
+    final status = rawStatus?.toString().trim();
+    if (status == null || status.isEmpty) return null;
+    return status.toUpperCase();
+  }
+
+  static bool shouldOpenHistoryTab(Map<String, dynamic> payload) {
+    const historyStatuses = {'COMPLETED', 'CANCELLED', 'DECLINED'};
+    final status = extractStatus(payload);
+    if (status != null && historyStatuses.contains(status)) {
+      return true;
+    }
+
+    final eventType = (payload['eventType'] ?? '').toString().toUpperCase();
+    return eventType == 'APPT_COMPLETED' ||
+        eventType == 'APPT_CANCELLED' ||
+        eventType == 'APPT_DECLINED';
+  }
+
+  static bool isAppointmentPayload(Map<String, dynamic> payload) {
+    if (extractAppointmentId(payload) != null) return true;
+    final deeplink = (payload['deeplink'] ?? '').toString();
+    return deeplink.startsWith('/appointments/');
+  }
+
+  static void dispatchNotificationTapPayload(Map<String, dynamic> payload) {
+    if (payload.isEmpty) return;
+    _dispatchNotificationTap(_normalizePayload(payload));
   }
 
   // Initialization
@@ -43,7 +92,10 @@ class FcmService {
           AndroidInitializationSettings('@mipmap/ic_launcher');
       const InitializationSettings initializationSettings =
           InitializationSettings(android: initializationSettingsAndroid);
-      await _localNotifications.initialize(settings: initializationSettings);
+      await _localNotifications.initialize(
+        settings: initializationSettings,
+        onDidReceiveNotificationResponse: _handleLocalNotificationTap,
+      );
 
       // 2. Fetch FCM Token
       String? token = await _firebaseMessaging.getToken();
@@ -70,7 +122,16 @@ class FcmService {
         }
       });
 
-      // 4. Token refresh listener
+      // 4. Open app from push tap while app is in background
+      FirebaseMessaging.onMessageOpenedApp.listen(_handleRemoteMessageTap);
+
+      // 5. Open app from push tap when app was terminated
+      final initialMessage = await _firebaseMessaging.getInitialMessage();
+      if (initialMessage != null) {
+        _handleRemoteMessageTap(initialMessage);
+      }
+
+      // 6. Token refresh listener
       FirebaseMessaging.instance.onTokenRefresh.listen(syncTokenWithBackend);
     } else {
       debugPrint('User declined or has not accepted permission');
@@ -108,6 +169,7 @@ class FcmService {
       id: message.hashCode,
       title: message.notification?.title ?? '',
       body: message.notification?.body ?? '',
+      payloadData: message.data,
     );
   }
 
@@ -115,6 +177,7 @@ class FcmService {
     required int id,
     required String title,
     required String body,
+    Map<String, dynamic>? payloadData,
   }) async {
     const AndroidNotificationDetails androidDetails =
         AndroidNotificationDetails(
@@ -134,7 +197,58 @@ class FcmService {
       title: title,
       body: body,
       notificationDetails: platformDetails,
+      payload: _encodePayload(payloadData),
     );
+  }
+
+  static void _handleRemoteMessageTap(RemoteMessage message) {
+    final payload = _normalizePayload(message.data);
+    if (payload.isEmpty) return;
+    _dispatchNotificationTap(payload);
+  }
+
+  static void _handleLocalNotificationTap(NotificationResponse response) {
+    final payload = _decodePayload(response.payload);
+    if (payload.isEmpty) return;
+    _dispatchNotificationTap(payload);
+  }
+
+  static void _dispatchNotificationTap(Map<String, dynamic> payload) {
+    _pendingNotificationTapPayload = payload;
+    _notificationTapStreamController.add(payload);
+  }
+
+  static String? _encodePayload(Map<String, dynamic>? payload) {
+    if (payload == null || payload.isEmpty) return null;
+    return jsonEncode(_normalizePayload(payload));
+  }
+
+  static Map<String, dynamic> _decodePayload(String? payload) {
+    if (payload == null || payload.trim().isEmpty) return {};
+    try {
+      final decoded = jsonDecode(payload);
+      if (decoded is Map) {
+        return decoded.map(
+          (key, value) => MapEntry(key.toString(), value),
+        );
+      }
+    } catch (_) {
+      // Ignore malformed payload.
+    }
+    return {};
+  }
+
+  static Map<String, dynamic> _normalizePayload(Map<String, dynamic> data) {
+    return data.map(
+      (key, value) => MapEntry(key, value is String ? value : value?.toString()),
+    );
+  }
+
+  static int? _toInt(dynamic raw) {
+    if (raw is int) return raw;
+    if (raw is num) return raw.toInt();
+    if (raw == null) return null;
+    return int.tryParse(raw.toString());
   }
 }
 

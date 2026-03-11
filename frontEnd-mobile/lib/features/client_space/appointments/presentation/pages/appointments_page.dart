@@ -8,7 +8,14 @@ import 'package:hjamty/features/auth/signIn.dart';
 import 'package:hjamty/features/client_space/search/presentation/pages/search_page.dart';
 
 class AppointmentsPage extends StatefulWidget {
-  const AppointmentsPage({super.key});
+  final int initialTabIndex;
+  final int? focusAppointmentId;
+
+  const AppointmentsPage({
+    super.key,
+    this.initialTabIndex = 0,
+    this.focusAppointmentId,
+  });
 
   @override
   State<AppointmentsPage> createState() => _AppointmentsPageState();
@@ -191,8 +198,10 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
     }
 
     // Authenticated view
+    final resolvedTabIndex = widget.initialTabIndex.clamp(0, 1).toInt();
     return DefaultTabController(
       length: 2,
+      initialIndex: resolvedTabIndex,
       child: Scaffold(
         backgroundColor: const Color(0xFFF5F7FA),
         appBar: AppBar(
@@ -225,7 +234,12 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
             ],
           ),
         ),
-        body: const TabBarView(children: [UpcomingTab(), HistoryTab()]),
+        body: TabBarView(
+          children: [
+            UpcomingTab(focusAppointmentId: widget.focusAppointmentId),
+            HistoryTab(focusAppointmentId: widget.focusAppointmentId),
+          ],
+        ),
       ),
     );
   }

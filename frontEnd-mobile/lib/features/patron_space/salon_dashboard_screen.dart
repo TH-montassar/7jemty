@@ -33,6 +33,8 @@ class SalonDashboardScreen extends StatefulWidget {
   salonId; // Optional: Only provided if a client views a specific salon
   final bool showBackButton;
   final bool isAdminPeek;
+  final int initialTabIndex;
+  final int? focusAppointmentId;
 
   const SalonDashboardScreen({
     super.key,
@@ -40,6 +42,8 @@ class SalonDashboardScreen extends StatefulWidget {
     this.salonId,
     this.showBackButton = false,
     this.isAdminPeek = false,
+    this.initialTabIndex = 0,
+    this.focusAppointmentId,
   });
 
   @override
@@ -56,6 +60,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
   String _reservationStatusFilter = 'ALL';
   String _reservationSortField = 'APPOINTMENT_DATE';
   bool _reservationSortAscending = true;
+  bool _hasOpenedFocusedAppointment = false;
 
   @override
   void initState() {
@@ -65,6 +70,14 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
       NotificationService.listenToNotificationsStream();
     }
     _setupFcmListener();
+  }
+
+  @override
+  void didUpdateWidget(covariant SalonDashboardScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.focusAppointmentId != widget.focusAppointmentId) {
+      _hasOpenedFocusedAppointment = false;
+    }
   }
 
   void _setupFcmListener() {
@@ -326,8 +339,13 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
     tabs.add(Tab(text: tr(context, 'portfolio')));
     tabs.add(Tab(text: tr(context, 'tab_reviews')));
 
+    final resolvedInitialTabIndex = widget.initialTabIndex
+        .clamp(0, tabs.length - 1)
+        .toInt();
+
     return DefaultTabController(
       length: tabs.length,
+      initialIndex: resolvedInitialTabIndex,
       child: Scaffold(
         backgroundColor: AppColors.bgColor,
         floatingActionButton: !widget.isPatron && widget.salonId != null
@@ -676,6 +694,37 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
     });
 
     return filtered;
+  }
+
+  int? _appointmentId(dynamic appointment) {
+    final raw = appointment is Map ? appointment['id'] : null;
+    if (raw is int) return raw;
+    if (raw is num) return raw.toInt();
+    return int.tryParse(raw?.toString() ?? '');
+  }
+
+  void _maybeOpenFocusedAppointment(List<dynamic> appointments) {
+    if (_hasOpenedFocusedAppointment || !mounted) return;
+    final focusId = widget.focusAppointmentId;
+    if (focusId == null) return;
+
+    dynamic target;
+    for (final apt in appointments) {
+      if (_appointmentId(apt) == focusId) {
+        target = apt;
+        break;
+      }
+    }
+    if (target == null) return;
+
+    _hasOpenedFocusedAppointment = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      showAppointmentDetailsBottomSheet(
+        context: context,
+        appointment: Map<String, dynamic>.from(target as Map),
+      );
+    });
   }
 
   Widget _buildReservationsFilters({
@@ -1051,6 +1100,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
 
         final allAppointments = List<dynamic>.from(snapshot.data ?? []);
         final appointments = _applyReservationFiltersAndSort(allAppointments);
+        _maybeOpenFocusedAppointment(allAppointments);
 
         if (allAppointments.isEmpty) {
           return Center(

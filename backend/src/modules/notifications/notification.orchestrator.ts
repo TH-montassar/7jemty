@@ -322,7 +322,10 @@ export const emitAppointmentEvent = async (
                 data: {
                     userId: user.id,
                     title,
-                    body
+                    body,
+                    eventType: event,
+                    appointmentId: ctx.appointmentId,
+                    deeplink: data.deeplink
                 }
             });
 
@@ -332,6 +335,9 @@ export const emitAppointmentEvent = async (
                 userId: user.id,
                 title,
                 body,
+                eventType: event,
+                appointmentId: ctx.appointmentId,
+                deeplink: data.deeplink,
                 isRead: false,
                 createdAt: new Date()
             }),

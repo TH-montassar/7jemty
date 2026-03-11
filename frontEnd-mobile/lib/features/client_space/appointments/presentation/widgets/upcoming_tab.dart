@@ -9,7 +9,9 @@ import 'package:hjamty/features/client_space/appointments/presentation/widgets/a
 import 'package:url_launcher/url_launcher.dart';
 
 class UpcomingTab extends StatefulWidget {
-  const UpcomingTab({super.key});
+  final int? focusAppointmentId;
+
+  const UpcomingTab({super.key, this.focusAppointmentId});
 
   @override
   State<UpcomingTab> createState() => _UpcomingTabState();
@@ -24,6 +26,7 @@ class _UpcomingTabState extends State<UpcomingTab> {
   bool _sortAscending = true;
   StreamSubscription<Map<String, dynamic>>? _fcmSubscription;
   Timer? _countdownTicker;
+  bool _focusHandled = false;
 
   String _normalizeStatus(dynamic rawStatus) {
     final status = (rawStatus as String? ?? '').toUpperCase();
@@ -55,6 +58,15 @@ class _UpcomingTabState extends State<UpcomingTab> {
     _setupFcmListener();
     _startCountdownTicker();
     _fetchAppointments();
+  }
+
+  @override
+  void didUpdateWidget(covariant UpcomingTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.focusAppointmentId != widget.focusAppointmentId) {
+      _focusHandled = false;
+      _tryOpenFocusedAppointment();
+    }
   }
 
   void _startCountdownTicker() {
@@ -109,6 +121,38 @@ class _UpcomingTabState extends State<UpcomingTab> {
     });
   }
 
+  int? _appointmentId(dynamic appointment) {
+    final raw = appointment is Map ? appointment['id'] : null;
+    if (raw is int) return raw;
+    if (raw is num) return raw.toInt();
+    return int.tryParse(raw?.toString() ?? '');
+  }
+
+  void _tryOpenFocusedAppointment() {
+    if (_focusHandled || !mounted || _isLoading) return;
+    final focusId = widget.focusAppointmentId;
+    if (focusId == null) return;
+
+    dynamic target;
+    for (final apt in _allAppointments) {
+      if (_appointmentId(apt) == focusId) {
+        target = apt;
+        break;
+      }
+    }
+    if (target == null) return;
+
+    _focusHandled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      showAppointmentDetailsBottomSheet(
+        context: context,
+        appointment: Map<String, dynamic>.from(target as Map),
+        showClientDetails: false,
+      );
+    });
+  }
+
   @override
   void dispose() {
     _fcmSubscription?.cancel();
@@ -126,10 +170,12 @@ class _UpcomingTabState extends State<UpcomingTab> {
 
       _applyFilters();
       setState(() => _isLoading = false);
+      _tryOpenFocusedAppointment();
       _startCountdownTicker();
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
+      _tryOpenFocusedAppointment();
       _startCountdownTicker();
     }
   }
@@ -171,6 +217,7 @@ class _UpcomingTabState extends State<UpcomingTab> {
     setState(() {
       _appointments = filtered;
     });
+    _tryOpenFocusedAppointment();
     _startCountdownTicker();
   }
 

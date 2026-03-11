@@ -6,10 +6,13 @@ import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:hjamty/core/services/fcm_service.dart';
 import 'package:hjamty/features/client_space/appointments/data/appointment_service.dart';
 import 'package:hjamty/features/client_space/appointments/presentation/pages/booking_flow_screen.dart';
+import 'package:hjamty/features/client_space/appointments/presentation/widgets/appointment_details_bottom_sheet.dart';
 import 'package:toastification/toastification.dart';
 
 class HistoryTab extends StatefulWidget {
-  const HistoryTab({super.key});
+  final int? focusAppointmentId;
+
+  const HistoryTab({super.key, this.focusAppointmentId});
 
   @override
   State<HistoryTab> createState() => _HistoryTabState();
@@ -23,6 +26,7 @@ class _HistoryTabState extends State<HistoryTab> {
   String _sortField = 'APPOINTMENT_DATE';
   bool _sortAscending = true;
   StreamSubscription<Map<String, dynamic>>? _fcmSubscription;
+  bool _focusHandled = false;
 
   DateTime? _safeDate(dynamic raw) {
     if (raw == null) return null;
@@ -51,6 +55,15 @@ class _HistoryTabState extends State<HistoryTab> {
   }
 
   @override
+  void didUpdateWidget(covariant HistoryTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.focusAppointmentId != widget.focusAppointmentId) {
+      _focusHandled = false;
+      _tryOpenFocusedAppointment();
+    }
+  }
+
+  @override
   void dispose() {
     _fcmSubscription?.cancel();
     super.dispose();
@@ -72,9 +85,11 @@ class _HistoryTabState extends State<HistoryTab> {
 
       _applyFilters();
       setState(() => _isLoading = false);
+      _tryOpenFocusedAppointment();
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
+      _tryOpenFocusedAppointment();
     }
   }
 
@@ -114,6 +129,39 @@ class _HistoryTabState extends State<HistoryTab> {
 
     setState(() {
       _appointments = filtered;
+    });
+    _tryOpenFocusedAppointment();
+  }
+
+  int? _appointmentId(dynamic appointment) {
+    final raw = appointment is Map ? appointment['id'] : null;
+    if (raw is int) return raw;
+    if (raw is num) return raw.toInt();
+    return int.tryParse(raw?.toString() ?? '');
+  }
+
+  void _tryOpenFocusedAppointment() {
+    if (_focusHandled || !mounted || _isLoading) return;
+    final focusId = widget.focusAppointmentId;
+    if (focusId == null) return;
+
+    dynamic target;
+    for (final apt in _allAppointments) {
+      if (_appointmentId(apt) == focusId) {
+        target = apt;
+        break;
+      }
+    }
+    if (target == null) return;
+
+    _focusHandled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      showAppointmentDetailsBottomSheet(
+        context: context,
+        appointment: Map<String, dynamic>.from(target as Map),
+        showClientDetails: false,
+      );
     });
   }
 

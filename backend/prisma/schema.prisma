@@ -33,13 +33,16 @@ model User {
 }
 
 model Notification {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  title     String
-  body      String
-  isRead    Boolean  @default(false)
-  createdAt DateTime @default(now())
-  user      User     @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+  id            Int      @id @default(autoincrement())
+  userId        Int
+  title         String
+  body          String
+  eventType     String?
+  appointmentId Int?
+  deeplink      String?
+  isRead        Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  user          User     @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Profile {
