@@ -4,9 +4,25 @@ export const sendNotification = async (token: string, title?: string, body?: str
     try {
         if (!token) return;
 
+        const normalizedData: Record<string, string> = {};
+        if (data && typeof data === 'object') {
+            Object.entries(data).forEach(([key, value]) => {
+                if (value === undefined || value === null) return;
+                normalizedData[key] = String(value);
+            });
+        }
+
         const message: any = {
-            data: data || {},
             token,
+            data: normalizedData,
+            android: {
+                priority: 'high',
+            },
+            apns: {
+                headers: {
+                    'apns-priority': '10',
+                },
+            },
         };
 
         if (title || body) {
@@ -14,6 +30,8 @@ export const sendNotification = async (token: string, title?: string, body?: str
                 title: title || '',
                 body: body || '',
             };
+            message.android.notification = { sound: 'default' };
+            message.apns.payload = { aps: { sound: 'default' } };
         }
 
         const response = await admin.messaging().send(message);
