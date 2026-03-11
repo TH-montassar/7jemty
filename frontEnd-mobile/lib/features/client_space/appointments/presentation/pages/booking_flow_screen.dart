@@ -528,13 +528,13 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
 
                   final prefs = await SharedPreferences.getInstance();
                   await prefs.setString('jwt_token', result['data']['token']);
-
-                  await _checkCurrentUser();
                   if (mounted) {
+                    setState(() {
+                      _currentUser = result['data']['user'];
+                    });
                     countdownTimer?.cancel();
                     Navigator.pop(context);
-                    await _fetchAvailability();
-                    _submitBooking();
+                    await _submitBooking();
                   }
                 } else {
                   if (passwordController.text.length != 6) {
@@ -548,25 +548,35 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                     return;
                   }
 
-                  await AuthService.verifyOtp(phoneController.text, passwordController.text);
+                  final verifyResult = await AuthService.verifyOtp(
+                    phoneController.text,
+                    passwordController.text,
+                  );
 
                   final phone = phoneController.text;
                   final code = passwordController.text;
+                  final verificationToken =
+                      verifyResult['phoneVerificationToken']?.toString();
+                  if (verificationToken == null || verificationToken.isEmpty) {
+                    throw Exception("Verification du numero invalide.");
+                  }
                   final generatedName = "Client ${phone.substring(phone.length > 4 ? phone.length - 4 : 0)}";
 
                   await AuthService.registerUser(
                     fullName: generatedName,
                     phoneNumber: phone,
                     password: code,
+                    phoneVerificationToken: verificationToken,
                   );
 
                   final result = await AuthService.loginUser(phoneNumber: phone, password: code);
 
                   final prefs = await SharedPreferences.getInstance();
                   await prefs.setString('jwt_token', result['data']['token']);
-
-                  await _checkCurrentUser();
                   if (mounted) {
+                    setState(() {
+                      _currentUser = result['data']['user'];
+                    });
                     toastification.show(
                       context: context,
                       type: ToastificationType.success,
@@ -576,8 +586,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                     );
                     countdownTimer?.cancel();
                     Navigator.pop(context);
-                    await _fetchAvailability();
-                    _submitBooking();
+                    await _submitBooking();
                   }
                 }
               } catch (e) {

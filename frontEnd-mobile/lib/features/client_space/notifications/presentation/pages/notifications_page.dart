@@ -51,6 +51,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
       setState(() {
         _notifications[index]['isRead'] = true;
       });
+      NotificationService.refreshUnreadCount();
     } catch (e) {
       // Fail silently for read receipts
     }
@@ -265,7 +266,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                         ),
                       ),
                       child: const Text(
-                        'Voir tous',
+                        'Voir plus',
                         style: TextStyle(fontSize: 16),
                       ),
                     ),

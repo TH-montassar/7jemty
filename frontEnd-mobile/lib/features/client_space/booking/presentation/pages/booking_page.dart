@@ -405,16 +405,25 @@ class _BookingPageState extends State<BookingPage> {
                     return;
                   }
 
-                  await AuthService.verifyOtp(phoneController.text, passwordController.text);
+                  final verifyResult = await AuthService.verifyOtp(
+                    phoneController.text,
+                    passwordController.text,
+                  );
 
                   final phone = phoneController.text;
                   final code = passwordController.text;
+                  final verificationToken =
+                      verifyResult['phoneVerificationToken']?.toString();
+                  if (verificationToken == null || verificationToken.isEmpty) {
+                    throw Exception("Verification du numero invalide.");
+                  }
                   final generatedName = "Client ${phone.substring(phone.length > 4 ? phone.length - 4 : 0)}";
 
                   await AuthService.registerUser(
                     fullName: generatedName,
                     phoneNumber: phone,
                     password: code,
+                    phoneVerificationToken: verificationToken,
                   );
 
                   final result = await AuthService.loginUser(phoneNumber: phone, password: code);

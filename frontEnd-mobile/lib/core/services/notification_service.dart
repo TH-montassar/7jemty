@@ -99,7 +99,8 @@ class NotificationService {
                     }
 
                     if (data['id'] != null ||
-                        data['type'] == 'NOTIFICATION_READ') {
+                        data['type'] == 'NOTIFICATION_READ' ||
+                        data['type'] == 'NOTIFICATIONS_READ_ALL') {
                       refreshUnreadCount();
                     }
                   } catch (e) {
@@ -141,5 +142,27 @@ class NotificationService {
         'Authorization': 'Bearer $token',
       },
     );
+  }
+
+  static Future<void> markAllAsRead() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('jwt_token');
+
+    if (token == null) return;
+
+    final response = await http.patch(
+      Uri.parse('${ApiConfig.host}/api/notifications/read-all'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      unreadCountNotifier.value = 0;
+      return;
+    }
+
+    throw Exception('Erreur lors du marquage de toutes les notifications.');
   }
 }

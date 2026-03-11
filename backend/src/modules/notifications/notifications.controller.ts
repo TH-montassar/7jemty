@@ -80,6 +80,36 @@ export const markNotificationAsRead = async (req: AuthRequest, res: Response) =>
     }
 };
 
+export const markAllNotificationsAsRead = async (req: AuthRequest, res: Response) => {
+    try {
+        if (!req.user || !req.user.userId) {
+            res.status(401).json({ message: 'Non autorise' });
+            return;
+        }
+
+        const updated = await prisma.notification.updateMany({
+            where: {
+                userId: req.user.userId,
+                isRead: false
+            },
+            data: { isRead: true }
+        });
+
+        broadcastNotificationToUser(req.user.userId, {
+            type: 'NOTIFICATIONS_READ_ALL',
+            count: updated.count
+        });
+
+        res.json({
+            message: 'Toutes les notifications sont marquees comme lues',
+            count: updated.count
+        });
+    } catch (e) {
+        console.error("Failed marking all notifications as read:", e);
+        res.status(500).json({ message: 'Erreur lors de la mise a jour des notifications' });
+    }
+};
+
 // --- REAL-TIME SSE SUPPORT --- //
 
 // Maps userId to a set of active Express Response streams
