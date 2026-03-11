@@ -16,7 +16,7 @@
     "create-admin": "tsx scripts/create_admin.ts",
     "seed-demo": "tsx scripts/seed_demo_data.ts",
     "start": "node dist/server.js",
-    "start:prod": "prisma migrate deploy && node dist/server.js",
+    "start:prod": "node dist/server.js",
     "build": "tsc"
   },
   "dependencies": {
