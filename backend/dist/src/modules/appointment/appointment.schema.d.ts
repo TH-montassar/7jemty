@@ -18,8 +18,8 @@ export declare const createAppointmentSchema: z.ZodObject<{
     salonId: z.ZodNumber;
     barberId: z.ZodOptional<z.ZodNumber>;
     targetType: z.ZodDefault<z.ZodEnum<{
-        EMPLOYEE: "EMPLOYEE";
         PATRON: "PATRON";
+        EMPLOYEE: "EMPLOYEE";
     }>>;
     date: z.ZodString;
     time: z.ZodString;

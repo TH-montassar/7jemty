@@ -1,69 +1,11 @@
 import { prisma } from '../../lib/db.js';
 import { sendNotification } from './notifications.service.js';
 import { broadcastNotificationToUser } from './notifications.controller.js';
-
-type RecipientRole = 'CLIENT' | 'BARBER' | 'PATRON';
-type NotificationPriority = 'LOW' | 'NORMAL' | 'HIGH';
-type TransportType = 'APPOINTMENT_UPDATED' | 'APPOINTMENT_REMINDER';
-
-export type AppointmentNotificationEvent =
-    | 'APPT_CREATED'
-    | 'APPT_CONFIRMED'
-    | 'APPT_CANCELLED'
-    | 'APPT_DECLINED'
-    | 'APPT_COMPLETED'
-    | 'APPT_SHIFTED'
-    | 'APPT_REMINDER_1H10_CLIENT'
-    | 'APPT_REMINDER_1H10_BARBER'
-    | 'APPT_CLIENT_LOCK_LT_1H'
-    | 'APPT_REMINDER_LT_1H_BARBER'
-    | 'APPT_REMINDER_30M'
-    | 'APPT_BARBER_REMINDER_30M'
-    | 'APPT_PATRON_EMPLOYEE_REMINDER_30M'
-    | 'APPT_REMINDER_15M'
-    | 'APPT_REMINDER_1M'
-    | 'APPT_BARBER_ARRIVAL_CHECK'
-    | 'APPT_CLIENT_START_NOW'
-    | 'APPT_BARBER_COMPLETION_CHECK';
-
-type AppointmentEventTemplate = {
-    transportType: TransportType;
-    recipientRoles?: RecipientRole[];
-    title: (ctx: AppointmentEventContext) => string;
-    body: (ctx: AppointmentEventContext) => string;
-    priority?: NotificationPriority;
-    persistInDb?: boolean;
-    sendPush?: boolean;
-    dedupeWindowMs?: number;
-};
-
-export type AppointmentEventContext = {
-    appointmentId: number;
-    appointmentDate?: Date | undefined;
-    status?: string | undefined;
-    clientId?: number | undefined;
-    barberId?: number | null | undefined;
-    patronId?: number | undefined;
-    clientName?: string | undefined;
-    actorRole?: 'CLIENT' | 'EMPLOYEE' | 'PATRON' | 'ADMIN' | undefined;
-    deeplink?: string | undefined;
-    targetUserIds?: number[] | undefined;
-    extraData?: Record<string, string | number | boolean | undefined> | undefined;
-    dedupeWindowMs?: number | undefined;
-};
-
-type RefreshPayload = {
-    appointmentId: number;
-    status?: string | undefined;
-    userIds: number[];
-    deeplink?: string | undefined;
-};
-
 const DEFAULT_DEDUPE_WINDOW_MS = 90_000;
-const dedupeCache = new Map<string, number>();
-
-const formatAppointmentDate = (appointmentDate?: Date | undefined): string => {
-    if (!appointmentDate) return '';
+const dedupeCache = new Map();
+const formatAppointmentDate = (appointmentDate) => {
+    if (!appointmentDate)
+        return '';
     const day = appointmentDate.toLocaleDateString('fr-FR');
     const time = appointmentDate.toLocaleTimeString('fr-FR', {
         hour: '2-digit',
@@ -71,8 +13,7 @@ const formatAppointmentDate = (appointmentDate?: Date | undefined): string => {
     });
     return `${day} a ${time}`;
 };
-
-const EVENT_TEMPLATES: Record<AppointmentNotificationEvent, AppointmentEventTemplate> = {
+const EVENT_TEMPLATES = {
     APPT_CREATED: {
         transportType: 'APPOINTMENT_UPDATED',
         recipientRoles: ['PATRON', 'BARBER'],
@@ -130,8 +71,7 @@ const EVENT_TEMPLATES: Record<AppointmentNotificationEvent, AppointmentEventTemp
         transportType: 'APPOINTMENT_REMINDER',
         recipientRoles: ['CLIENT'],
         title: () => 'Rappel de rendez-vous',
-        body: () =>
-            "Votre rendez-vous est dans 1h10. L'annulation sera impossible si le temps restant est inferieur a 1 heure.",
+        body: () => "Votre rendez-vous est dans 1h10. L'annulation sera impossible si le temps restant est inferieur a 1 heure.",
         priority: 'HIGH'
     },
     APPT_REMINDER_1H10_BARBER: {
@@ -212,42 +152,33 @@ const EVENT_TEMPLATES: Record<AppointmentNotificationEvent, AppointmentEventTemp
         priority: 'NORMAL'
     }
 };
-
-const normalizeExtraData = (
-    extraData?: Record<string, string | number | boolean | undefined>
-): Record<string, string> => {
-    const normalized: Record<string, string> = {};
-    if (!extraData) return normalized;
-
+const normalizeExtraData = (extraData) => {
+    const normalized = {};
+    if (!extraData)
+        return normalized;
     for (const [key, value] of Object.entries(extraData)) {
-        if (value === undefined) continue;
+        if (value === undefined)
+            continue;
         normalized[key] = String(value);
     }
-
     return normalized;
 };
-
-const getDefaultDeeplink = (appointmentId: number): string => `/appointments/${appointmentId}`;
-
-const resolveRecipientIds = (event: AppointmentNotificationEvent, ctx: AppointmentEventContext): number[] => {
+const getDefaultDeeplink = (appointmentId) => `/appointments/${appointmentId}`;
+const resolveRecipientIds = (event, ctx) => {
     if (ctx.targetUserIds && ctx.targetUserIds.length > 0) {
         return Array.from(new Set(ctx.targetUserIds.filter((id) => Number.isInteger(id) && id > 0)));
     }
-
     const template = EVENT_TEMPLATES[event];
-    const roleMap: Record<RecipientRole, number | undefined> = {
+    const roleMap = {
         CLIENT: ctx.clientId,
         BARBER: ctx.barberId ?? undefined,
         PATRON: ctx.patronId
     };
-
     const recipientIds = (template.recipientRoles || [])
         .map((role) => roleMap[role])
-        .filter((id): id is number => typeof id === 'number' && id > 0);
-
+        .filter((id) => typeof id === 'number' && id > 0);
     return Array.from(new Set(recipientIds));
 };
-
 const cleanupDedupeCache = () => {
     const now = Date.now();
     for (const [key, expiresAt] of dedupeCache.entries()) {
@@ -256,43 +187,18 @@ const cleanupDedupeCache = () => {
         }
     }
 };
-
-const shouldSkipByDedupe = (
-    event: AppointmentNotificationEvent,
-    appointmentId: number,
-    userId: number,
-    dedupeWindowMs: number
-) => {
+const shouldSkipByDedupe = (event, appointmentId, userId, dedupeWindowMs) => {
     cleanupDedupeCache();
     const key = `${event}:${appointmentId}:${userId}`;
     const now = Date.now();
     const expiresAt = dedupeCache.get(key);
-
     if (expiresAt && expiresAt > now) {
         return true;
     }
-
     dedupeCache.set(key, now + dedupeWindowMs);
     return false;
 };
-
-type TransportData = {
-    type: TransportType;
-    eventType: AppointmentNotificationEvent;
-    appointmentId: string;
-    status?: string;
-    newStatus?: string;
-    scheduledAt?: string;
-    deeplink: string;
-    priority: NotificationPriority;
-    [key: string]: string | undefined;
-};
-
-const buildTransportData = (
-    event: AppointmentNotificationEvent,
-    template: AppointmentEventTemplate,
-    ctx: AppointmentEventContext
-): TransportData => {
+const buildTransportData = (event, template, ctx) => {
     return {
         type: template.transportType,
         eventType: event,
@@ -304,30 +210,23 @@ const buildTransportData = (
         ...normalizeExtraData(ctx.extraData)
     };
 };
-
-export const emitAppointmentEvent = async (
-    event: AppointmentNotificationEvent,
-    ctx: AppointmentEventContext
-) => {
+export const emitAppointmentEvent = async (event, ctx) => {
     const template = EVENT_TEMPLATES[event];
     const recipientIds = resolveRecipientIds(event, ctx);
-    if (recipientIds.length === 0) return;
-
+    if (recipientIds.length === 0)
+        return;
     const title = template.title(ctx);
     const body = template.body(ctx);
     const data = buildTransportData(event, template, ctx);
     const dedupeWindowMs = ctx.dedupeWindowMs ?? template.dedupeWindowMs ?? DEFAULT_DEDUPE_WINDOW_MS;
-
     const users = await prisma.user.findMany({
         where: { id: { in: recipientIds } },
         include: { profile: true }
     });
-
     for (const user of users) {
         if (shouldSkipByDedupe(event, ctx.appointmentId, user.id, dedupeWindowMs)) {
             continue;
         }
-
         const dbNotification = template.persistInDb === false
             ? null
             : await prisma.notification.create({
@@ -340,7 +239,6 @@ export const emitAppointmentEvent = async (
                     deeplink: data.deeplink || null
                 }
             });
-
         broadcastNotificationToUser(user.id, {
             ...(dbNotification || {
                 id: 0,
@@ -360,29 +258,22 @@ export const emitAppointmentEvent = async (
             scheduledAt: ctx.appointmentDate?.toISOString(),
             deeplink: data.deeplink
         });
-
         if (template.sendPush === false) {
             continue;
         }
-
         if (user.profile?.fcmToken) {
             await sendNotification(user.profile.fcmToken, title, body, data);
         }
     }
 };
-
-export const broadcastAppointmentRefresh = async (payload: RefreshPayload) => {
-    const uniqueUserIds = Array.from(
-        new Set(payload.userIds.filter((id) => Number.isInteger(id) && id > 0))
-    );
-
-    if (uniqueUserIds.length === 0) return;
-
+export const broadcastAppointmentRefresh = async (payload) => {
+    const uniqueUserIds = Array.from(new Set(payload.userIds.filter((id) => Number.isInteger(id) && id > 0)));
+    if (uniqueUserIds.length === 0)
+        return;
     const users = await prisma.user.findMany({
         where: { id: { in: uniqueUserIds } },
         include: { profile: true }
     });
-
     const transportData = {
         type: 'APPOINTMENT_UPDATED',
         eventType: 'APPT_REFRESH',
@@ -390,7 +281,6 @@ export const broadcastAppointmentRefresh = async (payload: RefreshPayload) => {
         ...(payload.status !== undefined && { status: payload.status, newStatus: payload.status }),
         deeplink: payload.deeplink || getDefaultDeeplink(payload.appointmentId)
     };
-
     for (const user of users) {
         broadcastNotificationToUser(user.id, {
             type: transportData.type,
@@ -399,9 +289,9 @@ export const broadcastAppointmentRefresh = async (payload: RefreshPayload) => {
             ...(payload.status !== undefined && { newStatus: payload.status }),
             deeplink: transportData.deeplink
         });
-
         if (user.profile?.fcmToken) {
             await sendNotification(user.profile.fcmToken, undefined, undefined, transportData);
         }
     }
 };
+//# sourceMappingURL=notification.orchestrator.js.map

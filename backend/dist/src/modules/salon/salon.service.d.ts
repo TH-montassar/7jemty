@@ -65,17 +65,17 @@ export declare const getSalonByPatronId: (patronId: number) => Promise<{
     rating: string;
     services: {
         id: number;
-        salonId: number;
         name: string;
         description: string | null;
+        salonId: number;
         imageUrl: string | null;
         price: number;
         durationMinutes: number;
     }[];
     portfolio: {
         id: number;
-        salonId: number;
         createdAt: Date;
+        salonId: number;
         imageUrl: string;
     }[];
     socialLinks: {
@@ -189,45 +189,45 @@ export declare const getAllSalons: (lat?: number, lng?: number, includeUnapprove
 }[]>;
 export declare const createService: (patronId: number, data: any) => Promise<{
     id: number;
-    salonId: number;
     name: string;
     description: string | null;
+    salonId: number;
     imageUrl: string | null;
     price: number;
     durationMinutes: number;
 }>;
 export declare const createServiceAdmin: (salonId: number, data: any) => Promise<{
     id: number;
-    salonId: number;
     name: string;
     description: string | null;
+    salonId: number;
     imageUrl: string | null;
     price: number;
     durationMinutes: number;
 }>;
 export declare const getServices: (patronId: number) => Promise<{
     id: number;
-    salonId: number;
     name: string;
     description: string | null;
+    salonId: number;
     imageUrl: string | null;
     price: number;
     durationMinutes: number;
 }[]>;
 export declare const updateService: (patronId: number, serviceId: number, data: any) => Promise<{
     id: number;
-    salonId: number;
     name: string;
     description: string | null;
+    salonId: number;
     imageUrl: string | null;
     price: number;
     durationMinutes: number;
 }>;
 export declare const updateServiceAdmin: (salonId: number, serviceId: number, data: any) => Promise<{
     id: number;
-    salonId: number;
     name: string;
     description: string | null;
+    salonId: number;
     imageUrl: string | null;
     price: number;
     durationMinutes: number;
@@ -263,9 +263,9 @@ export declare const getSalonById: (id: number) => Promise<{
     };
     services: {
         id: number;
-        salonId: number;
         name: string;
         description: string | null;
+        salonId: number;
         imageUrl: string | null;
         price: number;
         durationMinutes: number;
@@ -286,8 +286,8 @@ export declare const getSalonById: (id: number) => Promise<{
     }[];
     portfolio: {
         id: number;
-        salonId: number;
         createdAt: Date;
+        salonId: number;
         imageUrl: string;
     }[];
     employees: {
@@ -339,18 +339,18 @@ export declare const getTopRatedSalons: (limit?: number, includeUnapproved?: boo
 export declare const searchSalons: (query: string, includeUnapproved?: boolean) => Promise<{
     image: string;
     rating: string;
+    _count: {
+        reviews: number;
+    };
     services: {
         id: number;
-        salonId: number;
         name: string;
         description: string | null;
+        salonId: number;
         imageUrl: string | null;
         price: number;
         durationMinutes: number;
     }[];
-    _count: {
-        reviews: number;
-    };
     workingHours: {
         id: number;
         salonId: number;
@@ -384,18 +384,18 @@ export declare const checkFavoriteStatus: (clientId: number, salonId: number) =>
 export declare const getFavoriteSalons: (clientId: number) => Promise<{
     image: string;
     rating: string;
+    _count: {
+        reviews: number;
+    };
     services: {
         id: number;
-        salonId: number;
         name: string;
         description: string | null;
+        salonId: number;
         imageUrl: string | null;
         price: number;
         durationMinutes: number;
     }[];
-    _count: {
-        reviews: number;
-    };
     workingHours: {
         id: number;
         salonId: number;
@@ -422,26 +422,26 @@ export declare const getFavoriteSalons: (clientId: number) => Promise<{
 }[]>;
 export declare const createPortfolioImage: (patronId: number, imageUrl: string) => Promise<{
     id: number;
-    salonId: number;
     createdAt: Date;
+    salonId: number;
     imageUrl: string;
 }>;
 export declare const deletePortfolioImage: (patronId: number, imageId: number) => Promise<{
     id: number;
-    salonId: number;
     createdAt: Date;
+    salonId: number;
     imageUrl: string;
 }>;
 export declare const createPortfolioImageAdmin: (salonId: number, imageUrl: string) => Promise<{
     id: number;
-    salonId: number;
     createdAt: Date;
+    salonId: number;
     imageUrl: string;
 }>;
 export declare const deletePortfolioImageAdmin: (salonId: number, imageId: number) => Promise<{
     id: number;
-    salonId: number;
     createdAt: Date;
+    salonId: number;
     imageUrl: string;
 }>;
 export declare const getAllSalonsAdmin: () => Promise<({
@@ -451,12 +451,12 @@ export declare const getAllSalonsAdmin: () => Promise<({
         employees: number;
     };
     patron: {
+        role: import("../../../generated/prisma/index.js").$Enums.Role;
         id: number;
         createdAt: Date;
-        phoneNumber: string;
         fullName: string;
+        phoneNumber: string;
         passwordHash: string;
-        role: import("../../../generated/prisma/index.js").$Enums.Role;
         isVerified: boolean;
         workplaceSalonId: number | null;
         ignoredAppointmentsCount: number;

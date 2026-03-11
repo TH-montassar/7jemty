@@ -1,6 +1,7 @@
 import * as authService from './auth.service.js';
 import { registerSchema, loginSchema, requestOtpSchema, verifyOtpSchema } from './auth.schema.js';
 export const register = async (req, res) => {
+    console.log(`[AUTH] Incoming REGISTER request for:`, req.body?.phoneNumber);
     try {
         const validatedData = registerSchema.parse(req.body);
         const result = await authService.registerUser(validatedData);
@@ -57,6 +58,7 @@ export const checkPhone = async (req, res) => {
     }
 };
 export const requestOtp = async (req, res) => {
+    console.log(`[AUTH] Incoming REQUEST-OTP request for:`, req.body?.phoneNumber);
     try {
         const validatedData = requestOtpSchema.parse(req.body);
         const result = await authService.requestOtp(validatedData.phoneNumber);

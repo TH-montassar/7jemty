@@ -9,14 +9,14 @@ export declare const getBarberAvailability: (salonId: number, dateString: string
 export declare const getAvailableDatesForRange: (salonId: number, startDateStr: string, endDateStr: string, requestedBarberId?: number, serviceIds?: number[], clientId_for_overlap_check?: number) => Promise<string[]>;
 export declare const createClientAppointment: (clientId: number, salonId: number, barberId: number | undefined, dateString: string, timeString: string, serviceIds: number[], targetType?: AppointmentTargetInput) => Promise<{
     barber: {
+        fullName: string;
         profile: {
             avatarUrl: string | null;
         } | null;
-        fullName: string;
     } | null;
     client: {
-        phoneNumber: string;
         fullName: string;
+        phoneNumber: string;
     };
     salon: {
         name: string;
@@ -26,9 +26,9 @@ export declare const createClientAppointment: (clientId: number, salonId: number
     services: ({
         service: {
             id: number;
-            salonId: number;
             name: string;
             description: string | null;
+            salonId: number;
             imageUrl: string | null;
             price: number;
             durationMinutes: number;
@@ -40,6 +40,8 @@ export declare const createClientAppointment: (clientId: number, salonId: number
     })[];
 } & {
     id: number;
+    createdAt: Date;
+    status: import("../../../generated/prisma/index.js").$Enums.AppointmentStatus;
     clientId: number;
     salonId: number;
     barberId: number | null;
@@ -47,7 +49,6 @@ export declare const createClientAppointment: (clientId: number, salonId: number
     estimatedEndTime: Date;
     totalPrice: number;
     totalDurationMinutes: number;
-    status: import("../../../generated/prisma/index.js").$Enums.AppointmentStatus;
     targetType: import("../../../generated/prisma/index.js").$Enums.AppointmentTarget;
     confirmedAt: Date | null;
     cancelledAt: Date | null;
@@ -60,23 +61,22 @@ export declare const createClientAppointment: (clientId: number, salonId: number
     is1hReminderSent: boolean;
     is10mReminderSent: boolean;
     lastCompletionAskTime: Date | null;
-    createdAt: Date;
 }>;
 export declare const processInProgressReminders: () => Promise<void>;
 export declare const processCompletionAlerts: () => Promise<void>;
 export declare const getSalonAppointments: (patronId: number) => Promise<({
     barber: {
+        fullName: string;
         profile: {
             avatarUrl: string | null;
         } | null;
-        fullName: string;
     } | null;
     client: {
+        fullName: string;
+        phoneNumber: string;
         profile: {
             avatarUrl: string | null;
         } | null;
-        phoneNumber: string;
-        fullName: string;
     };
     salon: {
         name: string;
@@ -86,9 +86,9 @@ export declare const getSalonAppointments: (patronId: number) => Promise<({
     services: ({
         service: {
             id: number;
-            salonId: number;
             name: string;
             description: string | null;
+            salonId: number;
             imageUrl: string | null;
             price: number;
             durationMinutes: number;
@@ -100,6 +100,8 @@ export declare const getSalonAppointments: (patronId: number) => Promise<({
     })[];
 } & {
     id: number;
+    createdAt: Date;
+    status: import("../../../generated/prisma/index.js").$Enums.AppointmentStatus;
     clientId: number;
     salonId: number;
     barberId: number | null;
@@ -107,7 +109,6 @@ export declare const getSalonAppointments: (patronId: number) => Promise<({
     estimatedEndTime: Date;
     totalPrice: number;
     totalDurationMinutes: number;
-    status: import("../../../generated/prisma/index.js").$Enums.AppointmentStatus;
     targetType: import("../../../generated/prisma/index.js").$Enums.AppointmentTarget;
     confirmedAt: Date | null;
     cancelledAt: Date | null;
@@ -120,21 +121,20 @@ export declare const getSalonAppointments: (patronId: number) => Promise<({
     is1hReminderSent: boolean;
     is10mReminderSent: boolean;
     lastCompletionAskTime: Date | null;
-    createdAt: Date;
 })[]>;
 export declare const getAppointmentsBySalonId: (salonId: number) => Promise<({
     barber: {
+        fullName: string;
         profile: {
             avatarUrl: string | null;
         } | null;
-        fullName: string;
     } | null;
     client: {
+        fullName: string;
+        phoneNumber: string;
         profile: {
             avatarUrl: string | null;
         } | null;
-        phoneNumber: string;
-        fullName: string;
     };
     salon: {
         name: string;
@@ -144,9 +144,9 @@ export declare const getAppointmentsBySalonId: (salonId: number) => Promise<({
     services: ({
         service: {
             id: number;
-            salonId: number;
             name: string;
             description: string | null;
+            salonId: number;
             imageUrl: string | null;
             price: number;
             durationMinutes: number;
@@ -158,6 +158,8 @@ export declare const getAppointmentsBySalonId: (salonId: number) => Promise<({
     })[];
 } & {
     id: number;
+    createdAt: Date;
+    status: import("../../../generated/prisma/index.js").$Enums.AppointmentStatus;
     clientId: number;
     salonId: number;
     barberId: number | null;
@@ -165,7 +167,6 @@ export declare const getAppointmentsBySalonId: (salonId: number) => Promise<({
     estimatedEndTime: Date;
     totalPrice: number;
     totalDurationMinutes: number;
-    status: import("../../../generated/prisma/index.js").$Enums.AppointmentStatus;
     targetType: import("../../../generated/prisma/index.js").$Enums.AppointmentTarget;
     confirmedAt: Date | null;
     cancelledAt: Date | null;
@@ -178,18 +179,17 @@ export declare const getAppointmentsBySalonId: (salonId: number) => Promise<({
     is1hReminderSent: boolean;
     is10mReminderSent: boolean;
     lastCompletionAskTime: Date | null;
-    createdAt: Date;
 })[]>;
 export declare const getClientAppointments: (clientId: number) => Promise<({
     barber: {
+        fullName: string;
         profile: {
             avatarUrl: string | null;
         } | null;
-        fullName: string;
     } | null;
     client: {
-        phoneNumber: string;
         fullName: string;
+        phoneNumber: string;
     };
     salon: {
         id: number;
@@ -203,9 +203,9 @@ export declare const getClientAppointments: (clientId: number) => Promise<({
     services: ({
         service: {
             id: number;
-            salonId: number;
             name: string;
             description: string | null;
+            salonId: number;
             imageUrl: string | null;
             price: number;
             durationMinutes: number;
@@ -222,6 +222,8 @@ export declare const getClientAppointments: (clientId: number) => Promise<({
     } | null;
 } & {
     id: number;
+    createdAt: Date;
+    status: import("../../../generated/prisma/index.js").$Enums.AppointmentStatus;
     clientId: number;
     salonId: number;
     barberId: number | null;
@@ -229,7 +231,6 @@ export declare const getClientAppointments: (clientId: number) => Promise<({
     estimatedEndTime: Date;
     totalPrice: number;
     totalDurationMinutes: number;
-    status: import("../../../generated/prisma/index.js").$Enums.AppointmentStatus;
     targetType: import("../../../generated/prisma/index.js").$Enums.AppointmentTarget;
     confirmedAt: Date | null;
     cancelledAt: Date | null;
@@ -242,19 +243,18 @@ export declare const getClientAppointments: (clientId: number) => Promise<({
     is1hReminderSent: boolean;
     is10mReminderSent: boolean;
     lastCompletionAskTime: Date | null;
-    createdAt: Date;
 })[]>;
 export declare const getEmployeeAppointments: (employeeId: number) => Promise<({
     barber: {
+        fullName: string;
         profile: {
             avatarUrl: string | null;
         } | null;
-        fullName: string;
     } | null;
     client: {
         id: number;
-        phoneNumber: string;
         fullName: string;
+        phoneNumber: string;
     };
     salon: {
         id: number;
@@ -264,9 +264,9 @@ export declare const getEmployeeAppointments: (employeeId: number) => Promise<({
     services: ({
         service: {
             id: number;
-            salonId: number;
             name: string;
             description: string | null;
+            salonId: number;
             imageUrl: string | null;
             price: number;
             durationMinutes: number;
@@ -278,6 +278,8 @@ export declare const getEmployeeAppointments: (employeeId: number) => Promise<({
     })[];
 } & {
     id: number;
+    createdAt: Date;
+    status: import("../../../generated/prisma/index.js").$Enums.AppointmentStatus;
     clientId: number;
     salonId: number;
     barberId: number | null;
@@ -285,7 +287,6 @@ export declare const getEmployeeAppointments: (employeeId: number) => Promise<({
     estimatedEndTime: Date;
     totalPrice: number;
     totalDurationMinutes: number;
-    status: import("../../../generated/prisma/index.js").$Enums.AppointmentStatus;
     targetType: import("../../../generated/prisma/index.js").$Enums.AppointmentTarget;
     confirmedAt: Date | null;
     cancelledAt: Date | null;
@@ -298,16 +299,15 @@ export declare const getEmployeeAppointments: (employeeId: number) => Promise<({
     is1hReminderSent: boolean;
     is10mReminderSent: boolean;
     lastCompletionAskTime: Date | null;
-    createdAt: Date;
 })[]>;
 export declare const extendAppointment: (appointmentId: number, minutes: number, userId: number, role: "PATRON" | "EMPLOYEE") => Promise<{
     client: {
+        role: import("../../../generated/prisma/index.js").$Enums.Role;
         id: number;
         createdAt: Date;
-        phoneNumber: string;
         fullName: string;
+        phoneNumber: string;
         passwordHash: string;
-        role: import("../../../generated/prisma/index.js").$Enums.Role;
         isVerified: boolean;
         workplaceSalonId: number | null;
         ignoredAppointmentsCount: number;
@@ -316,6 +316,8 @@ export declare const extendAppointment: (appointmentId: number, minutes: number,
     };
 } & {
     id: number;
+    createdAt: Date;
+    status: import("../../../generated/prisma/index.js").$Enums.AppointmentStatus;
     clientId: number;
     salonId: number;
     barberId: number | null;
@@ -323,7 +325,6 @@ export declare const extendAppointment: (appointmentId: number, minutes: number,
     estimatedEndTime: Date;
     totalPrice: number;
     totalDurationMinutes: number;
-    status: import("../../../generated/prisma/index.js").$Enums.AppointmentStatus;
     targetType: import("../../../generated/prisma/index.js").$Enums.AppointmentTarget;
     confirmedAt: Date | null;
     cancelledAt: Date | null;
@@ -336,7 +337,6 @@ export declare const extendAppointment: (appointmentId: number, minutes: number,
     is1hReminderSent: boolean;
     is10mReminderSent: boolean;
     lastCompletionAskTime: Date | null;
-    createdAt: Date;
 }>;
 export declare const postponeNoShowWithCascade: (appointmentId: number, minutes: number, userId: number, role: "PATRON" | "EMPLOYEE") => Promise<{
     appointmentId: number;
@@ -357,9 +357,9 @@ export declare const getUnreviewedAppointments: (clientId: number) => Promise<({
     services: ({
         service: {
             id: number;
-            salonId: number;
             name: string;
             description: string | null;
+            salonId: number;
             imageUrl: string | null;
             price: number;
             durationMinutes: number;
@@ -371,6 +371,8 @@ export declare const getUnreviewedAppointments: (clientId: number) => Promise<({
     })[];
 } & {
     id: number;
+    createdAt: Date;
+    status: import("../../../generated/prisma/index.js").$Enums.AppointmentStatus;
     clientId: number;
     salonId: number;
     barberId: number | null;
@@ -378,7 +380,6 @@ export declare const getUnreviewedAppointments: (clientId: number) => Promise<({
     estimatedEndTime: Date;
     totalPrice: number;
     totalDurationMinutes: number;
-    status: import("../../../generated/prisma/index.js").$Enums.AppointmentStatus;
     targetType: import("../../../generated/prisma/index.js").$Enums.AppointmentTarget;
     confirmedAt: Date | null;
     cancelledAt: Date | null;
@@ -391,15 +392,14 @@ export declare const getUnreviewedAppointments: (clientId: number) => Promise<({
     is1hReminderSent: boolean;
     is10mReminderSent: boolean;
     lastCompletionAskTime: Date | null;
-    createdAt: Date;
 })[]>;
 export declare const submitReview: (appointmentId: number, clientId: number, salonId: number, rating: number, comment?: string) => Promise<{
     id: number;
+    appointmentId: number;
+    createdAt: Date;
     clientId: number;
     salonId: number;
-    createdAt: Date;
     rating: number;
-    appointmentId: number;
     comment: string | null;
 }>;
 export {};

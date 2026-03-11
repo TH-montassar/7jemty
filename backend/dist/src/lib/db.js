@@ -13,7 +13,7 @@ const pool = new Pool({
 const adapter = new PrismaPg(pool);
 export const prisma = new PrismaClient({
     adapter,
-    log: ['query', 'info', 'warn', 'error'] // 👈 add it here
+    log: ['error']
 });
 prisma.$connect()
     .then(() => console.log('✅ Database connected successfully'))

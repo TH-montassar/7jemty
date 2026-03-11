@@ -1,40 +1,7 @@
 import { prisma } from '../../lib/db.js';
-import { sendNotification } from '../notifications/notifications.service.js';
-import { broadcastNotificationToUser, broadcastToAll } from '../notifications/notifications.controller.js';
+import { broadcastToAll } from '../notifications/notifications.controller.js';
+import { broadcastAppointmentRefresh, emitAppointmentEvent } from '../notifications/notification.orchestrator.js';
 const ACTIVE_APPOINTMENT_STATUSES = ['PENDING', 'CONFIRMED', 'IN_PROGRESS', 'ARRIVED'];
-const notifyUsers = async (_payload) => {
-    try {
-        const users = await prisma.user.findMany({
-            where: { id: { in: _payload.userIds } },
-            include: { profile: true }
-        });
-        for (const user of users) {
-            // 1. Create a persistent DB record
-            const newDbNotification = await prisma.notification.create({
-                data: {
-                    userId: user.id,
-                    title: _payload.title,
-                    body: _payload.body,
-                }
-            });
-            // 1a. Emit event via SSE Real-Time Stream
-            broadcastNotificationToUser(user.id, {
-                ...newDbNotification,
-                type: _payload.type || 'APPOINTMENT_DEFAULT'
-            });
-            const token = user.profile?.fcmToken;
-            if (token) {
-                await sendNotification(token, _payload.title, _payload.body, {
-                    appointmentId: _payload.appointmentId.toString(),
-                    type: _payload.type || 'APPOINTMENT_DEFAULT'
-                });
-            }
-        }
-    }
-    catch (e) {
-        console.error("Failed to notify users via FCM:", e);
-    }
-};
 export const updateAppointmentStatus = async (appointmentId, status, userId, userRole) => {
     const appointment = await prisma.appointment.findUnique({
         where: { id: appointmentId },
@@ -114,7 +81,36 @@ export const updateAppointmentStatus = async (appointmentId, status, userId, use
             data: updateData
         });
     });
-    await emitStatusNotifications(appointmentId, appointment.clientId, appointment.barberId, appointment.salon.patronId, status, appointment.appointmentDate);
+    const commonNotificationContext = {
+        appointmentId,
+        appointmentDate: appointment.appointmentDate,
+        status,
+        clientId: appointment.clientId,
+        barberId: appointment.barberId,
+        patronId: appointment.salon.patronId
+    };
+    if (status === 'CONFIRMED') {
+        await emitAppointmentEvent('APPT_CONFIRMED', commonNotificationContext);
+    }
+    if (status === 'CANCELLED') {
+        await emitAppointmentEvent('APPT_CANCELLED', commonNotificationContext);
+    }
+    if (status === 'DECLINED') {
+        await emitAppointmentEvent('APPT_DECLINED', commonNotificationContext);
+    }
+    if (status === 'COMPLETED') {
+        await prisma.appointment.update({
+            where: { id: appointmentId },
+            data: { reviewRequestedAt: new Date() }
+        });
+        await emitAppointmentEvent('APPT_COMPLETED', commonNotificationContext);
+    }
+    await broadcastAppointmentRefresh({
+        appointmentId,
+        status,
+        userIds: [appointment.clientId, appointment.barberId, appointment.salon.patronId]
+            .filter((id) => Boolean(id))
+    });
     return updated;
 };
 export const getBarberAvailability = async (salonId, dateString, requestedBarberId, serviceIds, clientId_for_overlap_check) => {
@@ -199,7 +195,7 @@ export const getAvailableDatesForRange = async (salonId, startDateStr, endDateSt
     const end = new Date(endDateStr);
     // Limit to max 31 days to prevent overload
     if ((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24) > 31) {
-        throw new Error("La plage de dates ne peut pas d�passer 31 jours.");
+        throw new Error("La plage de dates ne peut pas depasser 31 jours.");
     }
     const dateStrings = [];
     let current = new Date(start);
@@ -236,13 +232,13 @@ export const createClientAppointment = async (clientId, salonId, barberId, dateS
     const appointmentDate = parseTime(timeString, new Date(dateString));
     const now = new Date();
     if (appointmentDate <= now) {
-        throw new Error('Impossible de r�server un cr�neau dans le pass�');
+        throw new Error('Impossible de reserver un creneau dans le passe');
     }
     const estimatedEndTime = new Date(appointmentDate);
     estimatedEndTime.setMinutes(estimatedEndTime.getMinutes() + totalDurationMinutes);
     const [openHour, closeHour] = await getSalonOpenCloseForDate(salonId, appointmentDate);
     if (appointmentDate < openHour || estimatedEndTime > closeHour) {
-        throw new Error('Le cr�neau d�passe les horaires du salon');
+        throw new Error('Le creneau depasse les horaires du salon');
     }
     const availability = await getBarberAvailability(salonId, dateString, barberId, serviceIds);
     if (!availability.some((s) => s.time === timeString && s.available)) {
@@ -284,38 +280,21 @@ export const createClientAppointment = async (clientId, salonId, barberId, dateS
             services: { include: { service: true } }
         }
     });
-    const recipients = targetType === 'EMPLOYEE'
-        ? [targetBarberId, salon.patronId].filter((id, idx, arr) => Boolean(id) && arr.indexOf(id) === idx)
-        : [salon.patronId];
-    await notifyUsers({
-        title: 'Nouvelle demande de rendez-vous',
-        body: `Service r�serv� � ${timeString}`,
-        userIds: recipients,
+    await emitAppointmentEvent('APPT_CREATED', {
         appointmentId: appointment.id,
-        type: 'APPOINTMENT_UPDATED'
+        appointmentDate,
+        status: 'PENDING',
+        clientId,
+        barberId: targetBarberId,
+        patronId: salon.patronId,
+        dedupeWindowMs: 30_000
     });
-    // Silent broadcast to ensure all apps refresh
-    const allInvolved = [clientId, targetBarberId, salon.patronId].filter((id) => Boolean(id));
-    const uniqueInvolved = Array.from(new Set(allInvolved));
-    const users = await prisma.user.findMany({
-        where: { id: { in: uniqueInvolved } },
-        include: { profile: true }
+    await broadcastAppointmentRefresh({
+        appointmentId: appointment.id,
+        status: 'PENDING',
+        userIds: [clientId, targetBarberId, salon.patronId]
+            .filter((id) => Boolean(id))
     });
-    for (const user of users) {
-        // Broadcast via SSE (for Web and Mobile fallback)
-        broadcastNotificationToUser(user.id, {
-            type: 'APPOINTMENT_UPDATED',
-            appointmentId: appointment.id,
-            newStatus: 'PENDING'
-        });
-        if (user.profile?.fcmToken) {
-            await sendNotification(user.profile.fcmToken, undefined, undefined, {
-                type: 'APPOINTMENT_UPDATED',
-                appointmentId: appointment.id.toString(),
-                newStatus: 'PENDING'
-            });
-        }
-    }
     // Broadcast availability change to all clients
     broadcastToAll({
         type: 'AVAILABILITY_CHANGED',
@@ -333,11 +312,15 @@ export const processInProgressReminders = async () => {
         include: { salon: { select: { patronId: true } } }
     });
     for (const appointment of appointments) {
-        await notifyUsers({
-            title: 'Le client est-il arriv� ?',
-            body: 'Confirmez son arriv�e pour d�marrer la prestation.',
-            userIds: [appointment.barberId ?? appointment.salon.patronId],
-            appointmentId: appointment.id
+        await emitAppointmentEvent('APPT_BARBER_ARRIVAL_CHECK', {
+            appointmentId: appointment.id,
+            appointmentDate: appointment.appointmentDate,
+            status: appointment.status,
+            clientId: appointment.clientId,
+            barberId: appointment.barberId,
+            patronId: appointment.salon.patronId,
+            targetUserIds: [appointment.barberId ?? appointment.salon.patronId],
+            dedupeWindowMs: 60_000
         });
     }
 };
@@ -359,11 +342,15 @@ export const processCompletionAlerts = async () => {
                 nextCompletionCheckAt: new Date(now.getTime() + 15 * 60 * 1000)
             }
         });
-        await notifyUsers({
-            title: 'Temps �coul�',
-            body: 'As-tu termin� ? (Oui / Snooze +15min)',
-            userIds: [appointment.barberId ?? appointment.salon.patronId],
-            appointmentId: appointment.id
+        await emitAppointmentEvent('APPT_BARBER_COMPLETION_CHECK', {
+            appointmentId: appointment.id,
+            appointmentDate: appointment.appointmentDate,
+            status: appointment.status,
+            clientId: appointment.clientId,
+            barberId: appointment.barberId,
+            patronId: appointment.salon.patronId,
+            targetUserIds: [appointment.barberId ?? appointment.salon.patronId],
+            dedupeWindowMs: 5 * 60_000
         });
     }
     const ignoredThreshold = new Date(now.getTime() - 24 * 60 * 60 * 1000);
@@ -402,72 +389,6 @@ export const processCompletionAlerts = async () => {
         });
     }
 };
-const emitStatusNotifications = async (appointmentId, clientId, barberId, patronId, status, appointmentDate) => {
-    if (status === 'CONFIRMED') {
-        await notifyUsers({
-            title: 'Rendez-vous confirm�',
-            body: `Votre rendez-vous a �t� accept� pour le ${appointmentDate.toLocaleDateString('fr-FR')} � ${appointmentDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`,
-            userIds: [clientId, barberId, patronId].filter((id) => Boolean(id)),
-            appointmentId,
-            type: 'APPOINTMENT_UPDATED'
-        });
-    }
-    if (status === 'CANCELLED') {
-        const potentialRecipients = [clientId, barberId, patronId];
-        const recipients = potentialRecipients.filter((id, idx, arr) => Boolean(id) && arr.indexOf(id) === idx);
-        await notifyUsers({
-            title: 'Rendez-vous annul�',
-            body: 'Une modification a �t� effectu�e sur le rendez-vous.',
-            userIds: recipients,
-            appointmentId,
-            type: 'APPOINTMENT_UPDATED'
-        });
-    }
-    if (status === 'DECLINED') {
-        await notifyUsers({
-            title: 'Rendez-vous refus�',
-            body: 'Malheureusement, le salon a refus� ce cr�neau. Veuillez en choisir un autre.',
-            userIds: [clientId, barberId, patronId].filter((id) => Boolean(id)),
-            appointmentId,
-            type: 'APPOINTMENT_UPDATED'
-        });
-    }
-    if (status === 'COMPLETED') {
-        await prisma.appointment.update({
-            where: { id: appointmentId },
-            data: { reviewRequestedAt: new Date() }
-        });
-        await notifyUsers({
-            title: 'Laissez votre avis',
-            body: 'Votre prestation est termin�e, partagez votre review.',
-            userIds: [clientId, barberId, patronId].filter((id) => Boolean(id)),
-            appointmentId,
-            type: 'APPOINTMENT_UPDATED'
-        });
-    }
-    // Always send a silent real-time refresh trigger to everyone involved so frontend apps can reload data
-    const allInvolved = [clientId, barberId, patronId].filter((id) => Boolean(id));
-    const uniqueInvolved = Array.from(new Set(allInvolved));
-    const users = await prisma.user.findMany({
-        where: { id: { in: uniqueInvolved } },
-        include: { profile: true }
-    });
-    for (const user of users) {
-        // Broadcast via SSE (for Web and Mobile fallback)
-        broadcastNotificationToUser(user.id, {
-            type: 'APPOINTMENT_UPDATED',
-            appointmentId: appointmentId,
-            newStatus: status
-        });
-        if (user.profile?.fcmToken) {
-            await sendNotification(user.profile.fcmToken, undefined, undefined, {
-                type: 'APPOINTMENT_UPDATED',
-                appointmentId: appointmentId.toString(),
-                newStatus: status
-            });
-        }
-    }
-};
 const assertStatusTransition = (currentStatus, nextStatus, userRole, appointmentDate) => {
     if (nextStatus === currentStatus) {
         return;
@@ -487,7 +408,7 @@ const assertStatusTransition = (currentStatus, nextStatus, userRole, appointment
     if (nextStatus === 'CANCELLED' && userRole === 'CLIENT') {
         const oneHourBefore = new Date(appointmentDate.getTime() - 60 * 60 * 1000);
         if (new Date() >= oneHourBefore) {
-            throw new Error('Annulation client impossible � moins de 1h du rendez-vous');
+            throw new Error('Annulation client impossible a moins de 1h du rendez-vous');
         }
     }
 };
@@ -518,7 +439,7 @@ const getSalonOpenCloseForDate = async (salonId, date) => {
     let openTime = '08:00';
     let closeTime = '17:00';
     if (workingHours?.isDayOff) {
-        throw new Error('Salon ferm� ce jour');
+        throw new Error('Salon ferme ce jour');
     }
     if (workingHours?.openTime) {
         openTime = workingHours.openTime;
@@ -599,10 +520,10 @@ export const extendAppointment = async (appointmentId, minutes, userId, role) =>
     if (!appointment)
         throw new Error("Rendez-vous moch mawjoud");
     if (role === 'EMPLOYEE' && appointment.barberId !== userId) {
-        throw new Error("Non autoris� bch tzid wa9t");
+        throw new Error("Non autorise bch tzid wa9t");
     }
     if (role === 'PATRON' && appointment.salon.patronId !== userId) {
-        throw new Error("Non autoris� bch tzid wa9t");
+        throw new Error("Non autorise bch tzid wa9t");
     }
     if (appointment.status !== 'IN_PROGRESS') {
         throw new Error("Tnajemchi tzid wa9t ken lel maw3ed li en cours");
@@ -681,14 +602,14 @@ export const postponeNoShowWithCascade = async (appointmentId, minutes, userId, 
         return updatedAppointments;
     });
     for (const appt of shiftedAppointments) {
-        const recipients = [appt.clientId, appt.barberId, appt.salon.patronId]
-            .filter((id, idx, arr) => Boolean(id) && arr.indexOf(id) === idx);
-        await notifyUsers({
-            title: 'Rendez-vous decale',
-            body: `Rendez-vous decale de ${minutes} minutes.`,
-            userIds: recipients,
+        await emitAppointmentEvent('APPT_SHIFTED', {
             appointmentId: appt.id,
-            type: 'APPOINTMENT_UPDATED'
+            appointmentDate: appt.appointmentDate,
+            status: appt.status,
+            clientId: appt.clientId,
+            barberId: appt.barberId,
+            patronId: appt.salon.patronId,
+            extraData: { shiftMinutes: minutes }
         });
     }
     broadcastToAll({

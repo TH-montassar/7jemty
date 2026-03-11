@@ -8,6 +8,7 @@ export const registerSchema = z.object({
     address: z.string().optional(),
     latitude: z.number().optional(),
     longitude: z.number().optional(),
+    phoneVerificationToken: z.string().optional(),
 });
 export const loginSchema = z.object({
     phoneNumber: z.string().min(8, "Numéro de téléphone invalide"),

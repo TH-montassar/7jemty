@@ -5,7 +5,33 @@ import { env } from '../../config/env.js';
 import { sendNotification } from '../notifications/notifications.service.js';
 import { broadcastNotificationToUser } from '../notifications/notifications.controller.js';
 import { Role } from '../../../generated/prisma/index.js';
+const PHONE_VERIFY_PURPOSE = 'REGISTER_PHONE_VERIFICATION';
+const PHONE_VERIFY_TOKEN_EXPIRY = '15m';
+const createPhoneVerificationToken = (phoneNumber) => {
+    return jwt.sign({ phoneNumber, purpose: PHONE_VERIFY_PURPOSE }, env.JWT_SECRET, { expiresIn: PHONE_VERIFY_TOKEN_EXPIRY });
+};
+const assertPhoneVerifiedForRegister = (phoneNumber, phoneVerificationToken) => {
+    if (!phoneVerificationToken) {
+        throw new Error('Verification du numero requise avant inscription.');
+    }
+    try {
+        const decoded = jwt.verify(phoneVerificationToken, env.JWT_SECRET);
+        if (typeof decoded === 'string') {
+            throw new Error('Token invalide');
+        }
+        if (decoded.purpose !== PHONE_VERIFY_PURPOSE) {
+            throw new Error('Token invalide');
+        }
+        if (decoded.phoneNumber !== phoneNumber) {
+            throw new Error('Le numero verifie ne correspond pas.');
+        }
+    }
+    catch {
+        throw new Error('La verification du numero a expire ou est invalide.');
+    }
+};
 export const registerUser = async (data) => {
+    assertPhoneVerifiedForRegister(data.phoneNumber, data.phoneVerificationToken);
     const existingUser = await prisma.user.findUnique({
         where: { phoneNumber: data.phoneNumber }
     });
@@ -140,6 +166,28 @@ export const checkPhoneExists = async (phoneNumber) => {
     return { exists: false, role: null };
 };
 export const requestOtp = async (phoneNumber) => {
+    // 1. Spamm Protection: Limit to 1 request every 60 seconds
+    const oneMinuteAgo = new Date(Date.now() - 60 * 1000);
+    const recentOtp = await prisma.otpCode.findFirst({
+        where: {
+            phoneNumber,
+            createdAt: { gte: oneMinuteAgo }
+        }
+    });
+    if (recentOtp) {
+        throw new Error("Veuillez patienter 60 secondes avant de demander un nouveau code.");
+    }
+    // 2. Max attempts: Limit to 3 requests per 24 hours
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const otpsTodayCount = await prisma.otpCode.count({
+        where: {
+            phoneNumber,
+            createdAt: { gte: twentyFourHoursAgo }
+        }
+    });
+    if (otpsTodayCount >= 3) {
+        throw new Error("Vous avez dépassé la limite de 3 tentatives. Réessayez dans 24 heures.");
+    }
     // Generate a 6-digit code
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
@@ -153,7 +201,10 @@ export const requestOtp = async (phoneNumber) => {
     });
     // In a real production app, you would integrate an SMS provider here.
     // For now, we simulate sending it.
-    console.log(`[SIMULATED SMS] Send to ${phoneNumber}: Your  7jemty password  is ${code}`);
+    console.log('\n' + '='.repeat(50));
+    console.log(`🚀 [SIMULATED SMS] TO: ${phoneNumber}`);
+    console.log(`💬 CODE: ${code}`);
+    console.log('='.repeat(50) + '\n');
     return { message: "Code OTP envoyé avec succès" };
 };
 export const verifyOtp = async (phoneNumber, submittedCode) => {
@@ -177,7 +228,11 @@ export const verifyOtp = async (phoneNumber, submittedCode) => {
     await prisma.otpCode.delete({
         where: { id: otpRecord.id }
     });
-    return { message: "Numéro vérifié avec succès" };
+    const phoneVerificationToken = createPhoneVerificationToken(phoneNumber);
+    return {
+        message: "Numéro vérifié avec succès",
+        phoneVerificationToken
+    };
 };
 export const getAllUsersAdmin = async () => {
     const users = await prisma.user.findMany({

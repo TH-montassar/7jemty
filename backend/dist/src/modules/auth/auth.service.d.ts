@@ -3,8 +3,8 @@ export declare const registerUser: (data: any) => Promise<{
     user: {
         profile: {
             id: number;
-            createdAt: Date;
             userId: number;
+            createdAt: Date;
             email: string | null;
             avatarUrl: string | null;
             bio: string | null;
@@ -17,11 +17,11 @@ export declare const registerUser: (data: any) => Promise<{
             latitude: number | null;
             longitude: number | null;
         } | null;
+        role: import("../../../generated/prisma/index.js").$Enums.Role;
         id: number;
         createdAt: Date;
-        phoneNumber: string;
         fullName: string;
-        role: import("../../../generated/prisma/index.js").$Enums.Role;
+        phoneNumber: string;
         isVerified: boolean;
         workplaceSalonId: number | null;
         ignoredAppointmentsCount: number;
@@ -33,11 +33,11 @@ export declare const registerUser: (data: any) => Promise<{
 export declare const loginUser: (data: any) => Promise<{
     user: {
         hasSalon: boolean;
+        role: import("../../../generated/prisma/index.js").$Enums.Role;
         id: number;
         createdAt: Date;
-        phoneNumber: string;
         fullName: string;
-        role: import("../../../generated/prisma/index.js").$Enums.Role;
+        phoneNumber: string;
         isVerified: boolean;
         workplaceSalonId: number | null;
         ignoredAppointmentsCount: number;
@@ -49,8 +49,8 @@ export declare const loginUser: (data: any) => Promise<{
 export declare const getMe: (userId: number) => Promise<{
     profile: {
         id: number;
-        createdAt: Date;
         userId: number;
+        createdAt: Date;
         email: string | null;
         avatarUrl: string | null;
         bio: string | null;
@@ -63,11 +63,11 @@ export declare const getMe: (userId: number) => Promise<{
         latitude: number | null;
         longitude: number | null;
     } | null;
+    role: import("../../../generated/prisma/index.js").$Enums.Role;
     id: number;
     createdAt: Date;
-    phoneNumber: string;
     fullName: string;
-    role: import("../../../generated/prisma/index.js").$Enums.Role;
+    phoneNumber: string;
     isVerified: boolean;
     workplaceSalonId: number | null;
     ignoredAppointmentsCount: number;
@@ -84,8 +84,8 @@ export declare const updateProfile: (userId: number, data: {
     address?: string;
 }) => Promise<{
     id: number;
-    createdAt: Date;
     userId: number;
+    createdAt: Date;
     email: string | null;
     avatarUrl: string | null;
     bio: string | null;
@@ -110,6 +110,7 @@ export declare const requestOtp: (phoneNumber: string) => Promise<{
 }>;
 export declare const verifyOtp: (phoneNumber: string, submittedCode: string) => Promise<{
     message: string;
+    phoneVerificationToken: string;
 }>;
 type AdminUserUpdateInput = {
     fullName?: string;
@@ -125,15 +126,10 @@ type AdminUserUpdateInput = {
     };
 };
 export declare const getAllUsersAdmin: () => Promise<{
-    _count: {
-        appointmentsBarber: number;
-        appointmentsClient: number;
-        salonsOwned: number;
-    };
     profile: {
         id: number;
-        createdAt: Date;
         userId: number;
+        createdAt: Date;
         email: string | null;
         avatarUrl: string | null;
         bio: string | null;
@@ -146,11 +142,16 @@ export declare const getAllUsersAdmin: () => Promise<{
         latitude: number | null;
         longitude: number | null;
     } | null;
+    _count: {
+        appointmentsBarber: number;
+        appointmentsClient: number;
+        salonsOwned: number;
+    };
+    role: import("../../../generated/prisma/index.js").$Enums.Role;
     id: number;
     createdAt: Date;
-    phoneNumber: string;
     fullName: string;
-    role: import("../../../generated/prisma/index.js").$Enums.Role;
+    phoneNumber: string;
     isVerified: boolean;
     workplaceSalonId: number | null;
     ignoredAppointmentsCount: number;
@@ -160,8 +161,8 @@ export declare const getAllUsersAdmin: () => Promise<{
 export declare const updateUserAdmin: (userId: number, data: AdminUserUpdateInput) => Promise<{
     profile: {
         id: number;
-        createdAt: Date;
         userId: number;
+        createdAt: Date;
         email: string | null;
         avatarUrl: string | null;
         bio: string | null;
@@ -175,12 +176,12 @@ export declare const updateUserAdmin: (userId: number, data: AdminUserUpdateInpu
         longitude: number | null;
     } | null;
 } & {
+    role: import("../../../generated/prisma/index.js").$Enums.Role;
     id: number;
     createdAt: Date;
-    phoneNumber: string;
     fullName: string;
+    phoneNumber: string;
     passwordHash: string;
-    role: import("../../../generated/prisma/index.js").$Enums.Role;
     isVerified: boolean;
     workplaceSalonId: number | null;
     ignoredAppointmentsCount: number;
@@ -188,12 +189,12 @@ export declare const updateUserAdmin: (userId: number, data: AdminUserUpdateInpu
     isBlacklistedBySystem: boolean;
 }>;
 export declare const deleteUserAdmin: (userId: number) => Promise<{
+    role: import("../../../generated/prisma/index.js").$Enums.Role;
     id: number;
     createdAt: Date;
-    phoneNumber: string;
     fullName: string;
+    phoneNumber: string;
     passwordHash: string;
-    role: import("../../../generated/prisma/index.js").$Enums.Role;
     isVerified: boolean;
     workplaceSalonId: number | null;
     ignoredAppointmentsCount: number;

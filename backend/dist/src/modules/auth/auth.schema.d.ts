@@ -12,6 +12,7 @@ export declare const registerSchema: z.ZodObject<{
     address: z.ZodOptional<z.ZodString>;
     latitude: z.ZodOptional<z.ZodNumber>;
     longitude: z.ZodOptional<z.ZodNumber>;
+    phoneVerificationToken: z.ZodOptional<z.ZodString>;
 }, z.core.$strip>;
 export declare const loginSchema: z.ZodObject<{
     phoneNumber: z.ZodString;
