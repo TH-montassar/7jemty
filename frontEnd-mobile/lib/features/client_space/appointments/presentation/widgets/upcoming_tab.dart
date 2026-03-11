@@ -23,6 +23,7 @@ class _UpcomingTabState extends State<UpcomingTab> {
   String _sortField = 'APPOINTMENT_DATE';
   bool _sortAscending = true;
   StreamSubscription<Map<String, dynamic>>? _fcmSubscription;
+  Timer? _countdownTicker;
 
   String _normalizeStatus(dynamic rawStatus) {
     final status = (rawStatus as String? ?? '').toUpperCase();
@@ -52,7 +53,52 @@ class _UpcomingTabState extends State<UpcomingTab> {
   void initState() {
     super.initState();
     _setupFcmListener();
+    _startCountdownTicker();
     _fetchAppointments();
+  }
+
+  void _startCountdownTicker() {
+    _countdownTicker?.cancel();
+    _scheduleNextCountdownTick();
+  }
+
+  bool _hasSecondLevelCountdown() {
+    final now = DateTime.now();
+    for (final apt in _appointments) {
+      final status = _normalizeStatus(apt['status']);
+      if (status != 'CONFIRMED' && status != 'PENDING') continue;
+
+      final appointmentDate = _safeDate(apt['appointmentDate']);
+      if (appointmentDate == null) continue;
+
+      final secondsUntil = appointmentDate.difference(now).inSeconds;
+      if (secondsUntil > 0 && secondsUntil <= 60) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  void _scheduleNextCountdownTick() {
+    if (!mounted || _isLoading || _appointments.isEmpty) return;
+
+    final now = DateTime.now();
+    final useSecondLevelTicker = _hasSecondLevelCountdown();
+
+    final delay = useSecondLevelTicker
+        ? const Duration(seconds: 1)
+        : const Duration(minutes: 1) -
+              Duration(
+                seconds: now.second,
+                milliseconds: now.millisecond,
+                microseconds: now.microsecond,
+              );
+
+    _countdownTicker = Timer(delay, () {
+      if (!mounted) return;
+      setState(() {});
+      _scheduleNextCountdownTick();
+    });
   }
 
   void _setupFcmListener() {
@@ -66,6 +112,7 @@ class _UpcomingTabState extends State<UpcomingTab> {
   @override
   void dispose() {
     _fcmSubscription?.cancel();
+    _countdownTicker?.cancel();
     super.dispose();
   }
 
@@ -79,9 +126,11 @@ class _UpcomingTabState extends State<UpcomingTab> {
 
       _applyFilters();
       setState(() => _isLoading = false);
+      _startCountdownTicker();
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
+      _startCountdownTicker();
     }
   }
 
@@ -122,6 +171,7 @@ class _UpcomingTabState extends State<UpcomingTab> {
     setState(() {
       _appointments = filtered;
     });
+    _startCountdownTicker();
   }
 
   Future<void> _cancelAppointment(int appointmentId) async {
@@ -264,17 +314,22 @@ class _UpcomingTabState extends State<UpcomingTab> {
                               (difference.inMinutes % 60).toString(),
                             ],
                           );
+                        } else if (difference.inSeconds <= 60) {
+                          final secondsLeft =
+                              ((difference.inMilliseconds) / 1000).ceil().clamp(
+                                0,
+                                60,
+                              );
+                          countdownText = tr(
+                            context,
+                            'time_remaining_sec',
+                            args: [secondsLeft.toString()],
+                          );
                         } else if (difference.inMinutes > 0) {
                           countdownText = tr(
                             context,
                             'time_remaining_min',
                             args: [difference.inMinutes.toString()],
-                          );
-                        } else {
-                          countdownText = tr(
-                            context,
-                            'time_remaining_sec',
-                            args: [difference.inSeconds.toString()],
                           );
                         }
                       }
@@ -724,16 +779,17 @@ class _UpcomingTabState extends State<UpcomingTab> {
               setState(() => _sortField = value);
               _applyFilters();
             },
-            itemBuilder: (BuildContext context) => const <PopupMenuEntry<String>>[
-              PopupMenuItem<String>(
-                value: 'APPOINTMENT_DATE',
-                child: Text('Date RDV'),
-              ),
-              PopupMenuItem<String>(
-                value: 'CREATED_AT',
-                child: Text('Date creation'),
-              ),
-            ],
+            itemBuilder: (BuildContext context) =>
+                const <PopupMenuEntry<String>>[
+                  PopupMenuItem<String>(
+                    value: 'APPOINTMENT_DATE',
+                    child: Text('Date RDV'),
+                  ),
+                  PopupMenuItem<String>(
+                    value: 'CREATED_AT',
+                    child: Text('Date creation'),
+                  ),
+                ],
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               margin: const EdgeInsets.only(right: 8),
@@ -794,9 +850,7 @@ class _UpcomingTabState extends State<UpcomingTab> {
               child: Row(
                 children: [
                   Icon(
-                    _sortAscending
-                        ? Icons.arrow_upward
-                        : Icons.arrow_downward,
+                    _sortAscending ? Icons.arrow_upward : Icons.arrow_downward,
                     size: 16,
                     color: AppColors.textDark,
                   ),
@@ -805,8 +859,9 @@ class _UpcomingTabState extends State<UpcomingTab> {
                     _sortAscending ? 'Asc' : 'Desc',
                     style: TextStyle(
                       color: AppColors.textDark,
-                      fontWeight:
-                          !_sortAscending ? FontWeight.bold : FontWeight.w500,
+                      fontWeight: !_sortAscending
+                          ? FontWeight.bold
+                          : FontWeight.w500,
                       fontSize: 13,
                     ),
                   ),

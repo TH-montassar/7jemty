@@ -1,21 +1,93 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:hjamty/core/constants/app_colors.dart';
 import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:intl/intl.dart';
 import 'package:hjamty/features/client_space/appointments/presentation/widgets/appointment_details_bottom_sheet.dart';
 
-class NextRdvCard extends StatelessWidget {
+class NextRdvCard extends StatefulWidget {
   final Map<String, dynamic>? appointmentData;
 
   const NextRdvCard({super.key, this.appointmentData});
 
   @override
+  State<NextRdvCard> createState() => _NextRdvCardState();
+}
+
+class _NextRdvCardState extends State<NextRdvCard> {
+  Timer? _countdownTicker;
+  DateTime _now = DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+    _startCountdownTicker();
+  }
+
+  @override
+  void didUpdateWidget(covariant NextRdvCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.appointmentData?['appointmentDate'] !=
+            widget.appointmentData?['appointmentDate'] ||
+        oldWidget.appointmentData?['status'] !=
+            widget.appointmentData?['status']) {
+      _startCountdownTicker();
+    }
+  }
+
+  void _startCountdownTicker() {
+    _countdownTicker?.cancel();
+    _scheduleNextTick();
+  }
+
+  void _scheduleNextTick() {
+    if (!mounted) return;
+    final apt = widget.appointmentData;
+    if (apt == null) return;
+
+    final rawStatus = (apt['status'] as String? ?? 'PENDING').toUpperCase();
+    final status = rawStatus == 'ARRIVED' ? 'IN_PROGRESS' : rawStatus;
+    if (status != 'CONFIRMED' && status != 'PENDING') return;
+
+    final dateStr = apt['appointmentDate'];
+    final DateTime date = dateStr != null
+        ? DateTime.parse(dateStr.toString()).toLocal()
+        : DateTime.now();
+
+    final diff = date.difference(DateTime.now());
+    if (diff.isNegative) return;
+
+    final now = DateTime.now();
+    final delay = (diff.inSeconds <= 60)
+        ? const Duration(seconds: 1)
+        : const Duration(minutes: 1) -
+              Duration(
+                seconds: now.second,
+                milliseconds: now.millisecond,
+                microseconds: now.microsecond,
+              );
+
+    _countdownTicker = Timer(delay, () {
+      if (!mounted) return;
+      setState(() => _now = DateTime.now());
+      _scheduleNextTick();
+    });
+  }
+
+  @override
+  void dispose() {
+    _countdownTicker?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (appointmentData == null) {
+    if (widget.appointmentData == null) {
       return const SizedBox.shrink();
     }
 
-    final apt = appointmentData!;
+    final apt = widget.appointmentData!;
     final salonName = apt['salon']?['name'] ?? 'Salon inconnu';
     final barberName =
         apt['barber']?['fullName'] ?? 'Professionnel non assigné';
@@ -40,8 +112,7 @@ class NextRdvCard extends StatelessWidget {
               : tr(context, 'status_pending'));
 
     // Countdown logic
-    final now = DateTime.now();
-    final difference = date.difference(now);
+    final difference = date.difference(_now);
 
     String countdownText = "";
     if (status == 'CONFIRMED' || status == 'PENDING') {
@@ -56,17 +127,21 @@ class NextRdvCard extends StatelessWidget {
             (difference.inMinutes % 60).toString(),
           ],
         );
+      } else if (difference.inSeconds <= 60) {
+        final secondsLeft = ((difference.inMilliseconds) / 1000).ceil().clamp(
+          0,
+          60,
+        );
+        countdownText = tr(
+          context,
+          'time_remaining_sec',
+          args: [secondsLeft.toString()],
+        );
       } else if (difference.inMinutes > 0) {
         countdownText = tr(
           context,
           'time_remaining_min',
           args: [difference.inMinutes.toString()],
-        );
-      } else {
-        countdownText = tr(
-          context,
-          'time_remaining_sec',
-          args: [difference.inSeconds.toString()],
         );
       }
     }
@@ -85,7 +160,7 @@ class NextRdvCard extends StatelessWidget {
         onTap: () {
           showAppointmentDetailsBottomSheet(
             context: context,
-            appointment: appointmentData!,
+            appointment: widget.appointmentData!,
             showClientDetails: false,
           );
         },
@@ -112,7 +187,11 @@ class NextRdvCard extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.calendar_month_rounded, color: AppColors.primaryBlue, size: 20),
+                      const Icon(
+                        Icons.calendar_month_rounded,
+                        color: AppColors.primaryBlue,
+                        size: 20,
+                      ),
                       const SizedBox(width: 8),
                       Text(
                         tr(context, 'next_appointment'),
@@ -131,14 +210,21 @@ class NextRdvCard extends StatelessWidget {
                       );
                     },
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.primaryBlue.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.map_outlined, color: AppColors.primaryBlue, size: 14),
+                          const Icon(
+                            Icons.map_outlined,
+                            color: AppColors.primaryBlue,
+                            size: 14,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             tr(context, 'see_on_map'),
@@ -220,7 +306,11 @@ class NextRdvCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 6),
-                  const Icon(Icons.verified, color: AppColors.primaryBlue, size: 20),
+                  const Icon(
+                    Icons.verified,
+                    color: AppColors.primaryBlue,
+                    size: 20,
+                  ),
                 ],
               ),
               const SizedBox(height: 8),
@@ -228,12 +318,20 @@ class NextRdvCard extends StatelessWidget {
               // Services & Price
               Row(
                 children: [
-                  const Icon(Icons.cut_outlined, size: 18, color: Colors.black54),
+                  const Icon(
+                    Icons.cut_outlined,
+                    size: 18,
+                    color: Colors.black54,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       "$serviceNames - $price DT",
-                      style: const TextStyle(color: Colors.black54, fontSize: 14, fontWeight: FontWeight.w500),
+                      style: const TextStyle(
+                        color: Colors.black54,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -244,12 +342,20 @@ class NextRdvCard extends StatelessWidget {
               // Professional Name
               Row(
                 children: [
-                  const Icon(Icons.person_outline_rounded, size: 18, color: Colors.black54),
+                  const Icon(
+                    Icons.person_outline_rounded,
+                    size: 18,
+                    color: Colors.black54,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       tr(context, 'professional_label', args: [barberName]),
-                      style: const TextStyle(color: Colors.black54, fontSize: 14, fontWeight: FontWeight.w500),
+                      style: const TextStyle(
+                        color: Colors.black54,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
