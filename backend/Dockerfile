@@ -14,11 +14,15 @@ COPY . .
 # Generate Prisma client
 RUN npx prisma generate
 
-# Build the TypeScript code
-RUN npm run build
+# Define an argument for the environment, default to production for Render
+ARG NODE_ENV=production
+ENV NODE_ENV=${NODE_ENV}
 
-# Copy the generated Prisma client to the dist directory
-RUN cp -r generated dist/generated
+# Build the TypeScript code (Only in production)
+RUN if [ "$NODE_ENV" = "production" ]; then npm run build; fi
+
+# Copy the generated Prisma client to the dist directory (Only in production)
+RUN if [ "$NODE_ENV" = "production" ]; then cp -r generated dist/generated; fi
 
 # Expose the API port (defaulting to 3000, adjust if your server uses a different port)
 EXPOSE 3000

@@ -7,6 +7,13 @@ class ApiConfig {
 
   static String get host {
     if (_overrideHost.isNotEmpty) return _overrideHost;
+
+    if (kReleaseMode) {
+      // Production Render backend URL
+      return 'https://sevenjemty.onrender.com/'; //https://7jemty-production.up.railway.app/
+    }
+
+    // --- Dev Mode (Local) ---
     if (kIsWeb) return 'http://127.0.0.1:3000';
     if (Platform.isAndroid && _realDevice) return 'http://127.0.0.1:3000';
 
