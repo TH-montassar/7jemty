@@ -168,8 +168,12 @@ export const runAppointmentReminderTick = async () => {
                 }
             }
         }
-    } catch (error) {
-        console.error('Error in cron job execution:', error);
+    } catch (error: any) {
+        if (error.code === 'EAI_AGAIN') {
+            console.error('DNS Resolution failed (EAI_AGAIN). This is likely a transient network issue. Skipping this tick.');
+        } else {
+            console.error('Error in cron job execution:', error);
+        }
     }
 };
 
