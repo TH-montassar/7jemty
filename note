@@ -35,3 +35,4 @@ npm run dev              # start server
 
 
 docker compose --profile build up --build apk-builder
+flutter build apk --release
