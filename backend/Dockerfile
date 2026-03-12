@@ -25,7 +25,7 @@ RUN npm run build
 #RUN if [ "$NODE_ENV" = "production" ]; then cp -r generated dist/generated; fi
 RUN cp -r generated dist/generated
 # Expose the API port (defaulting to 3000, adjust if your server uses a different port)
-EXPOSE 3000
+EXPOSE 8080
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 # Run the development server
