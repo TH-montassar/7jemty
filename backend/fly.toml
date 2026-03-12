@@ -7,6 +7,12 @@ app = '7jemty'
 primary_region = 'iad'
 
 [build]
+  [build.args]
+    NODE_ENV = "production"
+
+[env]
+  PORT = "8080"
+  NODE_ENV = "production"
 
 [http_service]
   internal_port = 8080
