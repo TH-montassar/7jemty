@@ -602,9 +602,15 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
             }
           }
 
+          final bool isOtpStep = isPhoneChecked && !phoneExists;
+          final bool isLoginStep = isPhoneChecked && phoneExists;
+
           return AlertDialog(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: Text(tr(context, 'login_to_book')),
+            title: Text(
+              isOtpStep ? tr(context, 'verify_phone') : tr(context, 'login_to_book'),
+              textAlign: TextAlign.center,
+            ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -617,83 +623,126 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                     prefixIcon: const Icon(Icons.phone),
                   ),
                 ),
-                if (isPhoneChecked) ...[
-                  const SizedBox(height: 15),
+                if (isOtpStep) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    "${tr(context, 'otp_sent_to')} ${phoneController.text.trim()}",
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.black54),
+                  ),
+                  const SizedBox(height: 16),
                   TextField(
                     controller: passwordController,
-                    obscureText: phoneExists,
-                    keyboardType: phoneExists ? TextInputType.text : TextInputType.number,
-                    maxLength: phoneExists ? null : 6,
+                    keyboardType: TextInputType.number,
+                    textAlign: TextAlign.center,
+                    maxLength: 6,
                     onChanged: (value) {
-                      if (!phoneExists && value.length == 6 && !dialogLoading) {
+                      if (value.length == 6 && !dialogLoading) {
                         submitGuestFlow();
                       }
                     },
-                    decoration: InputDecoration(
-                      counterText: phoneExists ? null : "",
-                      labelText: phoneExists ? tr(context, 'password') : 'Code SMS',
-                      prefixIcon: phoneExists ? const Icon(Icons.lock) : const Icon(Icons.sms),
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 8,
                     ),
-                  ),
-                  if (!phoneExists) ...[
-                    const SizedBox(height: 15),
-                    TextButton(
-                      onPressed: timeLeft == 0 && !dialogLoading
-                          ? () async {
-                              setDialogState(() => dialogLoading = true);
-                              try {
-                                await AuthService.requestOtp(phoneController.text);
-                                setDialogState(() {
-                                  timeLeft = 60;
-                                  dialogLoading = false;
-                                });
-                                countdownTimer?.cancel();
-                                countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-                                  if (timeLeft > 0) {
-                                    setDialogState(() => timeLeft--);
-                                  } else {
-                                    timer.cancel();
-                                  }
-                                });
-                              } catch (e) {
-                                setDialogState(() => dialogLoading = false);
-                                if (!context.mounted) return;
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(e.toString().replaceAll('Exception: ', '')),
-                                    backgroundColor: AppColors.actionRed,
-                                  ),
-                                );
-                              }
-                            }
-                          : null,
-                      child: Text(
-                        timeLeft > 0
-                            ? tr(context, 'wait_before_resend', args: [timeLeft.toString()])
-                            : tr(context, 'resend_code'),
-                        style: TextStyle(
-                          color: timeLeft > 0 ? Colors.grey : AppColors.primaryBlue,
-                          fontWeight: FontWeight.bold,
-                        ),
+                    decoration: InputDecoration(
+                      counterText: "",
+                      hintText: "000000",
+                      hintStyle: TextStyle(color: Colors.grey.shade300),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                  ],
+                  ),
+                  const SizedBox(height: 10),
+                  TextButton(
+                    onPressed: timeLeft == 0 && !dialogLoading
+                        ? () async {
+                            setDialogState(() => dialogLoading = true);
+                            try {
+                              await AuthService.requestOtp(phoneController.text);
+                              setDialogState(() {
+                                timeLeft = 60;
+                                dialogLoading = false;
+                              });
+                              countdownTimer?.cancel();
+                              countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+                                if (timeLeft > 0) {
+                                  setDialogState(() => timeLeft--);
+                                } else {
+                                  timer.cancel();
+                                }
+                              });
+                            } catch (e) {
+                              setDialogState(() => dialogLoading = false);
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(e.toString().replaceAll('Exception: ', '')),
+                                  backgroundColor: AppColors.actionRed,
+                                ),
+                              );
+                            }
+                          }
+                        : null,
+                    child: Text(
+                      timeLeft > 0
+                          ? tr(context, 'wait_before_resend', args: [timeLeft.toString()])
+                          : tr(context, 'resend_code'),
+                      style: TextStyle(
+                        color: timeLeft > 0 ? Colors.grey : AppColors.primaryBlue,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+                if (isLoginStep) ...[
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: passwordController,
+                    obscureText: true,
+                    keyboardType: TextInputType.text,
+                    decoration: InputDecoration(
+                      labelText: tr(context, 'password'),
+                      prefixIcon: const Icon(Icons.lock),
+                    ),
+                  ),
                 ],
               ],
             ),
             actions: [
               TextButton(
-                onPressed: dialogLoading ? null : () {
-                  countdownTimer?.cancel();
-                  Navigator.pop(context);
-                },
+                onPressed: dialogLoading
+                    ? null
+                    : () {
+                        countdownTimer?.cancel();
+                        Navigator.pop(context);
+                      },
                 child: Text(tr(context, 'cancel')),
               ),
               ElevatedButton(
                 onPressed: dialogLoading ? null : submitGuestFlow,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryBlue,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
                 child: dialogLoading
-                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : Text((isPhoneChecked && phoneExists) ? tr(context, 'login') : tr(context, 'next')),
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Text(
+                        !isPhoneChecked
+                            ? tr(context, 'next')
+                            : (phoneExists ? tr(context, 'login') : tr(context, 'verify')),
+                      ),
               ),
             ],
           );

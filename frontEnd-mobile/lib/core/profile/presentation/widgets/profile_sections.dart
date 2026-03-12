@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hjamty/features/splash/presentation/pages/splash_screen.dart';
+import 'package:hjamty/core/services/notification_service.dart';
 import 'package:hjamty/core/widgets/shared_widgets.dart';
 
 // 1. Gallery Section
@@ -189,6 +190,7 @@ class SettingsSection extends StatelessWidget {
                     final prefs = await SharedPreferences.getInstance();
                     await prefs.remove('jwt_token');
                     await prefs.remove('user_role');
+                    NotificationService.resetUnreadCount();
                     if (!context.mounted) return;
                     Navigator.pushAndRemoveUntil(
                       context,

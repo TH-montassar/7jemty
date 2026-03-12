@@ -10,11 +10,16 @@ class NotificationService {
   // Reactive state for unread notifications count
   static final ValueNotifier<int> unreadCountNotifier = ValueNotifier<int>(0);
 
+  static void resetUnreadCount() {
+    unreadCountNotifier.value = 0;
+  }
+
   static Future<List<dynamic>> getMyNotifications() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('jwt_token');
 
     if (token == null) {
+      resetUnreadCount();
       throw Exception('Veuillez vous connecter pour voir vos notifications.');
     }
 
@@ -37,7 +42,10 @@ class NotificationService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('jwt_token');
-      if (token == null) return 0;
+      if (token == null) {
+        resetUnreadCount();
+        return 0;
+      }
 
       final response = await http.get(
         Uri.parse('${ApiConfig.host}/api/notifications/unread-count'),
@@ -53,8 +61,10 @@ class NotificationService {
         unreadCountNotifier.value = count;
         return count;
       }
+      resetUnreadCount();
       return 0;
     } catch (e) {
+      resetUnreadCount();
       return 0;
     }
   }
@@ -70,7 +80,10 @@ class NotificationService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('jwt_token');
-      if (token == null) return;
+      if (token == null) {
+        resetUnreadCount();
+        return;
+      }
 
       final request = http.Request(
         'GET',
