@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:hjamty/core/constants/app_colors.dart';
 import 'package:hjamty/features/client_space/main_layout/presentation/pages/client_main_layout.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class BookingSuccessScreen extends StatelessWidget {
   final String salonName;
@@ -24,6 +25,56 @@ class BookingSuccessScreen extends StatelessWidget {
     required this.totalPrice,
     required this.barberName,
   });
+
+  DateTime _buildStartDateTime() {
+    final parts = time.split(':');
+    final hour = parts.isNotEmpty ? int.tryParse(parts[0]) ?? 0 : 0;
+    final minute = parts.length > 1 ? int.tryParse(parts[1]) ?? 0 : 0;
+    return DateTime(date.year, date.month, date.day, hour, minute);
+  }
+
+  Uri _buildGoogleCalendarUri() {
+    final start = _buildStartDateTime();
+    final end = start.add(Duration(minutes: durationMinutes));
+    final utcFormat = DateFormat("yyyyMMdd'T'HHmmss'Z'");
+    final startUtc = utcFormat.format(start.toUtc());
+    final endUtc = utcFormat.format(end.toUtc());
+    final serviceNames = services
+        .map((service) => service['name']?.toString() ?? '')
+        .where((name) => name.isNotEmpty)
+        .join(', ');
+
+    final details = StringBuffer()
+      ..write('Salon: $salonName')
+      ..write('\nSpécialiste: $barberName');
+
+    if (serviceNames.isNotEmpty) {
+      details.write('\nServices: $serviceNames');
+    }
+
+    return Uri.parse('https://calendar.google.com/calendar/render').replace(
+      queryParameters: {
+        'action': 'TEMPLATE',
+        'text': 'Rendez-vous - $salonName',
+        'dates': '$startUtc/$endUtc',
+        'details': details.toString(),
+        'location': salonAddress,
+      },
+    );
+  }
+
+  Future<void> _addToCalendar(BuildContext context) async {
+    final uri = _buildGoogleCalendarUri();
+    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+
+    if (!launched && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Impossible d'ouvrir le calendrier pour le moment."),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -211,11 +262,7 @@ class BookingSuccessScreen extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Bientôt disponible!')),
-                    );
-                  },
+                  onPressed: () => _addToCalendar(context),
                   icon: const Icon(
                     Icons.share,
                     size: 20,

@@ -111,7 +111,9 @@ export const updateAppointmentStatus = async (
         status,
         clientId: appointment.clientId,
         barberId: appointment.barberId,
-        patronId: appointment.salon.patronId
+        patronId: appointment.salon.patronId,
+        actorUserId: userId,
+        actorRole: userRole
     };
 
     if (status === 'CONFIRMED') {
@@ -777,6 +779,8 @@ export const postponeNoShowWithCascade = async (
             clientId: appt.clientId,
             barberId: appt.barberId,
             patronId: appt.salon.patronId,
+            actorUserId: userId,
+            actorRole: role,
             extraData: { shiftMinutes: minutes }
         });
     }

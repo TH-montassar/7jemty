@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hjamty/core/constants/app_colors.dart';
-
-import 'package:hjamty/core/services/notification_service.dart';
 import 'package:hjamty/core/services/fcm_service.dart';
+import 'package:hjamty/core/services/notification_service.dart';
 import 'package:intl/intl.dart';
 
 class NotificationsPage extends StatefulWidget {
@@ -16,6 +15,23 @@ class _NotificationsPageState extends State<NotificationsPage> {
   bool _isLoading = true;
   bool _showAll = false;
   List<dynamic> _notifications = [];
+
+  bool _isRead(dynamic notification) {
+    if (notification is Map) {
+      return notification['isRead'] == true;
+    }
+    return false;
+  }
+
+  int _unreadCount() {
+    return _notifications.where((n) => !_isRead(n)).length;
+  }
+
+  int? _toInt(dynamic value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '');
+  }
 
   @override
   void initState() {
@@ -43,16 +59,62 @@ class _NotificationsPageState extends State<NotificationsPage> {
   }
 
   Future<void> _markAsRead(int id, int index) async {
-    if (_notifications[index]['isRead'] == true) return;
+    if (index < 0 || index >= _notifications.length) return;
+    final notification = _notifications[index];
+    if (notification is! Map || notification['isRead'] == true) return;
 
     try {
       await NotificationService.markAsRead(id);
       if (!mounted) return;
       setState(() {
-        _notifications[index]['isRead'] = true;
+        final updated = Map<String, dynamic>.from(notification);
+        updated['isRead'] = true;
+        _notifications[index] = updated;
       });
+      NotificationService.refreshUnreadCount();
+    } catch (_) {
+      // Fail silently for read receipts.
+    }
+  }
+
+  Future<void> _markAllAsRead() async {
+    final hasUnread = _unreadCount() > 0;
+    if (!hasUnread) {
+      setState(() {
+        _showAll = true;
+      });
+      return;
+    }
+
+    try {
+      await NotificationService.markAllAsRead();
+      if (!mounted) return;
+
+      setState(() {
+        _notifications = _notifications.map((n) {
+          if (n is Map<String, dynamic>) {
+            return {...n, 'isRead': true};
+          }
+          if (n is Map) {
+            final map = Map<String, dynamic>.from(n);
+            map['isRead'] = true;
+            return map;
+          }
+          return n;
+        }).toList();
+        _showAll = true;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Toutes les notifications sont marquees comme lues.'),
+        ),
+      );
     } catch (e) {
-      // Fail silently for read receipts
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''))),
+      );
     }
   }
 
@@ -94,9 +156,10 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final displayedNotifications = _showAll
-        ? _notifications
-        : _notifications.where((n) => n['isRead'] != true).toList();
+    final unreadCount = _unreadCount();
+    final hasUnread = unreadCount > 0;
+    final displayedNotifications =
+        _showAll ? _notifications : _notifications.where((n) => !_isRead(n)).toList();
 
     return Scaffold(
       backgroundColor: AppColors.bgColor,
@@ -108,12 +171,25 @@ class _NotificationsPageState extends State<NotificationsPage> {
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          "Notifications",
+          'Notifications',
           style: TextStyle(
             color: AppColors.textDark,
             fontWeight: FontWeight.bold,
           ),
         ),
+        actions: [
+          if (_notifications.isNotEmpty && hasUnread)
+            TextButton(
+              onPressed: _markAllAsRead,
+              child: const Text(
+                'Tout lire',
+                style: TextStyle(
+                  color: AppColors.primaryBlue,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+        ],
         centerTitle: true,
       ),
       body: _isLoading
@@ -134,18 +210,22 @@ class _NotificationsPageState extends State<NotificationsPage> {
                                 color: Colors.grey.withOpacity(0.5),
                               ),
                               const SizedBox(height: 16),
-                              const Text(
-                                "Pas de nouvelles notifications",
-                                style: TextStyle(
+                              Text(
+                                !_showAll
+                                    ? 'Aucune notification non lue'
+                                    : 'Pas de notifications',
+                                style: const TextStyle(
                                   fontSize: 18,
                                   color: Colors.grey,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
                               const SizedBox(height: 8),
-                              const Text(
-                                "Vos alertes apparaîtront ici.",
-                                style: TextStyle(
+                              Text(
+                                !_showAll
+                                    ? 'Les nouvelles alertes apparaitront ici.'
+                                    : 'Vos alertes apparaitront ici.',
+                                style: const TextStyle(
                                   fontSize: 14,
                                   color: Colors.grey,
                                 ),
@@ -157,20 +237,26 @@ class _NotificationsPageState extends State<NotificationsPage> {
                           padding: const EdgeInsets.all(16),
                           itemCount: displayedNotifications.length,
                           itemBuilder: (context, index) {
-                            final notif = displayedNotifications[index];
-                            final isRead = notif['isRead'] ?? false;
+                            final rawNotif = displayedNotifications[index];
+                            if (rawNotif is! Map) {
+                              return const SizedBox.shrink();
+                            }
+                            final notif = Map<String, dynamic>.from(rawNotif);
+                            final isRead = notif['isRead'] == true;
+                            final notifId = _toInt(notif['id']);
                             final originalIndex = _notifications.indexWhere(
-                              (n) => n['id'] == notif['id'],
+                              (n) => n is Map && n['id'] == notif['id'],
+                            );
+                            final createdAt = DateTime.tryParse(
+                              notif['createdAt']?.toString() ?? '',
                             );
 
                             return GestureDetector(
                               onTap: () {
-                                if (originalIndex != -1) {
-                                  _markAsRead(notif['id'], originalIndex);
+                                if (originalIndex != -1 && notifId != null) {
+                                  _markAsRead(notifId, originalIndex);
                                 }
-                                final payload = _extractTapPayload(
-                                  Map<String, dynamic>.from(notif as Map),
-                                );
+                                final payload = _extractTapPayload(notif);
                                 if (payload != null) {
                                   FcmService.dispatchNotificationTapPayload(
                                     payload,
@@ -191,7 +277,8 @@ class _NotificationsPageState extends State<NotificationsPage> {
                                   contentPadding: const EdgeInsets.all(16),
                                   leading: CircleAvatar(
                                     backgroundColor: isRead
-                                        ? AppColors.primaryBlue.withOpacity(0.1)
+                                        ? AppColors.primaryBlue
+                                            .withOpacity(0.1)
                                         : AppColors.primaryBlue,
                                     child: Icon(
                                       isRead
@@ -203,7 +290,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                                     ),
                                   ),
                                   title: Text(
-                                    notif['title'] ?? 'Notification',
+                                    notif['title']?.toString() ?? 'Notification',
                                     style: TextStyle(
                                       fontWeight: isRead
                                           ? FontWeight.normal
@@ -218,21 +305,17 @@ class _NotificationsPageState extends State<NotificationsPage> {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          notif['body'] ?? '',
+                                          notif['body']?.toString() ?? '',
                                           style: TextStyle(
                                             color: Colors.grey.shade700,
                                           ),
                                         ),
                                         const SizedBox(height: 8),
-                                        if (notif['createdAt'] != null)
+                                        if (createdAt != null)
                                           Text(
                                             DateFormat(
-                                              'dd MMM yyyy à HH:mm',
-                                            ).format(
-                                              DateTime.parse(
-                                                notif['createdAt'],
-                                              ),
-                                            ),
+                                              'dd MMM yyyy a HH:mm',
+                                            ).format(createdAt),
                                             style: const TextStyle(
                                               fontSize: 11,
                                               color: Colors.grey,
@@ -247,9 +330,9 @@ class _NotificationsPageState extends State<NotificationsPage> {
                           },
                         ),
                 ),
-                if (!_showAll && _notifications.any((n) => n['isRead'] == true))
+                if (!_showAll && _notifications.isNotEmpty)
                   Padding(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
                     child: OutlinedButton(
                       onPressed: () {
                         setState(() {
@@ -259,13 +342,13 @@ class _NotificationsPageState extends State<NotificationsPage> {
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.primaryBlue,
                         side: const BorderSide(color: AppColors.primaryBlue),
-                        minimumSize: const Size(double.infinity, 50),
+                        minimumSize: const Size(double.infinity, 48),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
                       child: const Text(
-                        'Voir tous',
+                        'Voir tout',
                         style: TextStyle(fontSize: 16),
                       ),
                     ),

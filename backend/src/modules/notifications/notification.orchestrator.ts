@@ -45,6 +45,7 @@ export type AppointmentEventContext = {
     barberId?: number | null | undefined;
     patronId?: number | undefined;
     clientName?: string | undefined;
+    actorUserId?: number | undefined;
     actorRole?: 'CLIENT' | 'EMPLOYEE' | 'PATRON' | 'ADMIN' | undefined;
     deeplink?: string | undefined;
     targetUserIds?: number[] | undefined;
@@ -231,7 +232,11 @@ const getDefaultDeeplink = (appointmentId: number): string => `/appointments/${a
 
 const resolveRecipientIds = (event: AppointmentNotificationEvent, ctx: AppointmentEventContext): number[] => {
     if (ctx.targetUserIds && ctx.targetUserIds.length > 0) {
-        return Array.from(new Set(ctx.targetUserIds.filter((id) => Number.isInteger(id) && id > 0)));
+        const uniqueTargetIds = Array.from(new Set(ctx.targetUserIds.filter((id) => Number.isInteger(id) && id > 0)));
+        if (ctx.actorUserId && ctx.actorUserId > 0) {
+            return uniqueTargetIds.filter((id) => id !== ctx.actorUserId);
+        }
+        return uniqueTargetIds;
     }
 
     const template = EVENT_TEMPLATES[event];
@@ -245,7 +250,11 @@ const resolveRecipientIds = (event: AppointmentNotificationEvent, ctx: Appointme
         .map((role) => roleMap[role])
         .filter((id): id is number => typeof id === 'number' && id > 0);
 
-    return Array.from(new Set(recipientIds));
+    const uniqueRecipientIds = Array.from(new Set(recipientIds));
+    if (ctx.actorUserId && ctx.actorUserId > 0) {
+        return uniqueRecipientIds.filter((id) => id !== ctx.actorUserId);
+    }
+    return uniqueRecipientIds;
 };
 
 const cleanupDedupeCache = () => {
