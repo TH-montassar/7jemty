@@ -1,0 +1,27 @@
+# Use an image with Flutter and Android SDK pre-installed for efficiency
+FROM ghcr.io/cirruslabs/flutter:stable
+
+WORKDIR /app
+
+# Accept build arguments if needed (e.g., API_BASE_URL)
+ARG API_BASE_URL
+ENV API_BASE_URL=${API_BASE_URL}
+
+# Copy pubspec files first to cache dependencies
+COPY pubspec.* ./
+RUN flutter pub get
+
+# Copy the rest of the application
+COPY . .
+
+# Ensure .env exists (even if empty) to avoid build errors if it's referenced in pubspec
+RUN touch .env
+
+# Build the APK
+# We use --release for a production build
+# You can add --dart-define=API_BASE_URL=$API_BASE_URL if your app uses it
+RUN flutter build apk --release
+
+# The output will be in /app/build/app/outputs/flutter-apk/app-release.apk
+# We can use a volume to get it out of the container
+CMD ["cp", "build/app/outputs/flutter-apk/app-release.apk", "/output/app-release.apk"]

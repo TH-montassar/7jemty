@@ -10,8 +10,8 @@ class ApiConfig {
 
     if (kReleaseMode) {
       // Production Render backend URL
-      // return 'https://sevenjemty.onrender.com/';
-      return 'https://7jemty-production.up.railway.app/';
+      return 'https://sevenjemty.onrender.com';
+      //return 'https://7jemty-production.up.railway.app';
     }
 
     // --- Dev Mode (Local) ---

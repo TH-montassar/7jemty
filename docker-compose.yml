@@ -36,3 +36,15 @@ services:
       - /app/windows
       - /app/macos
     restart: unless-stopped
+
+  apk-builder:
+    profiles:
+      - build
+    build:
+      context: ./frontEnd-mobile
+      dockerfile: Dockerfile.apk
+    container_name: 7jemty-apk-builder
+    volumes:
+      - ./frontEnd-mobile/build-output:/output
+    # No need to keep it running
+    restart: "no"
