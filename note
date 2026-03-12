@@ -32,3 +32,6 @@ npm run prisma:studio    # open visual DB browser
 npm run dev              # start server
 
 #**************************flutter**************************
+
+
+docker compose --profile build up --build apk-builder
