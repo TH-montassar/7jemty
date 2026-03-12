@@ -12,9 +12,10 @@ class ApiConfig {
     if (_overrideHost.isNotEmpty) return _overrideHost;
 
     if (kReleaseMode) {
-      // Production Render backend URL
-      return 'https://sevenjemty.onrender.com';
-      //return 'https://7jemty-production.up.railway.app';
+      // Production Fly.io backend URL
+      return 'https://7jemty.fly.dev';
+      //return 'https://sevenjemty.onrender.com'; // Render backup
+      //return 'https://sevenjemty.onrender.com';
     }
 
     // --- Dev Mode (Local) ---
