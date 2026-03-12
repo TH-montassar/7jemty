@@ -100,7 +100,11 @@ class FcmService {
       // 2. Fetch FCM Token
       String? token = await _firebaseMessaging.getToken();
       if (token != null) {
-        debugPrint('FCM Token generated: $token');
+        if (kReleaseMode) {
+          debugPrint('FCM token generated successfully.');
+        } else {
+          debugPrint('FCM Token generated: $token');
+        }
         await syncTokenWithBackend(token);
       }
 

@@ -34,7 +34,9 @@ flutter run --dart-define=API_BASE_URL=http://192.168.1.100:3000
 ```
 
 - Android emulator default: `http://10.0.2.2:3000`
-- Android real device mode (`REAL_DEVICE=true`): `http://127.0.0.1:3000` (with `adb reverse`)
+- Android real device mode requires both:
+  - `REAL_DEVICE=true`
+  - `REAL_DEVICE_API_BASE_URL=http://127.0.0.1:3000` (typically with `adb reverse`)
 - Physical phone (Wi-Fi): use your computer LAN IP (`192.168.x.x`) and ensure backend listens on `0.0.0.0:3000`.
 
 ### Optimized options for real devices

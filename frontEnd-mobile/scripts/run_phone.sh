@@ -147,7 +147,11 @@ if [[ "${REAL_DEVICE}" == "true" ]]; then
       fi
     fi
 
-    FLUTTER_CMD=(flutter run --dart-define="REAL_DEVICE=true")
+    FLUTTER_CMD=(
+      flutter run
+      --dart-define="REAL_DEVICE=true"
+      --dart-define="REAL_DEVICE_API_BASE_URL=http://127.0.0.1:${PORT}"
+    )
     if [[ -n "${DEVICE_ID}" ]]; then
       FLUTTER_CMD+=(-d "${DEVICE_ID}")
     fi
