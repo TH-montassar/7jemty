@@ -1,11 +1,12 @@
 import cron from 'node-cron';
 import { prisma } from '../lib/db.js';
 import { emitAppointmentEvent } from '../modules/notifications/notification.orchestrator.js';
+import { CLIENT_CANCELLATION_LOCK_MINUTES, CLIENT_CANCELLATION_PRELOCK_REMINDER_MINUTES } from '../modules/appointment/appointment.constants.js';
 export const runAppointmentReminderTick = async () => {
     try {
         const now = new Date();
         const currentTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes());
-        const oneHourTenFromNow = new Date(currentTime.getTime() + 70 * 60000);
+        const cancellationLockReminderFromNow = new Date(currentTime.getTime() + CLIENT_CANCELLATION_PRELOCK_REMINDER_MINUTES * 60000);
         const thirtyMinsFromNow = new Date(currentTime.getTime() + 30 * 60000);
         const fifteenMinsFromNow = new Date(currentTime.getTime() + 15 * 60000);
         const oneMinFromNow = new Date(currentTime.getTime() + 1 * 60000);
@@ -38,7 +39,7 @@ export const runAppointmentReminderTick = async () => {
                 patronId: appt.salon.patronId,
                 clientName: appt.client.fullName
             };
-            if (normalizedApptTime.getTime() === oneHourTenFromNow.getTime() && !appt.is1hReminderSent) {
+            if (normalizedApptTime.getTime() === cancellationLockReminderFromNow.getTime() && !appt.is1hReminderSent) {
                 await emitAppointmentEvent('APPT_REMINDER_1H10_CLIENT', {
                     ...baseContext,
                     targetUserIds: [appt.clientId]
@@ -49,7 +50,7 @@ export const runAppointmentReminderTick = async () => {
                 });
             }
             const minutesUntilAppointment = Math.floor((normalizedApptTime.getTime() - currentTime.getTime()) / 60000);
-            if (!appt.is1hReminderSent && minutesUntilAppointment <= 60 && minutesUntilAppointment > 0) {
+            if (!appt.is1hReminderSent && minutesUntilAppointment <= CLIENT_CANCELLATION_LOCK_MINUTES && minutesUntilAppointment > 0) {
                 await prisma.appointment.update({
                     where: { id: appt.id },
                     data: { is1hReminderSent: true }

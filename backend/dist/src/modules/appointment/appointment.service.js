@@ -1,6 +1,7 @@
 import { prisma } from '../../lib/db.js';
 import { broadcastToAll } from '../notifications/notifications.controller.js';
 import { broadcastAppointmentRefresh, emitAppointmentEvent } from '../notifications/notification.orchestrator.js';
+import { CLIENT_CANCELLATION_LOCK_HOURS, CLIENT_CANCELLATION_LOCK_MINUTES } from './appointment.constants.js';
 const ACTIVE_APPOINTMENT_STATUSES = ['PENDING', 'CONFIRMED', 'IN_PROGRESS', 'ARRIVED'];
 export const updateAppointmentStatus = async (appointmentId, status, userId, userRole) => {
     const appointment = await prisma.appointment.findUnique({
@@ -408,9 +409,9 @@ const assertStatusTransition = (currentStatus, nextStatus, userRole, appointment
         throw new Error(`Transition invalide: ${currentStatus} -> ${nextStatus}`);
     }
     if (nextStatus === 'CANCELLED' && userRole === 'CLIENT') {
-        const oneHourBefore = new Date(appointmentDate.getTime() - 60 * 60 * 1000);
-        if (new Date() >= oneHourBefore) {
-            throw new Error('Annulation client impossible a moins de 1h du rendez-vous');
+        const cancellationLockDate = new Date(appointmentDate.getTime() - CLIENT_CANCELLATION_LOCK_MINUTES * 60 * 1000);
+        if (new Date() >= cancellationLockDate) {
+            throw new Error(`Annulation client impossible a moins de ${CLIENT_CANCELLATION_LOCK_HOURS}h du rendez-vous`);
         }
     }
 };

@@ -1,8 +1,11 @@
 import { prisma } from '../../lib/db.js';
 import { sendNotification } from './notifications.service.js';
 import { broadcastNotificationToUser } from './notifications.controller.js';
+import { CLIENT_CANCELLATION_LOCK_HOURS, CLIENT_CANCELLATION_PRELOCK_REMINDER_MINUTES } from '../appointment/appointment.constants.js';
 const DEFAULT_DEDUPE_WINDOW_MS = 90_000;
 const dedupeCache = new Map();
+const cancellationLockHoursLabel = `${CLIENT_CANCELLATION_LOCK_HOURS}h`;
+const cancellationLockReminderLabel = `${Math.floor(CLIENT_CANCELLATION_PRELOCK_REMINDER_MINUTES / 60)}h${String(CLIENT_CANCELLATION_PRELOCK_REMINDER_MINUTES % 60).padStart(2, '0')}`;
 const formatAppointmentDate = (appointmentDate) => {
     if (!appointmentDate)
         return '';
@@ -71,28 +74,28 @@ const EVENT_TEMPLATES = {
         transportType: 'APPOINTMENT_REMINDER',
         recipientRoles: ['CLIENT'],
         title: () => 'Rappel de rendez-vous',
-        body: () => "Votre rendez-vous est dans 1h10. L'annulation sera impossible si le temps restant est inferieur a 1 heure.",
+        body: () => `Votre rendez-vous est dans ${cancellationLockReminderLabel}. L'annulation sera impossible si le temps restant est inferieur a ${CLIENT_CANCELLATION_LOCK_HOURS} heures.`,
         priority: 'HIGH'
     },
     APPT_REMINDER_1H10_BARBER: {
         transportType: 'APPOINTMENT_REMINDER',
         recipientRoles: ['BARBER'],
         title: () => 'Prochain client',
-        body: (ctx) => `Vous avez un rendez-vous dans 1h10 avec ${ctx.clientName || 'votre client'}.`,
+        body: (ctx) => `Vous avez un rendez-vous dans ${cancellationLockReminderLabel} avec ${ctx.clientName || 'votre client'}.`,
         priority: 'HIGH'
     },
     APPT_CLIENT_LOCK_LT_1H: {
         transportType: 'APPOINTMENT_REMINDER',
         recipientRoles: ['CLIENT'],
-        title: () => "Rendez-vous dans moins d'1h",
-        body: () => "L'annulation n'est plus possible maintenant, car le delai de 1h est depasse.",
+        title: () => `Rendez-vous dans moins de ${cancellationLockHoursLabel}`,
+        body: () => `L'annulation n'est plus possible maintenant, car le delai de ${cancellationLockHoursLabel} est depasse.`,
         priority: 'HIGH'
     },
     APPT_REMINDER_LT_1H_BARBER: {
         transportType: 'APPOINTMENT_REMINDER',
         recipientRoles: ['BARBER'],
         title: () => 'Prochain client',
-        body: (ctx) => `Rappel: rendez-vous dans moins d'1h avec ${ctx.clientName || 'votre client'}.`,
+        body: (ctx) => `Rappel: rendez-vous dans moins de ${cancellationLockHoursLabel} avec ${ctx.clientName || 'votre client'}.`,
         priority: 'HIGH'
     },
     APPT_REMINDER_30M: {
