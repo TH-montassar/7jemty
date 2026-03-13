@@ -117,8 +117,8 @@ class _TopRatedListState extends State<TopRatedList> {
                   ],
                 ),
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // --- 1. Ø§Ù„ØªØµÙˆÙŠØ±Ø© Ø§Ù„Ù„Ù‘ÙŠ Ø¹Ù„Ù‰ Ø§Ù„ÙŠØ³Ø§Ø± ---
                     ClipRRect(
                       borderRadius: BorderRadius.circular(15),
                       child: Image.network(
@@ -144,58 +144,32 @@ class _TopRatedListState extends State<TopRatedList> {
                         },
                       ),
                     ),
-                    const SizedBox(width: 15),
-
-                    // --- 2. Ø§Ù„Ù…Ø¹Ù„ÙˆÙ…Ø§Øª (Ø§Ù„Ø§Ø³Ù…ØŒ Ø§Ù„Ø¹Ù†ÙˆØ§Ù†ØŒ Ø§Ù„Ø³ÙˆÙ…ØŒ Rating) ---
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  salon['name'] ?? 'Salon',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 15,
-                                    color: AppColors.textDark,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Icons.star,
-                                    color: Colors.amber,
-                                    size: 14,
-                                  ),
-                                  const SizedBox(width: 2),
-                                  Text(
-                                    salon['rating']?.toString() ?? '0.0',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
+                          Text(
+                            salon['name'] ?? 'Salon',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: AppColors.textDark,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(height: 5),
+                          const SizedBox(height: 4),
                           Text(
                             salon['address'] ?? 'Adresse non fournie',
                             style: const TextStyle(
                               color: Colors.grey,
                               fontSize: 12,
                             ),
-                            maxLines: 1,
+                            maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(height: 5),
+                          const SizedBox(height: 8),
                           Text(
                             startingPrice != null
                                 ? 'A partir de ${startingPrice.toStringAsFixed(0)} DT'
@@ -205,42 +179,65 @@ class _TopRatedListState extends State<TopRatedList> {
                               fontSize: 12,
                             ),
                           ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-
-                    // --- 3. ÙÙ„Ø³Ø© RÃ©server ---
-                    SizedBox(
-                      height: 35,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => SalonDashboardScreen(
-                                isPatron: false,
-                                salonId: salon['id'],
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.star,
+                                    color: Colors.amber,
+                                    size: 15,
+                                  ),
+                                  const SizedBox(width: 3),
+                                  Text(
+                                    salon['rating']?.toString() ?? '0.0',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.actionRed,
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(horizontal: 15),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                              const Spacer(),
+                              SizedBox(
+                                height: 34,
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            SalonDashboardScreen(
+                                              isPatron: false,
+                                              salonId: salon['id'],
+                                            ),
+                                      ),
+                                    );
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.actionRed,
+                                    elevation: 0,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    tr(context, 'reserve_btn'),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                        child: Text(
-                          tr(context, 'reserve_btn'),
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                            color: Colors.white,
-                          ),
-                        ),
+                        ],
                       ),
                     ),
                   ],

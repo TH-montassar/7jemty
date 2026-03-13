@@ -191,23 +191,30 @@ class _ClientHomePageState extends State<ClientHomePage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textDark,
-                letterSpacing: -0.5,
+        Expanded(
+          child: Row(
+            children: [
+              Flexible(
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textDark,
+                    letterSpacing: -0.5,
+                  ),
+                ),
               ),
-            ),
-            if (icon != null) ...[
-              const SizedBox(width: 6),
-              Icon(icon, color: Colors.black45, size: 22),
+              if (icon != null) ...[
+                const SizedBox(width: 6),
+                Icon(icon, color: Colors.black45, size: 22),
+              ],
             ],
-          ],
+          ),
         ),
+        const SizedBox(width: 8),
         if (onSeeAll != null)
           TextButton(
             onPressed: onSeeAll,
