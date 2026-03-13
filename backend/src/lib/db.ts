@@ -3,10 +3,11 @@ import 'dotenv/config';
 import { PrismaClient } from '../../generated/prisma/index.js';
 import { PrismaPg } from '@prisma/adapter-pg';
 import pg from 'pg';
+import { normalizeDatabaseUrl } from './normalizeDatabaseUrl.js';
 
 const { Pool } = pg;
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL!,
+  connectionString: normalizeDatabaseUrl(process.env.DATABASE_URL!),
   max: 20, // Increase max connections to handle parallel Flutter app queries
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 30000, // 30 seconds to allow Neon to spin up from sleep

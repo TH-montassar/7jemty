@@ -36,7 +36,7 @@ Create/update `backend/.env` with:
 
 ```env
 PORT=3000
-DATABASE_URL=postgresql://USER:PASSWORD@HOST:5432/DB_NAME?sslmode=require
+DATABASE_URL=postgresql://USER:PASSWORD@HOST:5432/DB_NAME?sslmode=verify-full
 JWT_SECRET=change_me
 
 CLOUDINARY_CLOUD_NAME=your_cloud_name
