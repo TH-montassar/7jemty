@@ -13,9 +13,9 @@ class ApiConfig {
 
     if (kReleaseMode) {
       // Production Fly.io backend URL
-      return 'https://7jemty.fly.dev';
+      //return 'https://7jemty.fly.dev';
       //return 'https://sevenjemty.onrender.com'; // Render backup
-      //return 'https://7jemty-production.up.railway.app';
+      return 'https://7jemty-production.up.railway.app';
     }
 
     // --- Dev Mode (Local) ---
