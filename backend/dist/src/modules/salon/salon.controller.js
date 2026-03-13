@@ -85,8 +85,8 @@ export const deleteEmployeeAccountHandler = async (req, res) => {
 };
 export const getAllSalonsHandler = async (req, res) => {
     try {
-        const lat = req.query.lat ? parseFloat(req.query.lat) : undefined;
-        const lng = req.query.lng ? parseFloat(req.query.lng) : undefined;
+        const lat = req.query.lat !== undefined ? parseFloat(req.query.lat) : undefined;
+        const lng = req.query.lng !== undefined ? parseFloat(req.query.lng) : undefined;
         const salons = await getAllSalons(lat, lng);
         res.status(200).json({ success: true, data: salons });
     }
@@ -161,11 +161,13 @@ export const getTopRatedSalonsHandler = async (req, res) => {
 export const getSalonByIdHandler = async (req, res) => {
     try {
         const id = parseInt(req.params.id);
+        const lat = req.query.lat !== undefined ? parseFloat(req.query.lat) : undefined;
+        const lng = req.query.lng !== undefined ? parseFloat(req.query.lng) : undefined;
         if (isNaN(id)) {
             res.status(400).json({ success: false, message: 'ID invalide' });
             return;
         }
-        const salon = await getSalonById(id);
+        const salon = await getSalonById(id, lat, lng);
         res.status(200).json({ success: true, data: salon });
     }
     catch (error) {
@@ -175,11 +177,13 @@ export const getSalonByIdHandler = async (req, res) => {
 export const searchSalonHandler = async (req, res) => {
     try {
         const query = req.query.q;
+        const lat = req.query.lat !== undefined ? parseFloat(req.query.lat) : undefined;
+        const lng = req.query.lng !== undefined ? parseFloat(req.query.lng) : undefined;
         if (!query || query.trim() === '') {
             res.json({ success: true, data: [] });
             return;
         }
-        const salons = await searchSalons(query.trim());
+        const salons = await searchSalons(query.trim(), lat, lng);
         res.json({ success: true, data: salons });
     }
     catch (error) {

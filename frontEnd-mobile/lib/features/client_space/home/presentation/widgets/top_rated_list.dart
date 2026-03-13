@@ -88,6 +88,7 @@ class _TopRatedListState extends State<TopRatedList> {
           itemCount: topSalons.length,
           itemBuilder: (context, index) {
             final salon = topSalons[index];
+            final startingPrice = (salon['startingPrice'] as num?)?.toDouble();
 
             return GestureDetector(
               onTap: () {
@@ -196,7 +197,9 @@ class _TopRatedListState extends State<TopRatedList> {
                           ),
                           const SizedBox(height: 5),
                           Text(
-                            salon['price'] ?? tr(context, 'starting_from'),
+                            startingPrice != null
+                                ? 'A partir de ${startingPrice.toStringAsFixed(0)} DT'
+                                : tr(context, 'starting_from'),
                             style: const TextStyle(
                               color: Colors.grey,
                               fontSize: 12,

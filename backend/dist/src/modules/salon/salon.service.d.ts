@@ -164,29 +164,7 @@ export declare const removeEmployeeFromSalonAdmin: (salonId: number, employeeId:
     id: number;
     removed: boolean;
 }>;
-export declare const getAllSalons: (lat?: number, lng?: number, includeUnapproved?: boolean) => Promise<{
-    distance: string | null;
-    image: string;
-    rating: string;
-    _count: {
-        reviews: number;
-    };
-    id: number;
-    createdAt: Date;
-    name: string;
-    description: string | null;
-    address: string | null;
-    latitude: number | null;
-    longitude: number | null;
-    patronId: number;
-    contactPhone: string | null;
-    googleMapsUrl: string | null;
-    websiteUrl: string | null;
-    coverImageUrl: string | null;
-    speciality: string | null;
-    approvalStatus: import("../../../generated/prisma/index.js").$Enums.ApprovalStatus;
-    isForceClosed: boolean;
-}[]>;
+export declare const getAllSalons: (lat?: number, lng?: number, includeUnapproved?: boolean) => Promise<any[]>;
 export declare const createService: (patronId: number, data: any) => Promise<{
     id: number;
     name: string;
@@ -240,7 +218,7 @@ export declare const deleteServiceAdmin: (salonId: number, serviceId: number) =>
     id: number;
     deleted: boolean;
 }>;
-export declare const getSalonById: (id: number) => Promise<{
+export declare const getSalonById: (id: number, lat?: number, lng?: number) => Promise<{
     id: number;
     patronId: number;
     name: string;
@@ -311,70 +289,13 @@ export declare const getSalonById: (id: number) => Promise<{
         comment: string | null;
         createdAt: Date;
     }[];
+    distanceKm: number | null;
+    distance: string | null;
     image: string;
     rating: string;
 }>;
-export declare const getTopRatedSalons: (limit?: number, includeUnapproved?: boolean) => Promise<{
-    image: string;
-    rating: string;
-    _count: {
-        reviews: number;
-    };
-    id: number;
-    createdAt: Date;
-    name: string;
-    description: string | null;
-    address: string | null;
-    latitude: number | null;
-    longitude: number | null;
-    patronId: number;
-    contactPhone: string | null;
-    googleMapsUrl: string | null;
-    websiteUrl: string | null;
-    coverImageUrl: string | null;
-    speciality: string | null;
-    approvalStatus: import("../../../generated/prisma/index.js").$Enums.ApprovalStatus;
-    isForceClosed: boolean;
-}[]>;
-export declare const searchSalons: (query: string, includeUnapproved?: boolean) => Promise<{
-    image: string;
-    rating: string;
-    _count: {
-        reviews: number;
-    };
-    services: {
-        id: number;
-        name: string;
-        description: string | null;
-        salonId: number;
-        imageUrl: string | null;
-        price: number;
-        durationMinutes: number;
-    }[];
-    workingHours: {
-        id: number;
-        salonId: number;
-        dayOfWeek: number;
-        openTime: string | null;
-        closeTime: string | null;
-        isDayOff: boolean;
-    }[];
-    id: number;
-    createdAt: Date;
-    name: string;
-    description: string | null;
-    address: string | null;
-    latitude: number | null;
-    longitude: number | null;
-    patronId: number;
-    contactPhone: string | null;
-    googleMapsUrl: string | null;
-    websiteUrl: string | null;
-    coverImageUrl: string | null;
-    speciality: string | null;
-    approvalStatus: import("../../../generated/prisma/index.js").$Enums.ApprovalStatus;
-    isForceClosed: boolean;
-}[]>;
+export declare const getTopRatedSalons: (limit?: number, includeUnapproved?: boolean) => Promise<any[]>;
+export declare const searchSalons: (query: string, lat?: number, lng?: number, includeUnapproved?: boolean) => Promise<any[]>;
 export declare const toggleFavoriteSalon: (clientId: number, salonId: number) => Promise<{
     isFavorite: boolean;
 }>;

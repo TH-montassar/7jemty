@@ -7,6 +7,7 @@ export type AppointmentEventContext = {
     barberId?: number | null | undefined;
     patronId?: number | undefined;
     clientName?: string | undefined;
+    actorUserId?: number | undefined;
     actorRole?: 'CLIENT' | 'EMPLOYEE' | 'PATRON' | 'ADMIN' | undefined;
     deeplink?: string | undefined;
     targetUserIds?: number[] | undefined;

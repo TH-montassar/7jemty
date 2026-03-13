@@ -584,13 +584,34 @@ const calculateDistanceKm = (
     return Number.parseFloat((earthRadiusKm * c).toFixed(1));
 };
 
+const getStartingPrice = (services?: Array<{ price?: number | null }> | null) => {
+    if (!services || services.length === 0) {
+        return null;
+    }
+
+    const numericPrices = services
+        .map((service) => service.price)
+        .filter((price): price is number => typeof price === 'number' && Number.isFinite(price))
+        .sort((a, b) => a - b);
+
+    if (numericPrices.length === 0) {
+        return null;
+    }
+
+    return numericPrices[0];
+};
+
 const mapSalonForListing = (salon: any, lat?: number, lng?: number) => {
     const distanceKm = calculateDistanceKm(lat, lng, salon.latitude, salon.longitude);
+    const startingPrice = getStartingPrice(salon.services);
+    const reviewCount = (salon as any)._count?.reviews ?? 0;
 
     return {
         ...salon,
         distanceKm,
         distance: distanceKm != null ? `${distanceKm.toFixed(1)} km` : null,
+        startingPrice,
+        reviewCount,
         image: salon.coverImageUrl || 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=500&q=80',
         rating: (salon as any)._count?.reviews > 0 && (salon as any).rating ? ((salon as any).rating as number).toFixed(1) : "0.0"
     };
@@ -612,6 +633,8 @@ export const getAllSalons = async (lat?: number, lng?: number, includeUnapproved
     const salons = await prisma.salon.findMany({
         where: !includeUnapproved ? { approvalStatus: 'APPROVED' } : {},
         include: {
+            services: true,
+            workingHours: true,
             _count: {
                 select: {
                     reviews: true,
@@ -888,6 +911,8 @@ export const getTopRatedSalons = async (limit: number = 10, includeUnapproved: b
         orderBy: { rating: 'desc' } as any,
         take: limit,
         include: {
+            services: true,
+            workingHours: true,
             _count: {
                 select: {
                     reviews: true,
@@ -896,11 +921,7 @@ export const getTopRatedSalons = async (limit: number = 10, includeUnapproved: b
         }
     });
 
-    return salons.map(salon => ({
-        ...salon,
-        image: salon.coverImageUrl || 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=500&q=80',
-        rating: (salon as any)._count?.reviews > 0 && (salon as any).rating ? ((salon as any).rating as number).toFixed(1) : "0.0",
-    }));
+    return salons.map((salon) => mapSalonForListing(salon));
 };
 
 export const searchSalons = async (

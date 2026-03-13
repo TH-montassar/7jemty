@@ -10,119 +10,23 @@ class ClientHeaderSection extends StatelessWidget {
 
   const ClientHeaderSection({super.key, required this.userName});
 
-  Future<void> _showLocationSheet(BuildContext context) async {
+  Future<void> _useCurrentLocation(BuildContext context) async {
     final locationService = AppLocationService.instance;
+    final message = await locationService.refreshCurrentLocation();
 
-    await showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+    if (!context.mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message ?? 'Location updated. Nearby salons trtabou 7asb distance.',
+        ),
+        backgroundColor: message == null
+            ? AppColors.successGreen
+            : AppColors.textDark,
       ),
-      builder: (sheetContext) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Center(
-                  child: Container(
-                    width: 42,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                const Text(
-                  'Location',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.textDark,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Esta3mel GPS bark. Ma3adch fama fallback fake blasa.',
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
-                ),
-                const SizedBox(height: 18),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const CircleAvatar(
-                    backgroundColor: Color(0x11005CEE),
-                    child: Icon(
-                      Icons.my_location_rounded,
-                      color: AppColors.primaryBlue,
-                    ),
-                  ),
-                  title: const Text(
-                    'Use my location',
-                    style: TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  subtitle: const Text(
-                    'Yetlob permission marra wa7da w yratab a9reb salons.',
-                  ),
-                  onTap: () async {
-                    Navigator.of(sheetContext).pop();
-                    final message =
-                        await locationService.refreshCurrentLocation();
-                    if (!context.mounted) {
-                      return;
-                    }
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          message ??
-                              'Location updated. Nearby salons trtabou 7asb distance.',
-                        ),
-                        backgroundColor: message == null
-                            ? AppColors.successGreen
-                            : AppColors.textDark,
-                      ),
-                    );
-                  },
-                ),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const CircleAvatar(
-                    backgroundColor: Color(0x11005CEE),
-                    child: Icon(
-                      Icons.location_off_rounded,
-                      color: AppColors.primaryBlue,
-                    ),
-                  ),
-                  title: const Text(
-                    'Without location',
-                    style: TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  subtitle: const Text(
-                    'Salons yodhhrour bel ordre normal, bla distance sorting.',
-                  ),
-                  onTap: () async {
-                    Navigator.of(sheetContext).pop();
-                    await locationService.clearLocation();
-                    if (!context.mounted) {
-                      return;
-                    }
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Distance sorting tna7at.'),
-                        backgroundColor: AppColors.primaryBlue,
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 
@@ -161,10 +65,17 @@ class ClientHeaderSection extends StatelessWidget {
           AnimatedBuilder(
             animation: locationService,
             builder: (context, _) {
+              final hasLocation = locationService.usesPreciseLocation;
+              final chipLabel = hasLocation
+                  ? locationService.label
+                  : 'Use my location';
+
               return Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  onTap: () => _showLocationSheet(context),
+                  onTap: locationService.isLoading
+                      ? null
+                      : () => _useCurrentLocation(context),
                   borderRadius: BorderRadius.circular(24),
                   child: Ink(
                     padding: const EdgeInsets.symmetric(
@@ -174,14 +85,15 @@ class ClientHeaderSection extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: Colors.white.withOpacity(0.14)),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          locationService.usesPreciseLocation
+                          hasLocation
                               ? Icons.my_location_rounded
-                              : Icons.location_searching_rounded,
+                              : Icons.gps_fixed_rounded,
                           color: Colors.white,
                           size: 18,
                         ),
@@ -189,7 +101,7 @@ class ClientHeaderSection extends StatelessWidget {
                         ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 170),
                           child: Text(
-                            locationService.label,
+                            chipLabel,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
@@ -199,7 +111,7 @@ class ClientHeaderSection extends StatelessWidget {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: 8),
                         if (locationService.isLoading)
                           const SizedBox(
                             width: 14,
@@ -212,10 +124,12 @@ class ClientHeaderSection extends StatelessWidget {
                             ),
                           )
                         else
-                          const Icon(
-                            Icons.keyboard_arrow_down_rounded,
+                          Icon(
+                            hasLocation
+                                ? Icons.refresh_rounded
+                                : Icons.arrow_forward_rounded,
                             color: Colors.white,
-                            size: 20,
+                            size: 18,
                           ),
                       ],
                     ),

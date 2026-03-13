@@ -7,10 +7,10 @@ const { Pool } = pg;
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
-const CLIENT_COUNT = 10;
+const CLIENT_COUNT = 2;
 const PATRON_COUNT = 10;
-const EMPLOYEES_PER_SALON = 10;
-const SERVICES_PER_SALON = 10;
+const EMPLOYEES_PER_SALON = 3;
+const SERVICES_PER_SALON = 4;
 const DEFAULT_PASSWORD = '123456';
 function pad2(value) {
     return value.toString().padStart(2, '0');
@@ -19,7 +19,13 @@ function makeRunToken() {
     return Date.now().toString().slice(-6);
 }
 function makePhone(prefix, runToken, ...parts) {
-    return `${prefix}${runToken}${parts.map((p) => pad2(p)).join('')}`;
+    // Keep phone numbers at exactly 8 digits: 2-digit prefix + 6-digit suffix.
+    // Suffix is derived from the run token + parts and truncated from the right.
+    const rawSuffix = `${runToken}${parts.map((p) => pad2(p)).join('')}`.replace(/\D/g, '');
+    const suffix = rawSuffix.length >= 6
+        ? rawSuffix.slice(-6)
+        : rawSuffix.padStart(6, '0');
+    return `${prefix}${suffix}`;
 }
 function createWorkingHours() {
     return Array.from({ length: 7 }, (_, idx) => ({
@@ -35,7 +41,7 @@ async function createClients(runToken, passwordHash) {
         const phoneNumber = makePhone('31', runToken, i);
         await prisma.user.create({
             data: {
-                fullName: `Seed Client ${i}`,
+                fullName: ` Client ${i}`,
                 phoneNumber,
                 passwordHash,
                 role: Role.CLIENT,
@@ -61,7 +67,7 @@ async function createPatronsWithSalons(runToken, passwordHash) {
         const patronPhone = makePhone('41', runToken, p);
         const patron = await prisma.user.create({
             data: {
-                fullName: `Seed Patron ${p}`,
+                fullName: `Barber ${p}`,
                 phoneNumber: patronPhone,
                 passwordHash,
                 role: Role.PATRON,

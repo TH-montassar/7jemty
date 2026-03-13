@@ -166,7 +166,11 @@ const normalizeExtraData = (extraData) => {
 const getDefaultDeeplink = (appointmentId) => `/appointments/${appointmentId}`;
 const resolveRecipientIds = (event, ctx) => {
     if (ctx.targetUserIds && ctx.targetUserIds.length > 0) {
-        return Array.from(new Set(ctx.targetUserIds.filter((id) => Number.isInteger(id) && id > 0)));
+        const uniqueTargetIds = Array.from(new Set(ctx.targetUserIds.filter((id) => Number.isInteger(id) && id > 0)));
+        if (ctx.actorUserId && ctx.actorUserId > 0) {
+            return uniqueTargetIds.filter((id) => id !== ctx.actorUserId);
+        }
+        return uniqueTargetIds;
     }
     const template = EVENT_TEMPLATES[event];
     const roleMap = {
@@ -177,7 +181,11 @@ const resolveRecipientIds = (event, ctx) => {
     const recipientIds = (template.recipientRoles || [])
         .map((role) => roleMap[role])
         .filter((id) => typeof id === 'number' && id > 0);
-    return Array.from(new Set(recipientIds));
+    const uniqueRecipientIds = Array.from(new Set(recipientIds));
+    if (ctx.actorUserId && ctx.actorUserId > 0) {
+        return uniqueRecipientIds.filter((id) => id !== ctx.actorUserId);
+    }
+    return uniqueRecipientIds;
 };
 const cleanupDedupeCache = () => {
     const now = Date.now();
