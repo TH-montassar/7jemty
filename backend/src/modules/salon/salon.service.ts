@@ -563,6 +563,50 @@ export const removeEmployeeFromSalonAdmin = async (salonId: number, employeeId: 
     return { id: employeeId, removed: true };
 };
 
+const calculateDistanceKm = (
+    lat?: number,
+    lng?: number,
+    salonLatitude?: number | null,
+    salonLongitude?: number | null
+) => {
+    if (lat == null || lng == null || salonLatitude == null || salonLongitude == null) {
+        return null;
+    }
+
+    const earthRadiusKm = 6371;
+    const dLat = (salonLatitude - lat) * (Math.PI / 180);
+    const dLon = (salonLongitude - lng) * (Math.PI / 180);
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat * (Math.PI / 180)) * Math.cos(salonLatitude * (Math.PI / 180)) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return Number.parseFloat((earthRadiusKm * c).toFixed(1));
+};
+
+const mapSalonForListing = (salon: any, lat?: number, lng?: number) => {
+    const distanceKm = calculateDistanceKm(lat, lng, salon.latitude, salon.longitude);
+
+    return {
+        ...salon,
+        distanceKm,
+        distance: distanceKm != null ? `${distanceKm.toFixed(1)} km` : null,
+        image: salon.coverImageUrl || 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=500&q=80',
+        rating: (salon as any)._count?.reviews > 0 && (salon as any).rating ? ((salon as any).rating as number).toFixed(1) : "0.0"
+    };
+};
+
+const sortSalonsByDistance = <T extends { distanceKm?: number | null }>(salons: T[]) => {
+    salons.sort((a, b) => {
+        if (a.distanceKm == null && b.distanceKm == null) return 0;
+        if (a.distanceKm == null) return 1;
+        if (b.distanceKm == null) return -1;
+        return a.distanceKm - b.distanceKm;
+    });
+
+    return salons;
+};
+
 export const getAllSalons = async (lat?: number, lng?: number, includeUnapproved: boolean = false) => {
     // Njibou tous les salons men base de donnÃ©es
     const salons = await prisma.salon.findMany({
@@ -577,39 +621,10 @@ export const getAllSalons = async (lat?: number, lng?: number, includeUnapproved
     });
 
     // Ken 3ana les coordonnÃ©es mta3 el client, n7esbou el distance (en km mthln)
-    let salonsWithDistance = salons.map(salon => {
-        let distance: string | null = null;
-        if (lat && lng && salon.latitude && salon.longitude) {
-            // Calcul basique de distance Haversine
-            const R = 6371; // Rayon de la terre en km
-            const dLat = (salon.latitude - lat) * (Math.PI / 180);
-            const dLon = (salon.longitude - lng) * (Math.PI / 180);
-            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                Math.cos(lat * (Math.PI / 180)) * Math.cos(salon.latitude * (Math.PI / 180)) *
-                Math.sin(dLon / 2) * Math.sin(dLon / 2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            const _distance = R * c;
-            distance = _distance.toFixed(1) + ' km';
-        }
+    const salonsWithDistance = salons.map((salon) => mapSalonForListing(salon, lat, lng));
 
-        return {
-            ...salon,
-            distance: distance,
-            // l'app yesta3mel 'image' ltaw fi mocked data, nejmou nraj3ou coverImageUrl 
-            image: salon.coverImageUrl || 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=500&q=80',
-            // Default rating for now, or you can calculate if reviews relation is added
-            rating: (salon as any)._count?.reviews > 0 && (salon as any).rating ? ((salon as any).rating as number).toFixed(1) : "0.0"
-        };
-    });
-
-    // Ken distance mawjouda lel salons lkol wella partie menhom, nratbouhom (Ascendant)
-    if (lat && lng) {
-        salonsWithDistance.sort((a, b) => {
-            if (!a.distance && !b.distance) return 0;
-            if (!a.distance) return 1;
-            if (!b.distance) return -1;
-            return parseFloat(a.distance) - parseFloat(b.distance);
-        });
+    if (lat != null && lng != null) {
+        sortSalonsByDistance(salonsWithDistance);
     }
 
     return salonsWithDistance;
@@ -776,7 +791,7 @@ export const deleteServiceAdmin = async (salonId: number, serviceId: number) => 
     return { id: serviceId, deleted: true };
 };
 
-export const getSalonById = async (id: number) => {
+export const getSalonById = async (id: number, lat?: number, lng?: number) => {
     const salon = await prisma.salon.findUnique({
         where: { id },
         include: {
@@ -831,6 +846,7 @@ export const getSalonById = async (id: number) => {
     }));
 
     console.log(`[getSalonById] Finalizing response for Salon ${salon.id}. Reviews: ${formattedReviews.length}`);
+    const distanceKm = calculateDistanceKm(lat, lng, salon.latitude, salon.longitude);
 
     return {
         id: salon.id,
@@ -859,6 +875,8 @@ export const getSalonById = async (id: number) => {
         portfolio: salon.portfolio,
         employees: formattedEmployees,
         reviews: formattedReviews,
+        distanceKm,
+        distance: distanceKm != null ? `${distanceKm.toFixed(1)} km` : null,
         image: salon.coverImageUrl || 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=500&q=80',
         rating: formattedReviews.length > 0 && typeof salon.rating === "number" ? salon.rating.toFixed(1) : "0.0",
     };
@@ -885,7 +903,12 @@ export const getTopRatedSalons = async (limit: number = 10, includeUnapproved: b
     }));
 };
 
-export const searchSalons = async (query: string, includeUnapproved: boolean = false) => {
+export const searchSalons = async (
+    query: string,
+    lat?: number,
+    lng?: number,
+    includeUnapproved: boolean = false
+) => {
     const salons = await prisma.salon.findMany({
         where: {
             ...(!includeUnapproved ? { approvalStatus: 'APPROVED' } : {}),
@@ -907,11 +930,13 @@ export const searchSalons = async (query: string, includeUnapproved: boolean = f
         take: 20, // Limit results for performance
     });
 
-    return salons.map(salon => ({
-        ...salon,
-        image: salon.coverImageUrl || 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=500&q=80',
-        rating: (salon as any)._count?.reviews > 0 && (salon as any).rating ? ((salon as any).rating as number).toFixed(1) : "0.0",
-    }));
+    const mappedSalons = salons.map((salon) => mapSalonForListing(salon, lat, lng));
+
+    if (lat != null && lng != null) {
+        sortSalonsByDistance(mappedSalons);
+    }
+
+    return mappedSalons;
 };
 
 export const toggleFavoriteSalon = async (clientId: number, salonId: number) => {

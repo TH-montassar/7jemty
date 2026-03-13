@@ -6,6 +6,7 @@ import 'package:hjamty/core/constants/app_colors.dart';
 import 'package:hjamty/features/client_space/salon_profile/data/salon_service.dart';
 import 'package:hjamty/features/client_space/appointments/data/appointment_service.dart';
 import 'package:hjamty/core/services/notification_service.dart';
+import 'package:hjamty/core/services/location_service.dart';
 import 'package:hjamty/features/client_space/appointments/presentation/widgets/appointment_details_bottom_sheet.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
@@ -128,9 +129,16 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
 
   Future<void> _fetchSalonData() async {
     try {
+      final locationService = AppLocationService.instance;
+      await locationService.initialize();
+
       final response = (widget.isPatron && widget.salonId == null)
           ? await SalonService.getMySalon()
-          : await SalonService.getSalonById(widget.salonId!);
+          : await SalonService.getSalonById(
+              widget.salonId!,
+              lat: locationService.latitude,
+              lng: locationService.longitude,
+            );
       if (!mounted) return;
 
       bool isFav = false;

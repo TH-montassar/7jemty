@@ -1,9 +1,11 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:hjamty/core/constants/app_colors.dart';
+import 'package:hjamty/core/localization/translation_service.dart';
+import 'package:hjamty/core/services/location_service.dart';
 import 'package:hjamty/features/client_space/salon_profile/data/salon_service.dart';
 import 'package:hjamty/features/patron_space/salon_dashboard_screen.dart';
-import 'package:hjamty/core/localization/translation_service.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -13,29 +15,64 @@ class SearchPage extends StatefulWidget {
 }
 
 class _SearchPageState extends State<SearchPage> {
+  final AppLocationService _locationService = AppLocationService.instance;
   final TextEditingController _searchController = TextEditingController();
   Timer? _debounce;
   bool _isLoading = false;
   List<dynamic> _searchResults = [];
   bool _hasSearched = false;
-
-  // Initial State Data
   List<dynamic> _allSalons = [];
   bool _isLoadingAllSalons = true;
-
-  // Filter variables
   String _selectedFilter = 'All';
   final List<String> _filters = ['All', 'Top Rated', 'Open Now', 'Offers'];
+  String? _lastLocationKey;
 
   @override
   void initState() {
     super.initState();
+    _locationService.addListener(_handleLocationChanged);
+    unawaited(_locationService.initialize());
     _fetchAllSalons();
+  }
+
+  @override
+  void dispose() {
+    _locationService.removeListener(_handleLocationChanged);
+    _searchController.dispose();
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  void _handleLocationChanged() {
+    final nextLocationKey = _buildLocationKey();
+    if (_locationService.isLoading || nextLocationKey == _lastLocationKey) {
+      return;
+    }
+
+    if (_searchController.text.trim().isEmpty) {
+      if (mounted) {
+        setState(() {
+          _isLoadingAllSalons = true;
+        });
+      }
+      _fetchAllSalons();
+      return;
+    }
+
+    unawaited(_performSearch(_searchController.text.trim(), showLoader: false));
+  }
+
+  String _buildLocationKey() {
+    return "${_locationService.latitude ?? 'null'}:${_locationService.longitude ?? 'null'}";
   }
 
   Future<void> _fetchAllSalons() async {
     try {
-      final salons = await SalonService.getAllSalons();
+      _lastLocationKey = _buildLocationKey();
+      final salons = await SalonService.getAllSalons(
+        lat: _locationService.latitude,
+        lng: _locationService.longitude,
+      );
       if (mounted) {
         setState(() {
           _allSalons = salons;
@@ -50,7 +87,7 @@ class _SearchPageState extends State<SearchPage> {
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(tr(context, 'error_title') + ': ' + e.toString()),
+            content: Text("${tr(context, 'error_title')}: $e"),
             backgroundColor: Colors.red,
           ),
         );
@@ -58,15 +95,14 @@ class _SearchPageState extends State<SearchPage> {
     }
   }
 
-  @override
-  void dispose() {
-    _searchController.dispose();
-    _debounce?.cancel();
-    super.dispose();
-  }
-
   void _onSearchChanged(String query) {
-    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    if (_debounce?.isActive ?? false) {
+      _debounce!.cancel();
+    }
+
+    if (mounted) {
+      setState(() {});
+    }
 
     if (query.trim().isEmpty) {
       setState(() {
@@ -77,32 +113,49 @@ class _SearchPageState extends State<SearchPage> {
       return;
     }
 
-    _debounce = Timer(const Duration(milliseconds: 500), () async {
+    _debounce = Timer(
+      const Duration(milliseconds: 500),
+      () => _performSearch(query.trim()),
+    );
+  }
+
+  Future<void> _performSearch(
+    String query, {
+    bool showLoader = true,
+  }) async {
+    if (showLoader && mounted) {
       setState(() {
         _isLoading = true;
         _hasSearched = true;
       });
+    }
 
-      try {
-        final results = await SalonService.searchSalons(query.trim());
-        if (mounted) {
-          setState(() {
-            _searchResults = results;
-            _isLoading = false;
-          });
-        }
-      } catch (e) {
-        if (mounted) {
-          setState(() {
-            _searchResults = [];
-            _isLoading = false;
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
-          );
-        }
+    try {
+      _lastLocationKey = _buildLocationKey();
+      final results = await SalonService.searchSalons(
+        query,
+        lat: _locationService.latitude,
+        lng: _locationService.longitude,
+      );
+      if (mounted) {
+        setState(() {
+          _searchResults = results;
+          _isLoading = false;
+          _hasSearched = true;
+        });
       }
-    });
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _searchResults = [];
+          _isLoading = false;
+          _hasSearched = true;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+        );
+      }
+    }
   }
 
   @override
@@ -158,7 +211,11 @@ class _SearchPageState extends State<SearchPage> {
               child: Row(
                 children: [
                   const SizedBox(width: 16),
-                  Icon(Icons.search_rounded, color: Colors.grey.shade500, size: 22),
+                  Icon(
+                    Icons.search_rounded,
+                    color: Colors.grey.shade500,
+                    size: 22,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: TextField(
@@ -195,8 +252,12 @@ class _SearchPageState extends State<SearchPage> {
                           _searchResults = [];
                           _hasSearched = false;
                           _isLoading = false;
+                          _isLoadingAllSalons = true;
                         });
-                        if (_debounce?.isActive ?? false) _debounce!.cancel();
+                        if (_debounce?.isActive ?? false) {
+                          _debounce!.cancel();
+                        }
+                        _fetchAllSalons();
                       },
                     ),
                 ],
@@ -212,9 +273,7 @@ class _SearchPageState extends State<SearchPage> {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       height: 54,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-      ),
+      decoration: const BoxDecoration(color: Colors.white),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -227,8 +286,6 @@ class _SearchPageState extends State<SearchPage> {
           return GestureDetector(
             onTap: () {
               setState(() => _selectedFilter = filter);
-              // In a real scenario, this would apply a local filter to _searchResults
-              // For now it acts as an interactive UI element
             },
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
@@ -336,7 +393,6 @@ class _SearchPageState extends State<SearchPage> {
       );
     }
 
-    // --- Not Searched Yet State (Default) ---
     if (_isLoadingAllSalons) {
       return const Center(
         child: CircularProgressIndicator(color: AppColors.primaryBlue),
@@ -458,17 +514,17 @@ class _SearchPageState extends State<SearchPage> {
                               color: Colors.amber.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: const Row(
+                            child: Row(
                               children: [
-                                Icon(
+                                const Icon(
                                   Icons.star_rounded,
                                   color: Colors.amber,
                                   size: 14,
                                 ),
-                                SizedBox(width: 3),
+                                const SizedBox(width: 3),
                                 Text(
-                                  "4.8",
-                                  style: TextStyle(
+                                  salon['rating']?.toString() ?? '0.0',
+                                  style: const TextStyle(
                                     color: Colors.amber,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 12,
@@ -507,19 +563,18 @@ class _SearchPageState extends State<SearchPage> {
                       const SizedBox(height: 8),
                       Row(
                         children: [
+                          Icon(
+                            Icons.near_me_rounded,
+                            size: 14,
+                            color: Colors.grey.shade500,
+                          ),
+                          const SizedBox(width: 6),
                           Text(
-                            "Starting from ",
+                            salon['distance']?.toString() ??
+                                'Distance unavailable',
                             style: TextStyle(
                               color: Colors.grey.shade500,
                               fontSize: 12,
-                            ),
-                          ),
-                          const Text(
-                            "20 TND",
-                            style: TextStyle(
-                              color: AppColors.primaryBlue,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
                             ),
                           ),
                           const Spacer(),

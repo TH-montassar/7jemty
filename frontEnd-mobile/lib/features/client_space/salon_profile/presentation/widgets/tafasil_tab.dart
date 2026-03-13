@@ -33,7 +33,7 @@ class TafasilTab extends StatelessWidget {
                 AppColors.primaryBlue,
               ),
               const Divider(height: 20),
-              _contactRow(Icons.location_on, "Ariana, Tunis", Colors.red),
+              _contactRow(Icons.location_on, "Adresse disponible fil fiche", Colors.red),
               const Divider(height: 20),
               _contactRow(
                 Icons.access_time,

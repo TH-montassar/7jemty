@@ -1,6 +1,8 @@
-import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:hjamty/core/constants/app_colors.dart';
+import 'package:hjamty/core/localization/translation_service.dart';
+import 'package:hjamty/core/services/location_service.dart';
 import 'package:intl/intl.dart';
 
 class SalonInfoSection extends StatelessWidget {
@@ -8,19 +10,60 @@ class SalonInfoSection extends StatelessWidget {
 
   const SalonInfoSection({super.key, required this.salonData});
 
+  double? _toDouble(dynamic value) {
+    if (value is num) {
+      return value.toDouble();
+    }
+
+    if (value is String) {
+      return double.tryParse(value);
+    }
+
+    return null;
+  }
+
+  String _distanceLabel(AppLocationService locationService) {
+    final userLat = locationService.latitude;
+    final userLng = locationService.longitude;
+    final salonLat = _toDouble(salonData['latitude']);
+    final salonLng = _toDouble(salonData['longitude']);
+
+    if (userLat != null &&
+        userLng != null &&
+        salonLat != null &&
+        salonLng != null) {
+      final distanceKm =
+          Geolocator.distanceBetween(userLat, userLng, salonLat, salonLng) /
+          1000;
+
+      return '${distanceKm.toStringAsFixed(1)} km';
+    }
+
+    final apiDistance = salonData['distance']?.toString().trim();
+    if (apiDistance != null &&
+        apiDistance.isNotEmpty &&
+        apiDistance != '--' &&
+        apiDistance.toLowerCase() != 'unknown') {
+      return apiDistance;
+    }
+
+    return '--';
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Determine current open/close status
-    final now = DateTime.now();
-    final currentDay = now.weekday; // Lundi = 1, Dimanche = 7
+    final locationService = AppLocationService.instance;
 
+    final now = DateTime.now();
+    final currentDay = now.weekday;
     final workingHours = salonData['workingHours'] as List<dynamic>? ?? [];
     final todayHours = workingHours.firstWhere(
       (wh) => wh['dayOfWeek'] == currentDay,
       orElse: () => null,
     );
 
-    final int reviewsCount = (salonData['reviews'] as List<dynamic>?)?.length ?? 0;
+    final int reviewsCount =
+        (salonData['reviews'] as List<dynamic>?)?.length ?? 0;
     final String displayRating = reviewsCount == 0
         ? '0.0'
         : (salonData['rating']?.toString() ?? '0.0');
@@ -42,7 +85,7 @@ class SalonInfoSection extends StatelessWidget {
 
             if (currentDT.isAfter(openDT) && currentDT.isBefore(closeDT)) {
               isOpen = true;
-              closeTimeStr = DateFormat.jm().format(closeDT); // e.g. 8:00 PM
+              closeTimeStr = DateFormat.jm().format(closeDT);
             }
           } catch (_) {
             isOpen = true;
@@ -58,7 +101,6 @@ class SalonInfoSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Category Pill & Status
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -87,8 +129,6 @@ class SalonInfoSection extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-
-          // Salon Name
           Text(
             salonData['name'] ?? 'Salon',
             style: const TextStyle(
@@ -99,61 +139,64 @@ class SalonInfoSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-
-          // Rating, Reviews, Distance Row
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.amber,
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.star, color: Colors.black, size: 14),
-                    const SizedBox(width: 4),
-                    Text(
-                      displayRating,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                        color: Colors.black,
-                      ),
+          AnimatedBuilder(
+            animation: locationService,
+            builder: (context, _) {
+              return Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                '${reviewsCount} avis',
-                style: const TextStyle(
-                  color: Colors.grey,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(width: 10),
-              const Text(
-                '•',
-                style: TextStyle(color: Colors.grey, fontSize: 14),
-              ),
-              const SizedBox(width: 10),
-              const Text(
-                '3.5 km', // Hardcoded distance as in screenshot
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
+                    decoration: BoxDecoration(
+                      color: Colors.amber,
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.star, color: Colors.black, size: 14),
+                        const SizedBox(width: 4),
+                        Text(
+                          displayRating,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    '$reviewsCount avis',
+                    style: const TextStyle(
+                      color: Colors.grey,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  const Text(
+                    '|',
+                    style: TextStyle(color: Colors.grey, fontSize: 14),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    _distanceLabel(locationService),
+                    style: const TextStyle(
+                      color: Colors.grey,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
-
           const Divider(height: 40, color: Color(0xFFF5F5F5)),
-
-          // Address & Status
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -193,8 +236,8 @@ class SalonInfoSection extends StatelessWidget {
                         const SizedBox(width: 6),
                         Text(
                           isOpen
-                              ? 'Ouvert jusqu\'à ${closeTimeStr ?? ''}'
-                              : 'Fermé actuellement',
+                              ? "Ouvert jusqu'a ${closeTimeStr ?? ''}"
+                              : 'Ferme actuellement',
                           style: const TextStyle(
                             color: Colors.grey,
                             fontSize: 13,
@@ -217,7 +260,7 @@ class SalonInfoSection extends StatelessWidget {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  isOpen ? 'OUVERT' : 'FERMÉ',
+                  isOpen ? 'OUVERT' : 'FERME',
                   style: TextStyle(
                     color: isOpen ? Colors.green : Colors.red,
                     fontWeight: FontWeight.w900,

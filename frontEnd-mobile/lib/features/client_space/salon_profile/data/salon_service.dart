@@ -312,12 +312,12 @@ class SalonService {
   // ðŸ“ Fonction bech njibou e-salons lkol w nrajjouhom lel client
   static Future<List<dynamic>> getAllSalons({double? lat, double? lng}) async {
     try {
-      final String query = (lat != null && lng != null)
-          ? '?lat=$lat&lng=$lng'
-          : '';
-
       final response = await http.get(
-        Uri.parse('$baseUrl/all$query'),
+        Uri.parse('$baseUrl/all').replace(
+          queryParameters: lat != null && lng != null
+              ? {'lat': lat.toString(), 'lng': lng.toString()}
+              : null,
+        ),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -567,10 +567,19 @@ class SalonService {
   // ðŸ“ Fonction bech nzidou service l'salon
 
   // ðŸ“ Fonction bech njibou dÃ©tail mta3 salon wa7ed b id mta3o
-  static Future<Map<String, dynamic>> getSalonById(int id) async {
+  static Future<Map<String, dynamic>> getSalonById(
+    int id, {
+    double? lat,
+    double? lng,
+  }) async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/$id'),
+        Uri.parse('$baseUrl/$id').replace(
+          queryParameters: {
+            if (lat != null && lng != null) 'lat': lat.toString(),
+            if (lat != null && lng != null) 'lng': lng.toString(),
+          },
+        ),
         headers: {'Content-Type': 'application/json'},
       );
 
@@ -594,10 +603,20 @@ class SalonService {
   }
 
   // ðŸ“ Fonction bech nlawjou 3la salonat (Recherche)
-  static Future<List<dynamic>> searchSalons(String query) async {
+  static Future<List<dynamic>> searchSalons(
+    String query, {
+    double? lat,
+    double? lng,
+  }) async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/search?q=$query'),
+        Uri.parse('$baseUrl/search').replace(
+          queryParameters: {
+            'q': query,
+            if (lat != null && lng != null) 'lat': lat.toString(),
+            if (lat != null && lng != null) 'lng': lng.toString(),
+          },
+        ),
         headers: {'Content-Type': 'application/json'},
       );
 

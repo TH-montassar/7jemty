@@ -5,6 +5,7 @@ import 'package:hjamty/core/constants/app_colors.dart';
 import 'package:hjamty/core/localization/translation_service.dart'; // Added this import
 import 'package:hjamty/features/auth/data/auth_service.dart';
 import 'package:hjamty/features/client_space/appointments/data/appointment_service.dart';
+import 'package:hjamty/core/services/location_service.dart';
 import 'package:hjamty/core/services/fcm_service.dart';
 import 'package:hjamty/features/client_space/home/presentation/widgets/client_header_section.dart';
 import 'package:hjamty/features/client_space/home/presentation/widgets/next_rdv_card.dart';
@@ -22,6 +23,7 @@ class ClientHomePage extends StatefulWidget {
 }
 
 class _ClientHomePageState extends State<ClientHomePage> {
+  final AppLocationService _locationService = AppLocationService.instance;
   bool _isLoggedIn = false;
   String _clientName = "Client";
   Map<String, dynamic>? _nextAppointment;
@@ -34,6 +36,7 @@ class _ClientHomePageState extends State<ClientHomePage> {
     super.initState();
     _checkLoginStatus();
     _setupFcmListener();
+    unawaited(_locationService.initialize());
   }
 
   void _setupFcmListener() {
@@ -272,15 +275,24 @@ class _ClientHomePageState extends State<ClientHomePage> {
                           const QuickCategories(),
 
                           const SizedBox(height: 30),
-                          _buildSectionHeader(
-                            title: tr(context, 'near_you'),
-                            icon: Icons.location_on,
-                            onSeeAll: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const SearchPage(),
-                                ),
+                          AnimatedBuilder(
+                            animation: _locationService,
+                            builder: (context, _) {
+                              return _buildSectionHeader(
+                                title: _locationService.hasCoordinates
+                                    ? tr(context, 'near_you')
+                                    : 'Salons',
+                                icon: _locationService.hasCoordinates
+                                    ? Icons.location_on
+                                    : Icons.storefront_rounded,
+                                onSeeAll: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const SearchPage(),
+                                    ),
+                                  );
+                                },
                               );
                             },
                           ),

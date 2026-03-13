@@ -10,6 +10,7 @@ import 'package:hjamty/features/client_space/salon_profile/data/salon_service.da
 import 'package:hjamty/features/client_space/appointments/presentation/pages/booking_flow_screen.dart';
 import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:hjamty/features/client_space/salon_profile/presentation/widgets/about_tab.dart';
+import 'package:hjamty/core/services/location_service.dart';
 import 'package:toastification/toastification.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:share_plus/share_plus.dart';
@@ -33,9 +34,20 @@ class _SalonProfilePageState extends State<SalonProfilePage> {
   @override
   void initState() {
     super.initState();
-    _salonFuture = SalonService.getSalonById(widget.salonId);
+    _salonFuture = _loadSalon();
     _checkFavorite();
     _loadUserRole();
+  }
+
+  Future<Map<String, dynamic>> _loadSalon() async {
+    final locationService = AppLocationService.instance;
+    await locationService.initialize();
+
+    return SalonService.getSalonById(
+      widget.salonId,
+      lat: locationService.latitude,
+      lng: locationService.longitude,
+    );
   }
 
   Future<void> _loadUserRole() async {

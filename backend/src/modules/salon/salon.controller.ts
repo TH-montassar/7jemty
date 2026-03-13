@@ -116,8 +116,8 @@ export const deleteEmployeeAccountHandler = async (req: AuthRequest, res: Respon
 
 export const getAllSalonsHandler = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const lat = req.query.lat ? parseFloat(req.query.lat as string) : undefined;
-        const lng = req.query.lng ? parseFloat(req.query.lng as string) : undefined;
+        const lat = req.query.lat !== undefined ? parseFloat(req.query.lat as string) : undefined;
+        const lng = req.query.lng !== undefined ? parseFloat(req.query.lng as string) : undefined;
 
         const salons = await getAllSalons(lat, lng);
 
@@ -203,12 +203,14 @@ export const getTopRatedSalonsHandler = async (req: AuthRequest, res: Response):
 export const getSalonByIdHandler = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const id = parseInt(req.params.id as string);
+        const lat = req.query.lat !== undefined ? parseFloat(req.query.lat as string) : undefined;
+        const lng = req.query.lng !== undefined ? parseFloat(req.query.lng as string) : undefined;
         if (isNaN(id)) {
             res.status(400).json({ success: false, message: 'ID invalide' });
             return;
         }
 
-        const salon = await getSalonById(id);
+        const salon = await getSalonById(id, lat, lng);
         res.status(200).json({ success: true, data: salon });
     } catch (error: any) {
         res.status(404).json({ success: false, message: error.message });
@@ -218,11 +220,13 @@ export const getSalonByIdHandler = async (req: AuthRequest, res: Response): Prom
 export const searchSalonHandler = async (req: Request, res: Response): Promise<void> => {
     try {
         const query = req.query.q as string;
+        const lat = req.query.lat !== undefined ? parseFloat(req.query.lat as string) : undefined;
+        const lng = req.query.lng !== undefined ? parseFloat(req.query.lng as string) : undefined;
         if (!query || query.trim() === '') {
             res.json({ success: true, data: [] });
             return;
         }
-        const salons = await searchSalons(query.trim());
+        const salons = await searchSalons(query.trim(), lat, lng);
         res.json({ success: true, data: salons });
     } catch (error: any) {
         res.status(500).json({ success: false, message: error.message });
