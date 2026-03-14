@@ -346,10 +346,11 @@ docker compose up --build
 - Config
   - `frontEnd-mobile/lib/config/api_config.dart`: resolution de l'URL backend.
   - `frontEnd-mobile/lib/firebase_options.dart`: bootstrap Firebase depuis `.env`.
-- Core services transverses
-  - `frontEnd-mobile/lib/core/services/auth_service.dart`
-  - `frontEnd-mobile/lib/core/services/salon_service.dart`
-  - `frontEnd-mobile/lib/core/services/appointment_service.dart`
+- Services API transverses (chemins reels)
+  - `frontEnd-mobile/lib/features/auth/data/auth_service.dart`
+  - `frontEnd-mobile/lib/features/client_space/salon_profile/data/salon_service.dart`
+  - `frontEnd-mobile/lib/features/client_space/appointments/data/appointment_service.dart`
+  - `frontEnd-mobile/lib/features/admin_space/data/admin_service.dart`
   - `frontEnd-mobile/lib/core/services/notification_service.dart`
   - `frontEnd-mobile/lib/core/services/fcm_service.dart`
 - Features role-based
