@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:hjamty/features/patron_space/salon_dashboard_screen.dart';
 import 'package:hjamty/core/constants/app_colors.dart';
-import 'package:hjamty/features/client_space/salon_profile/data/salon_service.dart';
-import 'package:hjamty/core/utils/cloudinary_utils.dart';
 import 'package:hjamty/core/localization/translation_service.dart';
+import 'package:hjamty/core/services/location_service.dart';
+import 'package:hjamty/core/utils/cloudinary_utils.dart';
+import 'package:hjamty/features/client_space/salon_profile/data/salon_service.dart';
+import 'package:hjamty/features/patron_space/salon_dashboard_screen.dart';
 
 class TopRatedList extends StatefulWidget {
   const TopRatedList({super.key});
@@ -13,12 +16,145 @@ class TopRatedList extends StatefulWidget {
 }
 
 class _TopRatedListState extends State<TopRatedList> {
+  static const int _maxItems = 10;
+
+  final AppLocationService _locationService = AppLocationService.instance;
   late Future<List<dynamic>> _topSalonsFuture;
+  String? _lastLocationKey;
 
   @override
   void initState() {
     super.initState();
-    _topSalonsFuture = SalonService.getTopRatedSalons();
+    _topSalonsFuture = _fetchTopRatedSalons();
+    _locationService.addListener(_handleLocationChanged);
+    unawaited(_locationService.initialize());
+  }
+
+  @override
+  void dispose() {
+    _locationService.removeListener(_handleLocationChanged);
+    super.dispose();
+  }
+
+  void _handleLocationChanged() {
+    final nextKey = _buildLocationKey();
+    if (_locationService.isLoading || nextKey == _lastLocationKey) {
+      return;
+    }
+
+    setState(() {
+      _topSalonsFuture = _fetchTopRatedSalons();
+    });
+  }
+
+  Future<List<dynamic>> _fetchTopRatedSalons() async {
+    _lastLocationKey = _buildLocationKey();
+    final salons = await SalonService.getAllSalons(
+      lat: _locationService.latitude,
+      lng: _locationService.longitude,
+    );
+
+    final rankedSalons = salons
+        .whereType<Map>()
+        .map((salon) => Map<String, dynamic>.from(salon))
+        .where(_isApprovedSalon)
+        .toList()
+      ..sort(_compareByTopRated);
+
+    if (rankedSalons.length <= _maxItems) {
+      return rankedSalons;
+    }
+
+    return rankedSalons.take(_maxItems).toList();
+  }
+
+  String _buildLocationKey() {
+    return "${_locationService.latitude ?? 'null'}:${_locationService.longitude ?? 'null'}";
+  }
+
+  bool _isApprovedSalon(Map<String, dynamic> salon) {
+    return (salon['approvalStatus']?.toString().toUpperCase() ?? 'APPROVED') ==
+        'APPROVED';
+  }
+
+  int _compareByTopRated(Map<String, dynamic> a, Map<String, dynamic> b) {
+    final ratingCompare = _ratingValue(b).compareTo(_ratingValue(a));
+    if (ratingCompare != 0) {
+      return ratingCompare;
+    }
+
+    final reviewCompare = _reviewCount(b).compareTo(_reviewCount(a));
+    if (reviewCompare != 0) {
+      return reviewCompare;
+    }
+
+    return _compareByDistanceThenName(a, b);
+  }
+
+  int _compareByDistanceThenName(
+    Map<String, dynamic> a,
+    Map<String, dynamic> b,
+  ) {
+    final aDistance = _distanceKm(a);
+    final bDistance = _distanceKm(b);
+
+    if (aDistance != null && bDistance != null) {
+      final distanceCompare = aDistance.compareTo(bDistance);
+      if (distanceCompare != 0) {
+        return distanceCompare;
+      }
+    }
+
+    return (a['name']?.toString() ?? '').compareTo(b['name']?.toString() ?? '');
+  }
+
+  double _ratingValue(Map<String, dynamic> salon) {
+    return _toDouble(salon['rating']) ?? 0;
+  }
+
+  int _reviewCount(Map<String, dynamic> salon) {
+    final rawCount = salon['reviewCount'];
+    if (rawCount is num) {
+      return rawCount.toInt();
+    }
+
+    final rawCounter = salon['_count'];
+    if (rawCounter is Map && rawCounter['reviews'] is num) {
+      return (rawCounter['reviews'] as num).toInt();
+    }
+
+    final reviews = salon['reviews'];
+    if (reviews is List) {
+      return reviews.length;
+    }
+
+    return 0;
+  }
+
+  double? _distanceKm(Map<String, dynamic> salon) {
+    final directValue = _toDouble(salon['distanceKm']);
+    if (directValue != null) {
+      return directValue;
+    }
+
+    final distanceLabel = salon['distance']?.toString();
+    if (distanceLabel == null) {
+      return null;
+    }
+
+    return double.tryParse(distanceLabel.replaceAll(RegExp(r'[^0-9.]'), ''));
+  }
+
+  double? _toDouble(dynamic value) {
+    if (value is num) {
+      return value.toDouble();
+    }
+
+    if (value is String) {
+      return double.tryParse(value);
+    }
+
+    return null;
   }
 
   @override
@@ -63,10 +199,6 @@ class _TopRatedListState extends State<TopRatedList> {
         final topSalons = snapshot.data!
             .whereType<Map>()
             .map((salon) => Map<String, dynamic>.from(salon))
-            .where((salon) =>
-                (salon['approvalStatus']?.toString().toUpperCase() ??
-                    'APPROVED') ==
-                'APPROVED')
             .toList();
 
         if (topSalons.isEmpty) {
