@@ -1448,56 +1448,56 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                             ),
                           ],
                         ),
-                      ] else if (status == 'IN_PROGRESS' && isTimeReached) ...[
+                      ] else if (status == 'IN_PROGRESS') ...[
                         const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: OutlinedButton.icon(
-                                onPressed: () {
-                                  // Logic for "Mezel 15 min" could be a separate status or just a local reminder
-                                  toastification.show(
-                                    context: context,
-                                    type: ToastificationType.info,
-                                    title: Text(
-                                      tr(context, 'reminder_15m_set'),
-                                    ),
-                                  );
-                                },
-                                icon: const Icon(Icons.timer, size: 18),
-                                label: Text(tr(context, '15m_remaining')),
-                                style: OutlinedButton.styleFrom(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
+                        if (isTimeReached) ...[
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              onPressed: () {
+                                toastification.show(
+                                  context: context,
+                                  type: ToastificationType.info,
+                                  title: Text(
+                                    tr(context, 'reminder_15m_set'),
                                   ),
+                                );
+                              },
+                              icon: const Icon(Icons.timer, size: 18),
+                              label: Text(tr(context, '15m_remaining')),
+                              style: OutlinedButton.styleFrom(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: ElevatedButton.icon(
-                                onPressed: () =>
-                                    _updateAptStatus(apt['id'], 'COMPLETED'),
-                                icon: const Icon(
-                                  Icons.check,
-                                  color: Colors.white,
-                                ),
-                                label: Text(
-                                  tr(context, 'completed_btn'),
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.successGreen,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: () =>
+                                _updateAptStatus(apt['id'], 'COMPLETED'),
+                            icon: const Icon(
+                              Icons.check_circle,
+                              color: Colors.white,
+                            ),
+                            label: Text(
+                              tr(context, 'finished_haircut_q'),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
-                          ],
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.successGreen,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
                         ),
                       ],
                     ],
