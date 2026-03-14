@@ -1,43 +1,81 @@
-import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:flutter/material.dart';
+import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:hjamty/core/widgets/info_card.dart';
 
 class DashboardStats extends StatelessWidget {
-  const DashboardStats({super.key});
+  final Map<String, dynamic>? salonData;
+  final int loyaltyPoints;
+  final int nextRewardTarget;
+  final int remainingAppointmentsCount;
+  final VoidCallback? onRenewTap;
+
+  const DashboardStats({
+    super.key,
+    required this.salonData,
+    required this.loyaltyPoints,
+    required this.nextRewardTarget,
+    required this.remainingAppointmentsCount,
+    this.onRenewTap,
+  });
+
+  bool get _isSalonActive {
+    final approvalStatus =
+        (salonData?['approvalStatus'] ?? 'PENDING').toString().toUpperCase();
+    final isForceClosed = salonData?['isForceClosed'] == true;
+    return approvalStatus == 'APPROVED' && !isForceClosed;
+  }
+
+  String get _statusLabel {
+    final approvalStatus =
+        (salonData?['approvalStatus'] ?? 'PENDING').toString().toUpperCase();
+    final isForceClosed = salonData?['isForceClosed'] == true;
+
+    if (isForceClosed) return 'Fermé';
+    if (approvalStatus == 'APPROVED') return 'Actif';
+    if (approvalStatus == 'PENDING') return 'En attente';
+    return 'Inactif';
+  }
 
   @override
   Widget build(BuildContext context) {
+    final progress = nextRewardTarget <= 0
+        ? 0.0
+        : (loyaltyPoints / nextRewardTarget).clamp(0.0, 1.0);
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // --- كارت الاشتراك ---
         Expanded(
           child: InfoCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
-                  children: const [
-                    Icon(Icons.check_circle, color: Colors.blue, size: 20),
-                    SizedBox(width: 8),
-                    Text(
+                  children: [
+                    Icon(
+                      _isSalonActive ? Icons.check_circle : Icons.pause_circle,
+                      color: _isSalonActive ? Colors.blue : Colors.orange,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    const Text(
                       'Abonnement',
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  'Statut: Actif',
-                  style: TextStyle(color: Colors.grey),
+                Text(
+                  'Statut: $_statusLabel',
+                  style: const TextStyle(color: Colors.grey),
                 ),
                 const SizedBox(height: 4),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      '4',
-                      style: TextStyle(
+                    Text(
+                      remainingAppointmentsCount.toString(),
+                      style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
                       ),
@@ -52,7 +90,7 @@ class DashboardStats extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: onRenewTap,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue,
                       foregroundColor: Colors.white,
@@ -68,15 +106,14 @@ class DashboardStats extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 16),
-        // --- كارت النقاط ---
         Expanded(
           child: InfoCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
+                const Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
+                  children: [
                     Text(
                       'Points Fidélité',
                       style: TextStyle(fontWeight: FontWeight.bold),
@@ -85,20 +122,20 @@ class DashboardStats extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  'Points: 1200',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                Text(
+                  'Points: $loyaltyPoints',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Prochaine récompense: 2800 pts',
+                  'Prochaine récompense: $nextRewardTarget pts',
                   style: TextStyle(color: Colors.grey[600], fontSize: 11),
                 ),
                 const SizedBox(height: 12),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(10),
                   child: LinearProgressIndicator(
-                    value: 1200 / 2800,
+                    value: progress,
                     backgroundColor: Colors.grey[200],
                     color: Colors.blue,
                     minHeight: 8,

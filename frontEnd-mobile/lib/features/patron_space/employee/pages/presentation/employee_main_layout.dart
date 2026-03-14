@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:hjamty/core/constants/app_colors.dart';
 import 'package:hjamty/core/services/fcm_service.dart';
+import 'package:hjamty/features/auth/data/auth_service.dart';
 import 'package:hjamty/features/client_space/profile/presentation/pages/client_profile_page.dart';
 import 'package:hjamty/core/widgets/notification_bell.dart';
 import 'employee_agenda_page.dart';
@@ -18,6 +19,7 @@ class EmployeeMainLayout extends StatefulWidget {
 class _EmployeeMainLayoutState extends State<EmployeeMainLayout> {
   late int _selectedIndex;
   StreamSubscription<Map<String, dynamic>>? _notificationTapSubscription;
+  Map<String, dynamic>? _userData;
 
   final List<Widget> _pages = [const EmployeeAgendaPage(), const ProfilePage()];
 
@@ -25,7 +27,44 @@ class _EmployeeMainLayoutState extends State<EmployeeMainLayout> {
   void initState() {
     super.initState();
     _selectedIndex = widget.initialIndex;
+    _fetchUserData();
     _setupNotificationTapListener();
+  }
+
+  Future<void> _fetchUserData() async {
+    try {
+      final result = await AuthService.getMe();
+      if (!mounted) return;
+      setState(() {
+        _userData = result['data'];
+      });
+    } catch (_) {}
+  }
+
+  Widget _buildProfileNavIcon({required bool active}) {
+    final avatarUrl = _userData?['profile']?['avatarUrl']?.toString();
+    final hasAvatar = avatarUrl != null && avatarUrl.isNotEmpty;
+
+    if (!hasAvatar) {
+      return Icon(active ? Icons.person : Icons.person_outline);
+    }
+
+    return Container(
+      width: active ? 26 : 22,
+      height: active ? 26 : 22,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: active ? AppColors.primaryBlue : Colors.transparent,
+          width: 1.5,
+        ),
+      ),
+      child: CircleAvatar(
+        radius: active ? 13 : 11,
+        backgroundColor: Colors.grey[200],
+        backgroundImage: NetworkImage(avatarUrl),
+      ),
+    );
   }
 
   void _setupNotificationTapListener() {
@@ -122,12 +161,16 @@ class _EmployeeMainLayoutState extends State<EmployeeMainLayout> {
         showSelectedLabels: true,
         showUnselectedLabels: true,
         type: BottomNavigationBarType.fixed,
-        items: const [
+        items: [
           BottomNavigationBarItem(
             icon: Icon(Icons.calendar_today),
             label: 'Agenda',
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+          BottomNavigationBarItem(
+            icon: _buildProfileNavIcon(active: false),
+            activeIcon: _buildProfileNavIcon(active: true),
+            label: 'Profile',
+          ),
         ],
       ),
     );

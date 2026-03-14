@@ -5,12 +5,44 @@ import '../../../../../../core/localization/translation_service.dart';
 class ClientBottomNav extends StatelessWidget {
   final int selectedIndex;
   final Function(int) onTap;
+  final String? avatarUrl;
 
   const ClientBottomNav({
     super.key,
     required this.selectedIndex,
     required this.onTap,
+    this.avatarUrl,
   });
+
+  Widget _buildProfileNavIcon({required bool active}) {
+    final hasAvatar = avatarUrl != null && avatarUrl!.isNotEmpty;
+
+    if (!hasAvatar) {
+      return Icon(
+        active ? Icons.person_rounded : Icons.person_outline_rounded,
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6.0),
+      child: Container(
+        width: active ? 28 : 24,
+        height: active ? 28 : 24,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: active ? AppColors.primaryBlue : Colors.transparent,
+            width: 1.5,
+          ),
+        ),
+        child: CircleAvatar(
+          radius: active ? 14 : 12,
+          backgroundColor: Colors.grey[200],
+          backgroundImage: NetworkImage(avatarUrl!),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,10 +105,8 @@ class ClientBottomNav extends StatelessWidget {
                 label: tr(context, 'products'),
               ),
               BottomNavigationBarItem(
-                icon: const Padding(
-                  padding: EdgeInsets.only(bottom: 6.0),
-                  child: Icon(Icons.person_outline_rounded),
-                ),
+                icon: _buildProfileNavIcon(active: false),
+                activeIcon: _buildProfileNavIcon(active: true),
                 label: tr(context, 'profile'),
               ),
             ],

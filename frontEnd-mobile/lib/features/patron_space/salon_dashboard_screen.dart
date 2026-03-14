@@ -1163,354 +1163,345 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                   itemCount: appointments.length,
                   itemBuilder: (context, index) {
                     final apt = appointments[index];
-            final clientName = apt['client']['fullName'] ?? 'Client';
-            final clientPhone = apt['client']['phoneNumber'] ?? '';
-            final aptDate = apt['appointmentDate'];
-            final aptTime = apt['startTime'];
-            final status = apt['status'];
-
-            final dateFormatted = aptDate != null
-                ? DateFormat(
-                    'dd/MM/yyyy - HH:mm',
-                  ).format(DateTime.parse(aptDate).toLocal())
-                : '';
-
-            String countdownText = "";
-            bool isTimeReached = false;
-            if (aptDate != null &&
-                (status == 'CONFIRMED' ||
-                    status == 'PENDING' ||
-                    status == 'IN_PROGRESS')) {
-              DateTime targetDate;
-              if (status == 'IN_PROGRESS' && apt['estimatedEndTime'] != null) {
-                targetDate = DateTime.parse(apt['estimatedEndTime']).toLocal();
-              } else {
-                targetDate = DateTime.parse(aptDate).toLocal();
-              }
-
-              final now = DateTime.now();
-              final difference = targetDate.difference(now);
-
-              if (difference.isNegative || difference.inSeconds <= 0) {
-                isTimeReached = true;
-                countdownText = status == 'IN_PROGRESS'
-                    ? tr(context, 'time_up')
-                    : tr(context, 'time_passed');
-              } else if (difference.inHours == 1 &&
-                  difference.inMinutes % 60 == 0 &&
-                  status != 'IN_PROGRESS') {
-                countdownText = tr(context, '1h_remaining');
-              } else if (difference.inMinutes == 15 &&
-                  status != 'IN_PROGRESS') {
-                countdownText = tr(context, '15m_remaining');
-              } else if (difference.inHours > 0) {
-                countdownText = tr(
-                  context,
-                  'time_remaining_hours_min',
-                  args: [
-                    difference.inHours.toString(),
-                    (difference.inMinutes % 60).toString(),
-                  ],
-                );
-              } else if (difference.inMinutes > 0) {
-                countdownText = tr(
-                  context,
-                  'time_remaining_min',
-                  args: [difference.inMinutes.toString()],
-                );
-              } else {
-                countdownText = tr(
-                  context,
-                  'time_remaining_sec',
-                  args: [difference.inSeconds.toString()],
-                );
-              }
-            }
-
-            return GestureDetector(
-              onTap: () {
-                showAppointmentDetailsBottomSheet(
-                  context: context,
-                  appointment: apt,
-                );
-              },
-              child: Card(
-                margin: const EdgeInsets.only(bottom: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            clientName,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                              color: AppColors.textDark,
-                            ),
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: status == 'PENDING'
-                                      ? Colors.orange.withValues(alpha: 0.1)
-                                      : status == 'CONFIRMED'
-                                      ? Colors.green.withValues(alpha: 0.1)
-                                      : status == 'IN_PROGRESS'
-                                      ? AppColors.primaryBlue.withValues(
-                                          alpha: 0.1,
-                                        )
-                                      : status == 'COMPLETED'
-                                      ? Colors.blueGrey.withValues(alpha: 0.1)
-                                      : Colors.grey.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  tr(context, 'status_${status.toLowerCase()}'),
-                                  style: TextStyle(
-                                    color: status == 'PENDING'
-                                        ? Colors.orange
-                                        : status == 'CONFIRMED'
-                                        ? Colors.green
-                                        : status == 'IN_PROGRESS'
-                                        ? AppColors.primaryBlue
-                                        : status == 'COMPLETED'
-                                        ? Colors.blueGrey
-                                        : Colors.grey,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ),
-                              if (countdownText.isNotEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 4),
-                                  child: Text(
-                                    countdownText,
-                                    style: const TextStyle(
-                                      color: AppColors.actionRed,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      if (clientPhone.isNotEmpty) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          "T\u{00E9}l: $clientPhone",
-                          style: const TextStyle(
-                            color: Colors.grey,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.calendar_today,
-                            size: 16,
-                            color: AppColors.primaryBlue,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            dateFormatted,
-                            style: const TextStyle(fontWeight: FontWeight.w500),
-                          ),
-                          const SizedBox(width: 16),
-                          const Icon(
-                            Icons.access_time,
-                            size: 16,
-                            color: AppColors.primaryBlue,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            aptTime ?? '',
-                            style: const TextStyle(fontWeight: FontWeight.w500),
-                          ),
-                        ],
-                      ),
-                      if (status == 'PENDING') ...[
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: OutlinedButton(
-                                onPressed: () =>
-                                    _updateAptStatus(apt['id'], 'DECLINED'),
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: Colors.red,
-                                  side: const BorderSide(color: Colors.red),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                                child: Text(
-                                  tr(context, 'decline_btn'),
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: ElevatedButton(
-                                onPressed: () =>
-                                    _updateAptStatus(apt['id'], 'CONFIRMED'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.successGreen,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                                child: Text(
-                                  tr(context, 'accept_btn'),
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ] else if (status == 'CONFIRMED' && isTimeReached) ...[
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: OutlinedButton.icon(
-                                onPressed: () => _showNoShowDialog(apt['id']),
-                                icon: const Icon(Icons.person_off, size: 18),
-                                label: Text(
-                                  tr(context, 'no_show_btn'),
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: Colors.red,
-                                  side: const BorderSide(color: Colors.red),
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 12,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: ElevatedButton.icon(
-                                onPressed: () =>
-                                    _updateAptStatus(apt['id'], 'IN_PROGRESS'),
-                                icon: const Icon(
-                                  Icons.play_arrow,
-                                  color: Colors.white,
-                                  size: 18,
-                                ),
-                                label: Text(
-                                  tr(context, 'start_service_btn'),
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.primaryBlue,
-                                  elevation: 0,
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 12,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ] else if (status == 'IN_PROGRESS' && isTimeReached) ...[
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: OutlinedButton.icon(
-                                onPressed: () {
-                                  // Logic for "Mezel 15 min" could be a separate status or just a local reminder
-                                  toastification.show(
-                                    context: context,
-                                    type: ToastificationType.info,
-                                    title: Text(
-                                      tr(context, 'reminder_15m_set'),
-                                    ),
-                                  );
-                                },
-                                icon: const Icon(Icons.timer, size: 18),
-                                label: Text(tr(context, '15m_remaining')),
-                                style: OutlinedButton.styleFrom(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: ElevatedButton.icon(
-                                onPressed: () =>
-                                    _updateAptStatus(apt['id'], 'COMPLETED'),
-                                icon: const Icon(
-                                  Icons.check,
-                                  color: Colors.white,
-                                ),
-                                label: Text(
-                                  tr(context, 'completed_btn'),
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.successGreen,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-            );
+                    return _buildReservationAppointmentCard(apt);
                   },
                 ),
               ),
           ],
         );
       },
+    );
+  }
+
+  Widget _buildReservationAppointmentCard(dynamic apt) {
+    final status = (apt['status'] as String).toUpperCase();
+    final isPending = status == 'PENDING';
+    final isConfirmed = status == 'CONFIRMED' || status == 'ACCEPTED';
+    final isInProgress = status == 'IN_PROGRESS';
+    final isCompleted = status == 'COMPLETED';
+    final isDeclined = status == 'DECLINED' || status == 'CANCELLED';
+
+    final clientName = apt['client']?['fullName'] ?? 'Client';
+    final clientPhone = apt['client']?['phoneNumber'] ?? '';
+    final barberName = apt['barber']?['fullName']?.toString();
+    final serviceName = (apt['services'] as List?)?.isNotEmpty == true
+        ? apt['services'][0]['service']['name']
+        : 'Service';
+
+    final dateStr = apt['appointmentDate'];
+    final time = dateStr != null
+        ? DateFormat(
+            'dd/MM/yyyy - HH:mm',
+            'fr_FR',
+          ).format(DateTime.parse(dateStr).toLocal())
+        : '--:--';
+
+    Color statusColor = Colors.grey;
+    String statusText = status;
+
+    if (isPending) {
+      statusColor = Colors.orange;
+      statusText = tr(context, 'status_pending');
+    } else if (isConfirmed) {
+      statusColor = AppColors.primaryBlue;
+      statusText = tr(context, 'status_confirmed_badge');
+    } else if (isInProgress) {
+      statusColor = Colors.purple;
+      statusText = tr(context, 'status_in_progress');
+    } else if (isCompleted) {
+      statusColor = AppColors.successGreen;
+      statusText = tr(context, 'status_completed');
+    } else if (isDeclined) {
+      statusColor = AppColors.actionRed;
+      statusText = tr(context, 'status_cancelled');
+    }
+
+    String countdownText = '';
+    bool isTimeReached = false;
+
+    if (dateStr != null && (isConfirmed || isPending || isInProgress)) {
+      DateTime targetDate;
+      if (isInProgress && apt['estimatedEndTime'] != null) {
+        targetDate = DateTime.parse(apt['estimatedEndTime']).toLocal();
+      } else {
+        targetDate = DateTime.parse(dateStr).toLocal();
+      }
+
+      final difference = targetDate.difference(DateTime.now());
+
+      if (difference.isNegative || difference.inSeconds <= 0) {
+        isTimeReached = true;
+        countdownText = isInProgress
+            ? tr(context, 'time_is_up')
+            : tr(context, 'time_passed');
+      } else if (difference.inHours > 0) {
+        countdownText = tr(
+          context,
+          'time_remaining_hours_min',
+          args: [
+            difference.inHours.toString(),
+            (difference.inMinutes % 60).toString(),
+          ],
+        );
+      } else if (difference.inMinutes > 0) {
+        countdownText = tr(
+          context,
+          'time_remaining_min',
+          args: [difference.inMinutes.toString()],
+        );
+      } else {
+        countdownText = tr(
+          context,
+          'time_remaining_sec',
+          args: [difference.inSeconds.toString()],
+        );
+      }
+    }
+
+    return GestureDetector(
+      onTap: () {
+        showAppointmentDetailsBottomSheet(
+          context: context,
+          appointment: apt,
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 15),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+          border: Border.all(color: statusColor.withValues(alpha: 0.3)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        clientName,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: AppColors.textDark,
+                        ),
+                      ),
+                      if (clientPhone.toString().isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          'Tél: $clientPhone',
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: statusColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        statusText,
+                        style: TextStyle(
+                          color: statusColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                    if (countdownText.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          countdownText,
+                          style: const TextStyle(
+                            color: AppColors.actionRed,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            if (barberName != null && barberName.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Text(
+                  barberName,
+                  style: const TextStyle(
+                    color: AppColors.primaryBlue,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+            Text(
+              serviceName,
+              style: const TextStyle(color: Colors.grey, fontSize: 14),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                const Icon(Icons.calendar_today, size: 18, color: AppColors.primaryBlue),
+                const SizedBox(width: 8),
+                Text(
+                  time,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textDark,
+                  ),
+                ),
+              ],
+            ),
+            if (isPending || isConfirmed || isInProgress)
+              const SizedBox(height: 16),
+            if (isPending)
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => _updateAptStatus(apt['id'], 'DECLINED'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.actionRed,
+                        side: const BorderSide(color: AppColors.actionRed),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: Text(tr(context, 'decline_btn')),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => _updateAptStatus(apt['id'], 'CONFIRMED'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.successGreen,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: Text(
+                        tr(context, 'accept_btn'),
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            if (isConfirmed && isTimeReached)
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _showNoShowDialog(apt['id']),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.actionRed,
+                        side: const BorderSide(color: AppColors.actionRed),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      icon: const Icon(Icons.person_off, size: 18),
+                      label: Text(
+                        tr(context, 'no_show_btn'),
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => _updateAptStatus(apt['id'], 'IN_PROGRESS'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primaryBlue,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      icon: const Icon(Icons.play_arrow, size: 18),
+                      label: Text(
+                        tr(context, 'start_service_btn'),
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            if (isInProgress && isTimeReached)
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        toastification.show(
+                          context: context,
+                          type: ToastificationType.info,
+                          title: Text(tr(context, 'reminder_15m_set')),
+                        );
+                      },
+                      icon: const Icon(Icons.timer, size: 18),
+                      label: Text(tr(context, '15m_remaining')),
+                      style: OutlinedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => _updateAptStatus(apt['id'], 'COMPLETED'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.successGreen,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      icon: const Icon(Icons.check, size: 18),
+                      label: Text(
+                        tr(context, 'completed_btn'),
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -1598,8 +1589,13 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
               itemCount: specialists.length,
               itemBuilder: (context, index) {
                 final emp = specialists[index];
+                final currentId = (emp['id'] as num?)?.toInt();
+                final isPatronCard = patronId != null && currentId == patronId;
                 final name =
                     (emp['name'] ?? tr(context, 'specialist_role')) as String;
+                final rawRole =
+                    (emp['role'] ?? tr(context, 'specialist_role')).toString();
+                final displayRole = isPatronCard ? 'Patron' : rawRole;
                 final imageUrl = emp['imageUrl'] as String?;
 
                 return GestureDetector(
@@ -1649,13 +1645,37 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                         ),
                         const SizedBox(width: 15),
                         Expanded(
-                          child: Text(
-                            name,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
-                              color: AppColors.textDark,
-                            ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                  color: AppColors.textDark,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 5,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primaryBlue.withOpacity(0.08),
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                                child: Text(
+                                  displayRole,
+                                  style: const TextStyle(
+                                    color: AppColors.primaryBlue,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -2045,7 +2065,21 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: () => Navigator.pop(ctx),
+                          onPressed: () {
+                            final serviceId = (service['id'] as num?)?.toInt();
+                            Navigator.pop(ctx);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => BookingFlowScreen(
+                                  salonId: widget.salonId ?? 0,
+                                  initialServiceIds: serviceId != null
+                                      ? [serviceId]
+                                      : null,
+                                ),
+                              ),
+                            );
+                          },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.grey.shade200,
                             foregroundColor: Colors.black87,
@@ -2054,7 +2088,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                               borderRadius: BorderRadius.circular(14),
                             ),
                           ),
-                          child: const Text('Fermer'),
+                          child: Text(tr(context, 'reserve_btn')),
                         ),
                       ),
                   ],

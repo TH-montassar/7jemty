@@ -2,7 +2,7 @@ import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:hjamty/features/patron_space/main_layout/presentation/pages/home_page.dart';
-import 'package:hjamty/features/patron_space/appointments/presentation/pages/calendar_page.dart';
+import 'package:hjamty/features/patron_space/appointments/presentation/pages/patron_agenda_page.dart';
 import 'salon_dashboard_screen.dart';
 import 'package:hjamty/features/client_space/profile/presentation/pages/client_profile_page.dart';
 import 'package:hjamty/features/auth/data/auth_service.dart';
@@ -22,6 +22,32 @@ class _MainPageState extends State<MainPage> {
   late int _selectedIndex;
   Map<String, dynamic>? _userData;
   StreamSubscription<Map<String, dynamic>>? _notificationTapSubscription;
+
+  Widget _buildProfileNavIcon({required bool active}) {
+    final avatarUrl = _userData?['profile']?['avatarUrl']?.toString();
+    final hasAvatar = avatarUrl != null && avatarUrl.isNotEmpty;
+
+    if (!hasAvatar) {
+      return Icon(active ? Icons.person : Icons.person_outline);
+    }
+
+    return Container(
+      width: 24,
+      height: 24,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: active ? AppColors.primaryBlue : Colors.transparent,
+          width: 1.5,
+        ),
+      ),
+      child: CircleAvatar(
+        radius: 12,
+        backgroundColor: Colors.grey[200],
+        backgroundImage: NetworkImage(avatarUrl),
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -45,9 +71,15 @@ class _MainPageState extends State<MainPage> {
   }
 
   // هذي القايمة متاع الصفحات اللي بش يظهرو في الوسط
-  final List<Widget> _pages = [
-    const HomePage(), // Index 0
-    const CalendarPage(), // Index 1
+  late final List<Widget> _pages = [
+    HomePage(
+      onOpenPatronAgenda: () {
+        setState(() {
+          _selectedIndex = 1;
+        });
+      },
+    ), // Index 0
+    const PatronAgendaPage(), // Index 1
     const SalonDashboardScreen(isPatron: true), // Index 2
     const ProfilePage(), // Index 3
   ];
@@ -106,7 +138,7 @@ class _MainPageState extends State<MainPage> {
     return Scaffold(
       // 1. الـ AppBar حطيناه هنا بش يقعد ديما ظاهر
       // Hide global AppBar for Salon Dashboard and Profile since they have their own
-      appBar: (_selectedIndex == 2 || _selectedIndex == 3)
+      appBar: (_selectedIndex == 1 || _selectedIndex == 2 || _selectedIndex == 3)
           ? null
           : AppBar(
               title: Row(
@@ -191,8 +223,8 @@ class _MainPageState extends State<MainPage> {
               label: tr(context, 'my_salon'),
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline),
-              activeIcon: Icon(Icons.person),
+              icon: _buildProfileNavIcon(active: false),
+              activeIcon: _buildProfileNavIcon(active: true),
               label: tr(context, 'profile'),
             ),
           ],

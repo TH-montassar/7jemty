@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hjamty/core/constants/app_colors.dart';
+import 'package:hjamty/features/auth/data/auth_service.dart';
 import 'package:hjamty/features/admin_space/presentation/pages/admin_home_page.dart';
 import 'package:hjamty/features/admin_space/presentation/pages/manage_reports_page.dart';
 import 'package:hjamty/features/admin_space/presentation/pages/manage_salons_page.dart';
@@ -15,6 +16,7 @@ class AdminMainScreen extends StatefulWidget {
 
 class _AdminMainScreenState extends State<AdminMainScreen> {
   int _currentIndex = 0;
+  Map<String, dynamic>? _userData;
 
   final List<Widget> _pages = [
     const AdminDashboardPage(),
@@ -23,6 +25,22 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
     const ManageReportsPage(),
     const ProfilePage(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserData();
+  }
+
+  Future<void> _fetchUserData() async {
+    try {
+      final result = await AuthService.getMe();
+      if (!mounted) return;
+      setState(() {
+        _userData = result['data'];
+      });
+    } catch (_) {}
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,6 +85,9 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
 
   Widget _buildNavItem(int index, IconData icon) {
     final isSelected = _currentIndex == index;
+    final avatarUrl = _userData?['profile']?['avatarUrl']?.toString();
+    final useAvatar =
+        index == 4 && avatarUrl != null && avatarUrl.isNotEmpty;
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -97,11 +118,17 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
                   ),
                 ],
         ),
-        child: Icon(
-          icon,
-          color: isSelected ? Colors.white : Colors.grey.shade500,
-          size: isSelected ? 26 : 22,
-        ),
+        child: useAvatar
+            ? CircleAvatar(
+                radius: isSelected ? 13 : 11,
+                backgroundColor: Colors.grey[200],
+                backgroundImage: NetworkImage(avatarUrl),
+              )
+            : Icon(
+                icon,
+                color: isSelected ? Colors.white : Colors.grey.shade500,
+                size: isSelected ? 26 : 22,
+              ),
       ),
     );
   }

@@ -1,4 +1,9 @@
+#********git**********
 git reset --soft HEAD~1
+git pull origin main --rebase
+git push -u origin main
+
+
 
 ./scripts/run_phone.sh --wifi-connect 192.168.1.26
 # or
