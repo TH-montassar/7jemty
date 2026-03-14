@@ -52,27 +52,26 @@ async function main() {
     let threeHourUpdates = 0;
     let threeHourTenUpdates = 0;
 
-    for (let i = 0; i < clients.length; i++) {
-        const clientObj = clients[i];
+    let clientApptCounter = 0;
+
+    for (const clientObj of clients) {
         if (!clientObj || clientObj.clientId === null) continue;
         const clientId = clientObj.clientId;
 
-        // We will distribute the clients to test the different reminders
-        const typeIndex = i % 3;
-
-        const appointment = await prisma.appointment.findFirst({
+        // Fetch first 3 appointments for this client
+        const appointments = await prisma.appointment.findMany({
             where: {
                 clientId,
-                status: {
-                    in: ['PENDING', 'CONFIRMED']
-                }
+                status: { in: ['PENDING', 'CONFIRMED'] },
             },
-            orderBy: {
-                appointmentDate: 'asc',
-            },
+            orderBy: { appointmentDate: 'asc' },
+            take: 3,
         });
 
-        if (appointment) {
+        for (const appointment of appointments) {
+            const typeIndex = clientApptCounter % 3;
+            clientApptCounter++;
+
             let targetTime = thirtyNow;
             let typeLabel = '+30m';
 
@@ -90,13 +89,11 @@ async function main() {
 
             // Reset reminder flags so they can trigger again
             await prisma.appointment.update({
-                where: {
-                    id: appointment.id,
-                },
+                where: { id: appointment.id },
                 data: {
                     appointmentDate: targetTime,
                     is1hReminderSent: false,
-                    is10mReminderSent: false
+                    is10mReminderSent: false,
                 },
             });
             console.log(`[Client ${clientId}] Updated appointment ID: ${appointment.id} to ${typeLabel}`);
@@ -121,22 +118,26 @@ async function main() {
     let empHourUpdates = 0;
     let empHourTenUpdates = 0;
 
-    for (let i = 0; i < employees.length; i++) {
-        const empObj = employees[i];
+    let empApptCounter = 0;
+
+    for (const empObj of employees) {
         if (!empObj || empObj.barberId === null) continue;
         const barberId = empObj.barberId!;
 
-        const typeIndex = i % 3;
-
-        const appointment = await prisma.appointment.findFirst({
+        // Fetch first 3 appointments for this employee
+        const appointments = await prisma.appointment.findMany({
             where: {
                 barberId,
                 status: { in: ['PENDING', 'CONFIRMED'] },
             },
             orderBy: { appointmentDate: 'asc' },
+            take: 3,
         });
 
-        if (appointment) {
+        for (const appointment of appointments) {
+            const typeIndex = empApptCounter % 3;
+            empApptCounter++;
+
             let targetTime = thirtyNow;
             let typeLabel = '+30m';
 

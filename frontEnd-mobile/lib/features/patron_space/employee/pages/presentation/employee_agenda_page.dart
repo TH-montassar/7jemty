@@ -27,7 +27,7 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
   Timer? _uiTimer;
   String _statusFilter = 'ALL';
   String _sortField = 'APPOINTMENT_DATE';
-  bool _sortAscending = true;
+  bool _sortAscending = false;
   bool _focusHandled = false;
 
   @override
@@ -191,7 +191,7 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
     setState(() {
       _statusFilter = 'ALL';
       _sortField = 'APPOINTMENT_DATE';
-      _sortAscending = true;
+      _sortAscending = false;
     });
   }
 
