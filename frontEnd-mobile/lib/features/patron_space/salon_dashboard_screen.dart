@@ -1679,7 +1679,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
       );
     }
 
-    return ReviewsTab(salonData: _salonData!);
+    return ReviewsTab(salonData: _salonData!, allowReport: true);
   }
 
   Widget _buildWorkingTimesTab() {
@@ -2258,5 +2258,4 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
     );
   }
 }
-
 
