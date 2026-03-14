@@ -151,8 +151,9 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
         if (salonData['patron'] != null) {
           _professionals.insert(0, {
             'id': salonData['patron']['id'] ?? salonData['patronId'],
-            'name': (salonData['patron']['name'] ?? 'Patron') + ' (Patron)',
+            'name': salonData['patron']['name'] ?? 'Patron',
             'imageUrl': salonData['patron']['imageUrl'] ?? '',
+            'role': 'Patron',
             'isPatron': true,
           });
         }
@@ -386,7 +387,9 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
         final String pushedTime = time; // IMPORTANT: use local captured `time`
         final int pushedDuration = _totalDuration;
         final double pushedPrice = _totalPrice;
-        final String pushedBarberName = selectedProfessional?['name'] ?? '';
+        final String pushedBarberName = selectedProfessional != null
+            ? _professionalDisplayName(selectedProfessional)
+            : '';
 
         // Navigate to the Success Screen
         Navigator.push(
@@ -962,13 +965,15 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
     }
 
     return SizedBox(
-      height: 110,
+      height: 148,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         itemCount: _professionals.length,
         itemBuilder: (context, index) {
           final p = _professionals[index];
           final isSelected = _selectedBarberId == p['id'];
+          final isPatron = p['isPatron'] == true;
+          final displayName = _professionalDisplayName(p);
           return GestureDetector(
             onTap: _lockBarberForRebook
                 ? null
@@ -1011,14 +1016,31 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    p['name'] ?? tr(context, 'unknown'),
-                    style: TextStyle(
-                      fontWeight: isSelected
-                          ? FontWeight.bold
-                          : FontWeight.normal,
-                      color: isSelected ? AppColors.primaryBlue : Colors.grey,
-                      fontSize: 12,
+                  SizedBox(
+                    width: 96,
+                    child: Column(
+                      children: [
+                        Text(
+                          displayName,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                            color: isSelected
+                                ? AppColors.primaryBlue
+                                : Colors.grey,
+                            fontSize: 12,
+                            height: 1.15,
+                          ),
+                        ),
+                        if (isPatron) ...[
+                          const SizedBox(height: 4),
+                          _buildPatronSelectionBadge(),
+                        ],
+                      ],
                     ),
                   ),
                 ],
@@ -1026,6 +1048,31 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  String _professionalDisplayName(Map<String, dynamic> professional) {
+    final rawName = (professional['name'] ?? tr(context, 'unknown'))
+        .toString()
+        .trim();
+    return rawName.replaceAll(RegExp(r'\s*\(Patron\)\s*$', caseSensitive: false), '');
+  }
+
+  Widget _buildPatronSelectionBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: AppColors.primaryBlue.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: const Text(
+        'Patron',
+        style: TextStyle(
+          color: AppColors.primaryBlue,
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }

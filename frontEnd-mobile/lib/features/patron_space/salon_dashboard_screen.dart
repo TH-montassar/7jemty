@@ -1601,14 +1601,18 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
               itemBuilder: (context, index) {
                 final emp = specialists[index];
                 final currentId = (emp['id'] as num?)?.toInt();
-                final isPatronCard = patronId != null && currentId == patronId;
                 final name =
                     (emp['name'] ?? tr(context, 'specialist_role')) as String;
-                final rawRole =
-                    (emp['role'] ?? tr(context, 'specialist_role')).toString();
-                final displayRole = isPatronCard ? 'Patron' : rawRole;
+                final defaultRoleLabel = tr(context, 'specialist_role');
+                final roleLabel = (emp['role'] ?? '').toString().trim();
                 final imageUrl = emp['imageUrl'] as String?;
-                final isSalonOwner = emp['isPatron'] == true;
+                final isSalonOwner =
+                    emp['isPatron'] == true ||
+                    (patronId != null && currentId == patronId);
+                final showRoleChip =
+                    !isSalonOwner &&
+                    roleLabel.isNotEmpty &&
+                    roleLabel != defaultRoleLabel;
 
                 return GestureDetector(
                   onTap: () => _showSpecialistDialog(context, emp),
@@ -1657,13 +1661,25 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                         ),
                         const SizedBox(width: 15),
                         Expanded(
-                          child: Text(
-                            name,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
-                              color: AppColors.textDark,
-                            ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                  color: AppColors.textDark,
+                                ),
+                              ),
+                              if (isSalonOwner) ...[
+                                const SizedBox(height: 6),
+                                _buildPatronBadge(),
+                              ] else if (showRoleChip) ...[
+                                const SizedBox(height: 6),
+                                _buildSpecialistRoleChip(roleLabel),
+                              ],
+                            ],
                           ),
                         ),
                       ],
