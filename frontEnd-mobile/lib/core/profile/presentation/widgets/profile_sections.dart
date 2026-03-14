@@ -190,6 +190,7 @@ class SettingsSection extends StatelessWidget {
                   onTap: () async {
                     final prefs = await SharedPreferences.getInstance();
                     await FcmService.unregisterDeviceToken();
+                    NotificationService.stopListeningToNotificationsStream();
                     await prefs.remove('jwt_token');
                     await prefs.remove('user_role');
                     NotificationService.resetUnreadCount();

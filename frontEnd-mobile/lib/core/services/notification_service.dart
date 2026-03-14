@@ -69,21 +69,46 @@ class NotificationService {
     }
   }
 
+  static Timer? _refreshUnreadCountTimer;
+
   static void refreshUnreadCount() {
-    getUnreadCount();
+    _refreshUnreadCountTimer?.cancel();
+    _refreshUnreadCountTimer = Timer(const Duration(milliseconds: 250), () {
+      getUnreadCount();
+    });
   }
 
   static http.StreamedResponse? _streamResponse;
   static final http.Client _client = http.Client();
+  static StreamSubscription<String>? _streamSubscription;
+  static Timer? _reconnectTimer;
+  static bool _isConnecting = false;
+  static String? _activeToken;
 
   static void listenToNotificationsStream() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('jwt_token');
       if (token == null) {
+        stopListeningToNotificationsStream();
         resetUnreadCount();
         return;
       }
+
+      final isAlreadyListening =
+          _activeToken == token &&
+          (_isConnecting || _streamSubscription != null || _streamResponse != null);
+      if (isAlreadyListening) {
+        return;
+      }
+
+      if (_activeToken != null && _activeToken != token) {
+        stopListeningToNotificationsStream();
+      }
+
+      _isConnecting = true;
+      _activeToken = token;
+      _reconnectTimer?.cancel();
 
       final request = http.Request(
         'GET',
@@ -94,8 +119,9 @@ class NotificationService {
       request.headers['Cache-Control'] = 'no-cache';
 
       _client.send(request).then((response) {
+        _isConnecting = false;
         _streamResponse = response;
-        response.stream
+        _streamSubscription = response.stream
             .transform(utf8.decoder)
             .transform(const LineSplitter())
             .listen(
@@ -123,23 +149,44 @@ class NotificationService {
               },
               onDone: () {
                 debugPrint('SSE Stream closed. Reconnecting in 5s...');
-                Future.delayed(
-                  const Duration(seconds: 5),
-                  () => listenToNotificationsStream(),
-                );
+                _streamSubscription = null;
+                _streamResponse = null;
+                _scheduleReconnect();
               },
               onError: (e) {
                 debugPrint('SSE Stream error: $e. Reconnecting in 5s...');
-                Future.delayed(
-                  const Duration(seconds: 5),
-                  () => listenToNotificationsStream(),
-                );
+                _streamSubscription = null;
+                _streamResponse = null;
+                _scheduleReconnect();
               },
             );
+      }).catchError((e) {
+        _isConnecting = false;
+        _streamResponse = null;
+        debugPrint('SSE Connection Error: $e');
+        _scheduleReconnect();
       });
     } catch (e) {
       debugPrint('SSE Connection Error: $e');
     }
+  }
+
+  static void stopListeningToNotificationsStream() {
+    _reconnectTimer?.cancel();
+    _reconnectTimer = null;
+    _streamSubscription?.cancel();
+    _streamSubscription = null;
+    _streamResponse = null;
+    _isConnecting = false;
+    _activeToken = null;
+  }
+
+  static void _scheduleReconnect() {
+    if (_reconnectTimer != null || _activeToken == null) return;
+    _reconnectTimer = Timer(const Duration(seconds: 5), () {
+      _reconnectTimer = null;
+      listenToNotificationsStream();
+    });
   }
 
   static Future<void> markAsRead(int notificationId) async {

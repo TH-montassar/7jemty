@@ -23,7 +23,6 @@ class EmployeeAgendaPage extends StatefulWidget {
 class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
   bool _isLoading = true;
   List<dynamic> _appointments = [];
-  final Set<int> _notifiedAptIds = {};
   StreamSubscription<Map<String, dynamic>>? _fcmSubscription;
   Timer? _uiTimer;
   String _statusFilter = 'ALL';
@@ -44,7 +43,6 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
     // Add per-second UI timer for granular countdown (seconds)
     _uiTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) {
-        _checkNotifications();
         setState(() {}); // Just redraw the UI
       }
     });
@@ -389,37 +387,6 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
         ],
       ),
     );
-  }
-
-  void _checkNotifications() {
-    for (var apt in _appointments) {
-      final status = (apt['status'] as String).toUpperCase();
-      if (status != 'IN_PROGRESS') continue;
-
-      final id = apt['id'] as int;
-      final endTimeStr = apt['estimatedEndTime'];
-      if (endTimeStr == null) continue;
-
-      final endTime = DateTime.parse(endTimeStr).toLocal();
-      final difference = endTime.difference(DateTime.now());
-
-      if (difference.isNegative || difference.inSeconds <= 0) {
-        if (!_notifiedAptIds.contains(id)) {
-          _notifiedAptIds.add(id);
-          final clientName = apt['client']?['fullName'] ?? 'Client';
-          FcmService.showNotification(
-            id: id,
-            title: tr(context, 'time_is_up'),
-            body: tr(context, 'haircut_finished_add_time', args: [clientName]),
-          );
-        }
-      } else {
-        // If time was extended and is now in the future, allow notification to fire again later
-        if (_notifiedAptIds.contains(id)) {
-          _notifiedAptIds.remove(id);
-        }
-      }
-    }
   }
 
   @override

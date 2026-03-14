@@ -42,12 +42,30 @@ class FcmService {
       _notificationTapStreamController.stream;
 
   static Map<String, dynamic>? _pendingNotificationTapPayload;
+  static final Map<String, int> _recentMessageSignatures = {};
+  static const Duration _messageDeduplicationWindow = Duration(seconds: 2);
 
   static bool get _isPushSupportedPlatform => !kIsWeb;
 
   // Manual dispatch for SSE or other sources
   static void dispatchMessage(Map<String, dynamic> data) {
-    _messageStreamController.add(data);
+    final normalizedPayload = _normalizePayload(data);
+    if (normalizedPayload.isEmpty) return;
+
+    final signature = _buildMessageSignature(normalizedPayload);
+    final now = DateTime.now().millisecondsSinceEpoch;
+    _recentMessageSignatures.removeWhere(
+      (_, seenAt) => now - seenAt > _messageDeduplicationWindow.inMilliseconds,
+    );
+
+    final lastSeenAt = _recentMessageSignatures[signature];
+    if (lastSeenAt != null &&
+        now - lastSeenAt <= _messageDeduplicationWindow.inMilliseconds) {
+      return;
+    }
+
+    _recentMessageSignatures[signature] = now;
+    _messageStreamController.add(normalizedPayload);
   }
 
   static Map<String, dynamic>? consumePendingNotificationTap() {
@@ -132,7 +150,7 @@ class FcmService {
 
       // Push the payload to the stream so UI can react in real-time
       if (message.data.isNotEmpty) {
-        _messageStreamController.add(message.data);
+        dispatchMessage(message.data);
       }
 
       if (_hasVisibleNotificationContent(message)) {
@@ -360,6 +378,21 @@ class FcmService {
     return data.map(
       (key, value) => MapEntry(key, value is String ? value : value?.toString()),
     );
+  }
+
+  static String _buildMessageSignature(Map<String, dynamic> payload) {
+    final signaturePayload = <String, String?>{
+      'type': payload['type']?.toString(),
+      'eventType': payload['eventType']?.toString(),
+      'appointmentId': payload['appointmentId']?.toString(),
+      'newStatus': payload['newStatus']?.toString(),
+      'status': payload['status']?.toString(),
+      'deeplink': payload['deeplink']?.toString(),
+      'title': payload['title']?.toString(),
+      'body': payload['body']?.toString(),
+    };
+
+    return jsonEncode(signaturePayload);
   }
 
   static bool _hasVisibleNotificationContent(RemoteMessage message) {
