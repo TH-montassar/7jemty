@@ -215,4 +215,64 @@ class AdminService {
       throw Exception('Erreur: $e');
     }
   }
+
+  static Future<List<dynamic>> getReviewReports() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token');
+
+      final response = await http.get(
+        Uri.parse(ApiConfig.endpoint('/api/review/reports')),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200 && data['success'] == true) {
+        return data['data'];
+      }
+      throw Exception(data['message'] ?? 'Erreur chargement signalements');
+    } catch (e) {
+      throw Exception('Erreur: $e');
+    }
+  }
+
+  static Future<void> resolveReviewReport(
+    int reportId, {
+    required String action,
+    String? adminNote,
+    bool warnUser = false,
+    bool banUser = false,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token');
+
+      final endpoint = action == 'DISMISS'
+          ? ApiConfig.endpoint('/api/review/reports/$reportId/dismiss')
+          : ApiConfig.endpoint('/api/review/reports/$reportId/action');
+
+      final response = await http.patch(
+        Uri.parse(endpoint),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          if (adminNote != null && adminNote.isNotEmpty) 'adminNote': adminNote,
+          'warnUser': warnUser,
+          'banUser': banUser,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode != 200 || data['success'] != true) {
+        throw Exception(data['message'] ?? 'Erreur résolution signalement');
+      }
+    } catch (e) {
+      throw Exception('Erreur: $e');
+    }
+  }
 }

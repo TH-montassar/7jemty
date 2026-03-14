@@ -30,6 +30,9 @@ model User {
   salonsOwned              Salon[]             @relation("PatronSalons")
   workplaceSalon           Salon?              @relation("SalonEmployees", fields: [workplaceSalonId], references: [id])
   notifications            Notification[]      @relation("UserNotifications")
+  reportsMade              ReportedReview[]    @relation("ReportsMade")
+  warnings                 UserWarning[]
+  warningCount             Int                 @default(0)
 }
 
 model Notification {
@@ -214,6 +217,32 @@ model Review {
   appointment   Appointment @relation(fields: [appointmentId], references: [id])
   client        User        @relation(fields: [clientId], references: [id])
   salon         Salon       @relation(fields: [salonId], references: [id])
+  reports       ReportedReview[]
+}
+
+model ReportedReview {
+  id         Int          @id @default(autoincrement())
+  reviewId   Int
+  review     Review       @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  reporterId Int
+  reporter   User         @relation("ReportsMade", fields: [reporterId], references: [id], onDelete: Cascade)
+  reason     String
+  message    String?
+  status     ReportStatus @default(PENDING)
+  createdAt  DateTime     @default(now())
+  resolvedAt DateTime?
+  resolvedBy Int?
+
+  @@index([reviewId])
+  @@index([status])
+}
+
+model UserWarning {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reason    String
+  createdAt DateTime @default(now())
 }
 
 model FavoriteSalon {
@@ -284,4 +313,10 @@ enum AppointmentStatus {
 enum AppointmentTarget {
   EMPLOYEE
   PATRON
+}
+
+enum ReportStatus {
+  PENDING
+  DISMISSED
+  ACTION_TAKEN
 }
