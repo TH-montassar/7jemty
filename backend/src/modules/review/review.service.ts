@@ -151,6 +151,18 @@ export const takeAction = async (reportId: number, adminId: number) => {
     const warningReason = `Review supprimée après signalement (${report.reason})`;
 
     await prisma.$transaction(async (tx) => {
+        // Mark the report as resolved first. In the current schema,
+        // deleting the review cascades and removes the ReportedReview row.
+        // If we delete first, the update below fails with "record not found".
+        await tx.reportedReview.update({
+            where: { id: reportId },
+            data: {
+                status: ReportStatus.ACTION_TAKEN,
+                resolvedAt: now,
+                resolvedBy: adminId,
+            }
+        });
+
         await tx.review.delete({ where: { id: report.reviewId } });
 
         await tx.userWarning.create({
@@ -164,16 +176,6 @@ export const takeAction = async (reportId: number, adminId: number) => {
             where: { id: clientId },
             data: {
                 warningCount: { increment: 1 }
-            }
-        });
-
-        await tx.reportedReview.update({
-            where: { id: reportId },
-            data: {
-                status: ReportStatus.ACTION_TAKEN,
-                resolvedAt: now,
-                resolvedBy: adminId,
-                // reviewId is automatically set to null by Prisma onDelete: SetNull
             }
         });
 
