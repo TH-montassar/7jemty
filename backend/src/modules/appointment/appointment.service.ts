@@ -396,7 +396,10 @@ export const createClientAppointment = async (
         appointmentId: appointment.id,
         status: 'PENDING',
         userIds: [clientId, targetBarberId, salon.patronId]
-            .filter((id): id is number => Boolean(id))
+            .filter((id): id is number => Boolean(id)),
+        pushTitle: 'Demande de rendez-vous envoyee',
+        pushBody: 'Votre demande a bien ete transmise au salon.',
+        pushUserIds: [clientId]
     });
 
     // Broadcast availability change to all clients

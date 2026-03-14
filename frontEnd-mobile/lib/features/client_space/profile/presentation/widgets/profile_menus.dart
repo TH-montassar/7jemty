@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hjamty/core/constants/app_colors.dart';
 import 'package:hjamty/core/localization/translation_service.dart';
+import 'package:hjamty/core/services/fcm_service.dart';
 import 'package:hjamty/core/services/notification_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hjamty/features/auth/signIn.dart';
@@ -258,6 +259,7 @@ class LogoutButton extends StatelessWidget {
 
   Future<void> _logout(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
+    await FcmService.unregisterDeviceToken();
     await prefs.remove('jwt_token');
     await prefs.remove('user_role');
     NotificationService.resetUnreadCount();

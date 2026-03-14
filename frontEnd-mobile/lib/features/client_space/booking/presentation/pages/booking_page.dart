@@ -7,6 +7,7 @@ import 'package:hjamty/features/client_space/booking/presentation/widgets/checko
 import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:hjamty/features/auth/data/auth_service.dart';
 import 'package:hjamty/features/client_space/appointments/data/appointment_service.dart';
+import 'package:hjamty/core/services/fcm_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:toastification/toastification.dart';
 import 'package:hjamty/features/client_space/appointments/presentation/pages/booking_success_screen.dart';
@@ -386,6 +387,7 @@ class _BookingPageState extends State<BookingPage> {
 
                   final prefs = await SharedPreferences.getInstance();
                   await prefs.setString('jwt_token', result['data']['token']);
+                  await FcmService.syncCurrentTokenWithBackend();
 
                   await _checkCurrentUser();
                   if (mounted) {
@@ -430,6 +432,7 @@ class _BookingPageState extends State<BookingPage> {
 
                   final prefs = await SharedPreferences.getInstance();
                   await prefs.setString('jwt_token', result['data']['token']);
+                  await FcmService.syncCurrentTokenWithBackend();
 
                   await _checkCurrentUser();
                   if (mounted) {

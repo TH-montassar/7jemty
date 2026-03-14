@@ -42,12 +42,21 @@ JWT_SECRET=change_me
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_cloudinary_key
 CLOUDINARY_API_SECRET=your_cloudinary_secret
+
+# Optional: Firebase Admin for mobile push notifications
+# Option A: paste the whole service account JSON as one line
+FIREBASE_SERVICE_ACCOUNT_JSON={"type":"service_account","project_id":"...","private_key":"-----BEGIN PRIVATE KEY-----\\n...\\n-----END PRIVATE KEY-----\\n","client_email":"..."}
+
+# Option B: provide the key fields separately
+FIREBASE_PROJECT_ID=your_project_id
+FIREBASE_CLIENT_EMAIL=your_service_account_email
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\\n...\\n-----END PRIVATE KEY-----\\n"
 ```
 
 Notes:
 - `DATABASE_URL` is required.
 - `JWT_SECRET` has a fallback in code, but you should set your own value.
-- Firebase admin init uses application default credentials; configure it only if your flow needs push notifications.
+- For Android push notifications, configure Firebase Admin credentials using one of the Firebase env options above, or `GOOGLE_APPLICATION_CREDENTIALS`.
 
 ## Run With Docker (recommended quick start)
 

@@ -4,6 +4,7 @@ import 'package:hjamty/core/constants/app_colors.dart';
 import 'package:hjamty/core/localization/translation_service.dart';
 import 'signIn.dart';
 import 'package:hjamty/features/auth/data/auth_service.dart';
+import 'package:hjamty/core/services/fcm_service.dart';
 import 'package:toastification/toastification.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hjamty/features/patron_space/main_page.dart';
@@ -88,6 +89,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('jwt_token', token);
       await prefs.setString('user_role', userRole);
+      await FcmService.syncCurrentTokenWithBackend();
 
       if (!mounted) return;
       toastification.show(

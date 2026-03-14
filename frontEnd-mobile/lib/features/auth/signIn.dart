@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:hjamty/core/constants/app_colors.dart';
 import 'signUp.dart';
 import 'package:hjamty/features/auth/data/auth_service.dart';
+import 'package:hjamty/core/services/fcm_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hjamty/features/patron_space/main_page.dart';
 import 'package:hjamty/features/client_space/main_layout/presentation/pages/client_main_layout.dart';
@@ -217,6 +218,7 @@ class _SignInScreenState extends State<SignInScreen> {
                                         await SharedPreferences.getInstance();
                                     await prefs.setString('jwt_token', token);
                                     await prefs.setString('user_role', userRole);
+                                    await FcmService.syncCurrentTokenWithBackend();
 
                                     if (!mounted) return;
 

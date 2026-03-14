@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hjamty/features/splash/presentation/pages/splash_screen.dart';
+import 'package:hjamty/core/services/fcm_service.dart';
 import 'package:hjamty/core/services/notification_service.dart';
 import 'package:hjamty/core/widgets/shared_widgets.dart';
 
@@ -188,6 +189,7 @@ class SettingsSection extends StatelessWidget {
                   isDestructive: true,
                   onTap: () async {
                     final prefs = await SharedPreferences.getInstance();
+                    await FcmService.unregisterDeviceToken();
                     await prefs.remove('jwt_token');
                     await prefs.remove('user_role');
                     NotificationService.resetUnreadCount();

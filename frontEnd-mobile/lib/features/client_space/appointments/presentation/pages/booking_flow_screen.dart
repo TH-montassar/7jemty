@@ -528,6 +528,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
 
                   final prefs = await SharedPreferences.getInstance();
                   await prefs.setString('jwt_token', result['data']['token']);
+                  await FcmService.syncCurrentTokenWithBackend();
                   if (mounted) {
                     setState(() {
                       _currentUser = result['data']['user'];
@@ -573,6 +574,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
 
                   final prefs = await SharedPreferences.getInstance();
                   await prefs.setString('jwt_token', result['data']['token']);
+                  await FcmService.syncCurrentTokenWithBackend();
                   if (mounted) {
                     setState(() {
                       _currentUser = result['data']['user'];

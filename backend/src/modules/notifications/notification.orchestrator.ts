@@ -62,6 +62,9 @@ type RefreshPayload = {
     status?: string | undefined;
     userIds: number[];
     deeplink?: string | undefined;
+    pushTitle?: string | undefined;
+    pushBody?: string | undefined;
+    pushUserIds?: number[] | undefined;
 };
 
 const DEFAULT_DEDUPE_WINDOW_MS = 90_000;
@@ -390,6 +393,9 @@ export const broadcastAppointmentRefresh = async (payload: RefreshPayload) => {
     const uniqueUserIds = Array.from(
         new Set(payload.userIds.filter((id) => Number.isInteger(id) && id > 0))
     );
+    const pushUserIds = new Set(
+        (payload.pushUserIds || []).filter((id) => Number.isInteger(id) && id > 0)
+    );
 
     if (uniqueUserIds.length === 0) return;
 
@@ -416,7 +422,18 @@ export const broadcastAppointmentRefresh = async (payload: RefreshPayload) => {
         });
 
         if (user.profile?.fcmToken) {
-            await sendNotification(user.profile.fcmToken, undefined, undefined, transportData);
+            const shouldSendVisiblePush = Boolean(
+                payload.pushTitle
+                && payload.pushBody
+                && pushUserIds.has(user.id)
+            );
+
+            await sendNotification(
+                user.profile.fcmToken,
+                shouldSendVisiblePush ? payload.pushTitle : undefined,
+                shouldSendVisiblePush ? payload.pushBody : undefined,
+                transportData
+            );
         }
     }
 };

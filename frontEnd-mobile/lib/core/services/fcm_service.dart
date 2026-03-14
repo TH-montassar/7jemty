@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -10,10 +11,24 @@ import '../../../config/api_config.dart';
 import 'dart:async';
 
 class FcmService {
+  static const String _androidChannelId = 'hjamty_main_channel';
+  static const String _androidChannelName = 'Hjamty Notifications';
+  static const String _androidChannelDescription =
+      'Notifications for appointments and account activity.';
+  static const String _pendingFcmTokenPrefsKey = 'pending_fcm_token';
+
   static final FirebaseMessaging _firebaseMessaging =
       FirebaseMessaging.instance;
   static final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
+  static const AndroidNotificationChannel _androidNotificationChannel =
+      AndroidNotificationChannel(
+        _androidChannelId,
+        _androidChannelName,
+        description: _androidChannelDescription,
+        importance: Importance.max,
+      );
+  static bool _localNotificationsInitialized = false;
 
   // Create a broadcast stream to listen for specific data payloads (e.g., appointment updates)
   static final StreamController<Map<String, dynamic>> _messageStreamController =
@@ -27,6 +42,8 @@ class FcmService {
       _notificationTapStreamController.stream;
 
   static Map<String, dynamic>? _pendingNotificationTapPayload;
+
+  static bool get _isPushSupportedPlatform => !kIsWeb;
 
   // Manual dispatch for SSE or other sources
   static void dispatchMessage(Map<String, dynamic> data) {
@@ -77,6 +94,13 @@ class FcmService {
 
   // Initialization
   static Future<void> initialize() async {
+    if (!_isPushSupportedPlatform) {
+      debugPrint('Skipping FCM initialization on Web.');
+      return;
+    }
+
+    await ensureLocalNotificationsInitialized();
+
     // 1. Request Permission from User
     NotificationSettings settings = await _firebaseMessaging.requestPermission(
       alert: true,
@@ -85,70 +109,155 @@ class FcmService {
       provisional: false,
     );
 
-    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-      debugPrint('User granted native notification permissions.');
+    final androidImplementation =
+        _localNotifications
+            .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin
+            >();
+    await androidImplementation?.requestNotificationsPermission();
 
-      const AndroidInitializationSettings initializationSettingsAndroid =
-          AndroidInitializationSettings('@mipmap/ic_launcher');
-      const InitializationSettings initializationSettings =
-          InitializationSettings(android: initializationSettingsAndroid);
-      await _localNotifications.initialize(
-        settings: initializationSettings,
-        onDidReceiveNotificationResponse: _handleLocalNotificationTap,
+    if (settings.authorizationStatus == AuthorizationStatus.denied) {
+      debugPrint('User declined or has not accepted permission');
+      return;
+    }
+
+    debugPrint('User granted native notification permissions.');
+
+    // 2. Fetch FCM Token
+    await syncCurrentTokenWithBackend();
+
+    // 3. Listen to foreground messages (while app is open)
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      debugPrint('Got a message whilst in the foreground!');
+
+      // Push the payload to the stream so UI can react in real-time
+      if (message.data.isNotEmpty) {
+        _messageStreamController.add(message.data);
+      }
+
+      if (_hasVisibleNotificationContent(message)) {
+        _showLocalNotification(message);
+        // Instantly update badge count reactively by fetching the true count
+        NotificationService.refreshUnreadCount();
+      }
+    });
+
+    // 4. Open app from push tap while app is in background
+    FirebaseMessaging.onMessageOpenedApp.listen(_handleRemoteMessageTap);
+
+    // 5. Open app from push tap when app was terminated
+    final initialMessage = await _firebaseMessaging.getInitialMessage();
+    if (initialMessage != null) {
+      _handleRemoteMessageTap(initialMessage);
+    }
+
+    // 6. Token refresh listener
+    FirebaseMessaging.instance.onTokenRefresh.listen(syncTokenWithBackend);
+  }
+
+  static Future<void> ensureLocalNotificationsInitialized() async {
+    if (!_isPushSupportedPlatform) return;
+    if (_localNotificationsInitialized) return;
+
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+    const InitializationSettings initializationSettings =
+        InitializationSettings(android: initializationSettingsAndroid);
+
+    await _localNotifications.initialize(
+      settings: initializationSettings,
+      onDidReceiveNotificationResponse: _handleLocalNotificationTap,
+    );
+
+    final androidImplementation =
+        _localNotifications
+            .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin
+            >();
+    await androidImplementation?.createNotificationChannel(
+      _androidNotificationChannel,
+    );
+
+    _localNotificationsInitialized = true;
+  }
+
+  static Future<void> syncCurrentTokenWithBackend() async {
+    if (!_isPushSupportedPlatform) {
+      debugPrint('Skipping FCM token sync on Web.');
+      return;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    final currentToken = await _firebaseMessaging.getToken();
+    final tokenToSync =
+        currentToken?.trim().isNotEmpty == true
+            ? currentToken!.trim()
+            : prefs.getString(_pendingFcmTokenPrefsKey);
+
+    if (tokenToSync == null || tokenToSync.isEmpty) {
+      debugPrint('No FCM token available to sync.');
+      return;
+    }
+
+    if (!kReleaseMode) {
+      debugPrint('FCM Token ready: $tokenToSync');
+    }
+
+    await syncTokenWithBackend(tokenToSync);
+  }
+
+  static Future<void> unregisterDeviceToken() async {
+    if (!_isPushSupportedPlatform) {
+      debugPrint('Skipping FCM token unregister on Web.');
+      return;
+    }
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userToken = prefs.getString('jwt_token');
+
+      if (userToken == null || userToken.isEmpty) return;
+
+      final response = await http.patch(
+        Uri.parse('${ApiConfig.host}/api/auth/me'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $userToken',
+        },
+        body: jsonEncode({'fcmToken': null}),
       );
 
-      // 2. Fetch FCM Token
-      String? token = await _firebaseMessaging.getToken();
-      if (token != null) {
-        if (kReleaseMode) {
-          debugPrint('FCM token generated successfully.');
-        } else {
-          debugPrint('FCM Token generated: $token');
-        }
-        await syncTokenWithBackend(token);
+      if (response.statusCode == 200) {
+        await prefs.remove(_pendingFcmTokenPrefsKey);
+        debugPrint('FCM token removed from backend successfully.');
+      } else {
+        debugPrint(
+          'Failed to remove FCM token. Status: ${response.statusCode}',
+        );
       }
-
-      // 3. Listen to foreground messages (while app is open)
-      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-        debugPrint('Got a message whilst in the foreground!');
-
-        // Push the payload to the stream so UI can react in real-time
-        if (message.data.isNotEmpty) {
-          _messageStreamController.add(message.data);
-        }
-
-        if (message.notification != null &&
-            (message.notification?.title?.isNotEmpty == true ||
-                message.notification?.body?.isNotEmpty == true)) {
-          _showLocalNotification(message);
-          // Instantly update badge count reactively by fetching the true count
-          NotificationService.refreshUnreadCount();
-        }
-      });
-
-      // 4. Open app from push tap while app is in background
-      FirebaseMessaging.onMessageOpenedApp.listen(_handleRemoteMessageTap);
-
-      // 5. Open app from push tap when app was terminated
-      final initialMessage = await _firebaseMessaging.getInitialMessage();
-      if (initialMessage != null) {
-        _handleRemoteMessageTap(initialMessage);
-      }
-
-      // 6. Token refresh listener
-      FirebaseMessaging.instance.onTokenRefresh.listen(syncTokenWithBackend);
-    } else {
-      debugPrint('User declined or has not accepted permission');
+    } catch (e) {
+      debugPrint('Failed to unregister FCM token: $e');
     }
   }
 
   // Helper to send the token to NestJS
   static Future<void> syncTokenWithBackend(String fcmToken) async {
+    if (!_isPushSupportedPlatform) {
+      debugPrint('Skipping FCM backend sync on Web.');
+      return;
+    }
+
     try {
+      if (fcmToken.trim().isEmpty) return;
+
       final prefs = await SharedPreferences.getInstance();
       final userToken = prefs.getString('jwt_token'); // JWT auth token
+      await prefs.setString(_pendingFcmTokenPrefsKey, fcmToken);
 
-      if (userToken == null) return; // User not logged in, ignore.
+      if (userToken == null || userToken.isEmpty) {
+        debugPrint('JWT missing, postponing FCM token sync until login.');
+        return;
+      }
 
       final response = await http.patch(
         Uri.parse('${ApiConfig.host}/api/auth/me'),
@@ -160,7 +269,12 @@ class FcmService {
       );
 
       if (response.statusCode == 200) {
+        await prefs.remove(_pendingFcmTokenPrefsKey);
         debugPrint('FCM Token synced to backend successfully.');
+      } else {
+        debugPrint(
+          'Failed to sync FCM token. Status: ${response.statusCode}, Body: ${response.body}',
+        );
       }
     } catch (e) {
       debugPrint('Failed to sync FCM Token: $e');
@@ -171,8 +285,8 @@ class FcmService {
   static Future<void> _showLocalNotification(RemoteMessage message) async {
     await showNotification(
       id: message.hashCode,
-      title: message.notification?.title ?? '',
-      body: message.notification?.body ?? '',
+      title: _extractVisibleTitle(message),
+      body: _extractVisibleBody(message),
       payloadData: message.data,
     );
   }
@@ -183,10 +297,10 @@ class FcmService {
     required String body,
     Map<String, dynamic>? payloadData,
   }) async {
-    const AndroidNotificationDetails androidDetails =
-        AndroidNotificationDetails(
-          'hjamty_main_channel', // channelId
-          'Hjamty Notifications', // channelName
+    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+          _androidChannelId,
+          _androidChannelName,
+          channelDescription: _androidChannelDescription,
           importance: Importance.max,
           priority: Priority.high,
           playSound: true,
@@ -248,6 +362,41 @@ class FcmService {
     );
   }
 
+  static bool _hasVisibleNotificationContent(RemoteMessage message) {
+    return _extractVisibleTitle(message).isNotEmpty ||
+        _extractVisibleBody(message).isNotEmpty;
+  }
+
+  static String _extractVisibleTitle(RemoteMessage message) {
+    final notificationTitle = message.notification?.title?.trim();
+    if (notificationTitle != null && notificationTitle.isNotEmpty) {
+      return notificationTitle;
+    }
+
+    final dataTitle = message.data['title']?.toString().trim();
+    if (dataTitle != null && dataTitle.isNotEmpty) {
+      return dataTitle;
+    }
+
+    final fallbackTitle = message.data['notificationTitle']?.toString().trim();
+    return fallbackTitle ?? '';
+  }
+
+  static String _extractVisibleBody(RemoteMessage message) {
+    final notificationBody = message.notification?.body?.trim();
+    if (notificationBody != null && notificationBody.isNotEmpty) {
+      return notificationBody;
+    }
+
+    final dataBody = message.data['body']?.toString().trim();
+    if (dataBody != null && dataBody.isNotEmpty) {
+      return dataBody;
+    }
+
+    final fallbackBody = message.data['notificationBody']?.toString().trim();
+    return fallbackBody ?? '';
+  }
+
   static int? _toInt(dynamic raw) {
     if (raw is int) return raw;
     if (raw is num) return raw.toInt();
@@ -259,5 +408,27 @@ class FcmService {
 // Global background handler (MUST be outside any class)
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  if (kIsWeb) {
+    debugPrint('Skipping background FCM handler on Web.');
+    return;
+  }
+
+  await Firebase.initializeApp();
+  await FcmService.ensureLocalNotificationsInitialized();
   debugPrint("Handling a background message: ${message.messageId}");
+
+  if (message.data.isNotEmpty) {
+    FcmService.dispatchMessage(message.data);
+  }
+
+  if (message.notification == null &&
+      (message.data['title']?.toString().trim().isNotEmpty == true ||
+          message.data['body']?.toString().trim().isNotEmpty == true)) {
+    await FcmService.showNotification(
+      id: message.hashCode,
+      title: message.data['title']?.toString() ?? '',
+      body: message.data['body']?.toString() ?? '',
+      payloadData: message.data,
+    );
+  }
 }
