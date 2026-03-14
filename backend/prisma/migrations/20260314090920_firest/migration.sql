@@ -10,6 +10,9 @@ CREATE TYPE "AppointmentStatus" AS ENUM ('PENDING', 'CONFIRMED', 'IN_PROGRESS', 
 -- CreateEnum
 CREATE TYPE "AppointmentTarget" AS ENUM ('EMPLOYEE', 'PATRON');
 
+-- CreateEnum
+CREATE TYPE "ReportStatus" AS ENUM ('PENDING', 'DISMISSED', 'ACTION_TAKEN');
+
 -- CreateTable
 CREATE TABLE "User" (
     "id" SERIAL NOT NULL,
@@ -23,6 +26,7 @@ CREATE TABLE "User" (
     "blacklistedAt" TIMESTAMP(3),
     "isBlacklistedBySystem" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "warningCount" INTEGER NOT NULL DEFAULT 0,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
@@ -33,6 +37,9 @@ CREATE TABLE "Notification" (
     "userId" INTEGER NOT NULL,
     "title" TEXT NOT NULL,
     "body" TEXT NOT NULL,
+    "eventType" TEXT,
+    "appointmentId" INTEGER,
+    "deeplink" TEXT,
     "isRead" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -212,6 +219,31 @@ CREATE TABLE "Review" (
 );
 
 -- CreateTable
+CREATE TABLE "ReportedReview" (
+    "id" SERIAL NOT NULL,
+    "reviewId" INTEGER NOT NULL,
+    "reporterId" INTEGER NOT NULL,
+    "reason" TEXT NOT NULL,
+    "message" TEXT,
+    "status" "ReportStatus" NOT NULL DEFAULT 'PENDING',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "resolvedAt" TIMESTAMP(3),
+    "resolvedBy" INTEGER,
+
+    CONSTRAINT "ReportedReview_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "UserWarning" (
+    "id" SERIAL NOT NULL,
+    "userId" INTEGER NOT NULL,
+    "reason" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "UserWarning_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "FavoriteSalon" (
     "id" SERIAL NOT NULL,
     "clientId" INTEGER NOT NULL,
@@ -267,6 +299,12 @@ CREATE UNIQUE INDEX "BarberServiceStat_barberId_serviceId_key" ON "BarberService
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Review_appointmentId_key" ON "Review"("appointmentId");
+
+-- CreateIndex
+CREATE INDEX "ReportedReview_reviewId_idx" ON "ReportedReview"("reviewId");
+
+-- CreateIndex
+CREATE INDEX "ReportedReview_status_idx" ON "ReportedReview"("status");
 
 -- AddForeignKey
 ALTER TABLE "User" ADD CONSTRAINT "User_workplaceSalonId_fkey" FOREIGN KEY ("workplaceSalonId") REFERENCES "Salon"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -327,6 +365,15 @@ ALTER TABLE "Review" ADD CONSTRAINT "Review_clientId_fkey" FOREIGN KEY ("clientI
 
 -- AddForeignKey
 ALTER TABLE "Review" ADD CONSTRAINT "Review_salonId_fkey" FOREIGN KEY ("salonId") REFERENCES "Salon"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ReportedReview" ADD CONSTRAINT "ReportedReview_reviewId_fkey" FOREIGN KEY ("reviewId") REFERENCES "Review"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ReportedReview" ADD CONSTRAINT "ReportedReview_reporterId_fkey" FOREIGN KEY ("reporterId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "UserWarning" ADD CONSTRAINT "UserWarning_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "FavoriteSalon" ADD CONSTRAINT "FavoriteSalon_clientId_fkey" FOREIGN KEY ("clientId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;

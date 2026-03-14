@@ -1,2 +1,0 @@
--- AlterTable
-ALTER TABLE "ReviewReport" ADD COLUMN "reason" TEXT NOT NULL DEFAULT 'INAPPROPRIATE';

@@ -207,16 +207,16 @@ model AppointmentService {
 }
 
 model Review {
-  id            Int         @id @default(autoincrement())
+  id            Int              @id @default(autoincrement())
   clientId      Int
   salonId       Int
-  appointmentId Int         @unique
+  appointmentId Int              @unique
   rating        Int
   comment       String?
-  createdAt     DateTime    @default(now())
-  appointment   Appointment @relation(fields: [appointmentId], references: [id])
-  client        User        @relation(fields: [clientId], references: [id])
-  salon         Salon       @relation(fields: [salonId], references: [id])
+  createdAt     DateTime         @default(now())
+  appointment   Appointment      @relation(fields: [appointmentId], references: [id])
+  client        User             @relation(fields: [clientId], references: [id])
+  salon         Salon            @relation(fields: [salonId], references: [id])
   reports       ReportedReview[]
 }
 
