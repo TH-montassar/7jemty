@@ -1,6 +1,6 @@
 # Rapport technique - Projet 7jemty / hjamty
 
-Mise a jour: 2026-03-09
+Mise a jour: 2026-03-14
 
 ## 1) Perimetre audite
 
@@ -20,28 +20,20 @@ L'architecture actuelle est orientee "modules par feature" cote backend (`auth`,
 
 ## 3) Structure du repo
 
+Arborescence complete du depot (fichiers suivis Git) ajoutee dans:
+- `ARBORESCENCE_COMPLETE.md`
+
+Extrait racine:
+
 ```text
-/7jemty
-|- backend/
-|  |- server.ts
-|  |- src/
-|  |  |- app.ts
-|  |  |- config/
-|  |  |- lib/
-|  |  |- middlewares/
-|  |  |- modules/
-|  |- prisma/schema.prisma
-|  |- scripts/create_admin.ts
-|  |- scripts/fast_forward.ts
-|- frontEnd-mobile/
-|  |- lib/
-|  |  |- main.dart
-|  |  |- config/
-|  |  |- core/
-|  |  |- features/
-|- docker-compose.yml
-|- README.md
-|- RAPPORT_TECHNIQUE.md
+7jemty/
+├── .gitignore
+├── ARBORESCENCE_COMPLETE.md
+├── RAPPORT_TECHNIQUE.md
+├── README.md
+├── backend/
+├── docker-compose.yml
+└── frontEnd-mobile/
 ```
 
 ## 4) Backend - architecture reelle
