@@ -295,6 +295,21 @@ CREATE UNIQUE INDEX "User_phoneNumber_key" ON "User"("phoneNumber");
 CREATE UNIQUE INDEX "Profile_userId_key" ON "Profile"("userId");
 
 -- CreateIndex
+CREATE INDEX "Appointment_appointmentDate_idx" ON "Appointment"("appointmentDate");
+
+-- CreateIndex
+CREATE INDEX "Appointment_status_idx" ON "Appointment"("status");
+
+-- CreateIndex
+CREATE INDEX "Appointment_clientId_idx" ON "Appointment"("clientId");
+
+-- CreateIndex
+CREATE INDEX "Appointment_barberId_idx" ON "Appointment"("barberId");
+
+-- CreateIndex
+CREATE INDEX "Appointment_salonId_idx" ON "Appointment"("salonId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "BarberServiceStat_barberId_serviceId_key" ON "BarberServiceStat"("barberId", "serviceId");
 
 -- CreateIndex
