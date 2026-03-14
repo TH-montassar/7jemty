@@ -1509,12 +1509,22 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
     final employees = (_salonData?['employees'] as List<dynamic>?) ?? [];
     final patron = _salonData?['patron'] as Map<String, dynamic>?;
 
+    final patronId = (patron?['id'] as num?)?.toInt();
     final specialists = employees
         .whereType<Map<String, dynamic>>()
-        .map((emp) => Map<String, dynamic>.from(emp))
+        .map((emp) {
+          final specialist = Map<String, dynamic>.from(emp);
+          final specialistId = (specialist['id'] as num?)?.toInt();
+
+          if (patronId != null && specialistId == patronId) {
+            specialist['isPatron'] = true;
+            specialist.putIfAbsent('role', () => 'Patron');
+          }
+
+          return specialist;
+        })
         .toList();
 
-    final patronId = (patron?['id'] as num?)?.toInt();
     final patronAlreadyInList =
         patronId != null &&
         specialists.any((emp) => (emp['id'] as num?)?.toInt() == patronId);
@@ -1524,6 +1534,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
         'id': patronId,
         'name': (patron['name'] ?? 'Patron').toString(),
         'role': 'Patron',
+        'isPatron': true,
         'bio': null,
         'imageUrl': patron['imageUrl'],
       });
@@ -1597,6 +1608,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                     (emp['role'] ?? tr(context, 'specialist_role')).toString();
                 final displayRole = isPatronCard ? 'Patron' : rawRole;
                 final imageUrl = emp['imageUrl'] as String?;
+                final isSalonOwner = emp['isPatron'] == true;
 
                 return GestureDetector(
                   onTap: () => _showSpecialistDialog(context, emp),
@@ -1645,37 +1657,13 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                         ),
                         const SizedBox(width: 15),
                         Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                name,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15,
-                                  color: AppColors.textDark,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 5,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.primaryBlue.withOpacity(0.08),
-                                  borderRadius: BorderRadius.circular(999),
-                                ),
-                                child: Text(
-                                  displayRole,
-                                  style: const TextStyle(
-                                    color: AppColors.primaryBlue,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ),
-                            ],
+                          child: Text(
+                            name,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: AppColors.textDark,
+                            ),
                           ),
                         ),
                       ],
@@ -1686,6 +1674,53 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
             ),
           ),
       ],
+    );
+  }
+
+  Widget _buildPatronBadge() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.primaryBlue.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.workspace_premium,
+            size: 14,
+            color: AppColors.primaryBlue,
+          ),
+          SizedBox(width: 4),
+          Text(
+            'Patron',
+            style: TextStyle(
+              color: AppColors.primaryBlue,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSpecialistRoleChip(String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.primaryBlue.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: AppColors.primaryBlue,
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 
@@ -2106,6 +2141,8 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
         (emp['name'] ?? tr(context, 'specialist_role')) as String;
     final String role =
         (emp['role'] ?? tr(context, 'specialist_role')) as String;
+    final bool isSalonOwner =
+        emp['isPatron'] == true || role.toLowerCase() == 'patron';
     final String? bio = emp['bio'] as String?;
     final String? imageUrl = emp['imageUrl'] as String?;
     final String? phone = emp['phoneNumber'] as String?;
@@ -2139,24 +2176,15 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                             textAlign: TextAlign.left,
                           ),
                           const SizedBox(height: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.primaryBlue.withOpacity(0.08),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              role,
-                              style: const TextStyle(
-                                color: AppColors.primaryBlue,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
+                          if (isSalonOwner) ...[
+                            _buildPatronBadge(),
+                            if (role.isNotEmpty &&
+                                role.toLowerCase() != 'patron') ...[
+                              const SizedBox(height: 8),
+                              _buildSpecialistRoleChip(role),
+                            ],
+                          ] else
+                            _buildSpecialistRoleChip(role),
                           if (phone != null && phone.isNotEmpty) ...[
                             const SizedBox(height: 12),
                             Row(
