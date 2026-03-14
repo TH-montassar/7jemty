@@ -192,6 +192,34 @@ class _NotificationsPageState extends State<NotificationsPage> {
         ],
         centerTitle: true,
       ),
+      bottomNavigationBar: !_isLoading && !_showAll && _notifications.isNotEmpty
+          ? Container(
+              color: AppColors.bgColor,
+              child: SafeArea(
+                top: false,
+                minimum: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+                child: OutlinedButton(
+                  onPressed: () {
+                    setState(() {
+                      _showAll = true;
+                    });
+                  },
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primaryBlue,
+                    side: const BorderSide(color: AppColors.primaryBlue),
+                    minimumSize: const Size(double.infinity, 48),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text(
+                    'Voir tout',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                ),
+              ),
+            )
+          : null,
       body: _isLoading
           ? const Center(
               child: CircularProgressIndicator(color: AppColors.primaryBlue),
@@ -330,29 +358,6 @@ class _NotificationsPageState extends State<NotificationsPage> {
                           },
                         ),
                 ),
-                if (!_showAll && _notifications.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
-                    child: OutlinedButton(
-                      onPressed: () {
-                        setState(() {
-                          _showAll = true;
-                        });
-                      },
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.primaryBlue,
-                        side: const BorderSide(color: AppColors.primaryBlue),
-                        minimumSize: const Size(double.infinity, 48),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      child: const Text(
-                        'Voir tout',
-                        style: TextStyle(fontSize: 16),
-                      ),
-                    ),
-                  ),
               ],
             ),
     );

@@ -248,7 +248,6 @@ class _ClientHomePageState extends State<ClientHomePage> {
             0xFFF5F7FA,
           ), // A slightly cooler, "pro" grey background
           child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
             child: Column(
               children: [
                 // 1. الهيدر
