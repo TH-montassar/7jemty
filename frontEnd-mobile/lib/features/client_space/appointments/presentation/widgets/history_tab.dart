@@ -24,7 +24,7 @@ class _HistoryTabState extends State<HistoryTab> {
   List<dynamic> _appointments = [];
   String _selectedStatus = 'All';
   String _sortField = 'APPOINTMENT_DATE';
-  bool _sortAscending = true;
+  bool _sortAscending = false;
   StreamSubscription<Map<String, dynamic>>? _fcmSubscription;
   bool _focusHandled = false;
 
@@ -213,7 +213,7 @@ class _HistoryTabState extends State<HistoryTab> {
           salonId: salonId,
           initialServiceIds: serviceIds.isEmpty ? null : serviceIds,
           initialBarberId: barberId,
-          lockInitialSelections: true,
+          lockInitialSelections: false,
         ),
       ),
     );
@@ -553,7 +553,7 @@ class _HistoryTabState extends State<HistoryTab> {
               setState(() {
                 _selectedStatus = 'All';
                 _sortField = 'APPOINTMENT_DATE';
-                _sortAscending = true;
+                _sortAscending = false;
               });
               _applyFilters();
             },

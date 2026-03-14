@@ -23,7 +23,7 @@ class _UpcomingTabState extends State<UpcomingTab> {
   List<dynamic> _appointments = [];
   String _selectedStatus = 'All';
   String _sortField = 'APPOINTMENT_DATE';
-  bool _sortAscending = true;
+  bool _sortAscending = false;
   StreamSubscription<Map<String, dynamic>>? _fcmSubscription;
   Timer? _countdownTicker;
   bool _focusHandled = false;
@@ -221,15 +221,16 @@ class _UpcomingTabState extends State<UpcomingTab> {
     _startCountdownTicker();
   }
 
-  Future<void> _cancelAppointment(int appointmentId) async {
+  Future<bool> _cancelAppointment(int appointmentId) async {
     try {
       await AppointmentService.updateStatus(
         appointmentId: appointmentId,
         status: 'CANCELLED',
       );
       _fetchAppointments(); // Refresh the list
+      return true;
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) return false;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -238,6 +239,7 @@ class _UpcomingTabState extends State<UpcomingTab> {
           backgroundColor: AppColors.actionRed,
         ),
       );
+      return false;
     }
   }
 
@@ -688,7 +690,7 @@ class _UpcomingTabState extends State<UpcomingTab> {
               setState(() {
                 _selectedStatus = 'All';
                 _sortField = 'APPOINTMENT_DATE';
-                _sortAscending = true;
+                _sortAscending = false;
               });
               _applyFilters();
             },
@@ -971,10 +973,10 @@ class _UpcomingTabState extends State<UpcomingTab> {
                 navigator.pop();
 
                 // Wait for the backend API
-                await _cancelAppointment(appointmentId);
+                final success = await _cancelAppointment(appointmentId);
 
-                // Show the snackbar using the saved messenger
-                if (mounted) {
+                // Show the snackbar using the saved messenger ONLY on success
+                if (mounted && success) {
                   scaffoldMessenger.showSnackBar(
                     SnackBar(
                       content: Text(tr(parentContext, 'appointment_cancelled')),

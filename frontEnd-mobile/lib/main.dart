@@ -14,7 +14,6 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'firebase_options.dart';
 import 'package:hjamty/core/services/fcm_service.dart';
 
-// Service de traduction global`
 final translationService = TranslationService();
 
 void main() async {
