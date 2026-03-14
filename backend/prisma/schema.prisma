@@ -172,6 +172,12 @@ model Appointment {
   services              AppointmentService[]
   review                Review?
   faults                AppointmentFault[]
+
+  @@index([appointmentDate])
+  @@index([status])
+  @@index([clientId])
+  @@index([barberId])
+  @@index([salonId])
 }
 
 model AppointmentFault {

@@ -173,6 +173,7 @@ export const takeAction = async (reportId: number, adminId: number) => {
                 status: ReportStatus.ACTION_TAKEN,
                 resolvedAt: now,
                 resolvedBy: adminId,
+                // reviewId is automatically set to null by Prisma onDelete: SetNull
             }
         });
 
