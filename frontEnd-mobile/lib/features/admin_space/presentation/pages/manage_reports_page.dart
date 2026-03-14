@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
+import 'package:hjamty/core/services/fcm_service.dart';
+import 'package:hjamty/core/services/notification_service.dart';
 import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:hjamty/features/admin_space/data/admin_service.dart';
 
@@ -12,14 +15,47 @@ class ManageReportsPage extends StatefulWidget {
 class _ManageReportsPageState extends State<ManageReportsPage> {
   bool _isLoading = true;
   List<dynamic> _reports = [];
+  StreamSubscription<Map<String, dynamic>>? _reportsSubscription;
 
   @override
   void initState() {
     super.initState();
+    NotificationService.listenToNotificationsStream();
+    _reportsSubscription = FcmService.messageStream.listen(_handleRealtimeEvent);
     _fetchReports();
   }
 
-  Future<void> _fetchReports() async {
+  @override
+  void dispose() {
+    _reportsSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _handleRealtimeEvent(Map<String, dynamic> data) {
+    final eventType = (data['eventType'] ?? data['type'] ?? '')
+        .toString()
+        .toUpperCase();
+
+    if (eventType == 'REVIEW_REPORTED') {
+      _fetchReports(showLoader: false);
+      return;
+    }
+
+    if (eventType == 'REPORT_DISMISSED' || eventType == 'REPORT_ACTION_TAKEN') {
+      final reportId = int.tryParse(data['reportId']?.toString() ?? '');
+      if (reportId == null || !mounted) return;
+
+      setState(() {
+        _reports.removeWhere((report) => report['id'] == reportId);
+      });
+    }
+  }
+
+  Future<void> _fetchReports({bool showLoader = true}) async {
+    if (showLoader && mounted) {
+      setState(() => _isLoading = true);
+    }
+
     try {
       final reports = await AdminService.getReviewReports();
       if (!mounted) return;
@@ -91,7 +127,10 @@ class _ManageReportsPageState extends State<ManageReportsPage> {
         warnUser: warnUser,
         banUser: banUser,
       );
-      await _fetchReports();
+      if (!mounted) return;
+      setState(() {
+        _reports.removeWhere((report) => report['id'] == reportId);
+      });
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(tr(context, 'review_report_resolved'))),

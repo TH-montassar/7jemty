@@ -240,8 +240,17 @@ const normalizeExtraData = (
 const getDefaultDeeplink = (appointmentId: number): string => `/appointments/${appointmentId}`;
 
 const resolveRecipientIds = (event: AppointmentNotificationEvent, ctx: AppointmentEventContext): number[] => {
+    console.log(`[NotificationOrchestrator] Resolving recipients for ${event}. Context:`, {
+        appointmentId: ctx.appointmentId,
+        clientId: ctx.clientId,
+        barberId: ctx.barberId,
+        patronId: ctx.patronId,
+        targetUserIds: ctx.targetUserIds
+    });
+
     if (ctx.targetUserIds && ctx.targetUserIds.length > 0) {
         const uniqueTargetIds = Array.from(new Set(ctx.targetUserIds.filter((id) => Number.isInteger(id) && id > 0)));
+        console.log(`[NotificationOrchestrator] Using explicit targetUserIds:`, uniqueTargetIds);
         if (ctx.actorUserId && ctx.actorUserId > 0) {
             return uniqueTargetIds.filter((id) => id !== ctx.actorUserId);
         }
@@ -255,13 +264,24 @@ const resolveRecipientIds = (event: AppointmentNotificationEvent, ctx: Appointme
         PATRON: ctx.patronId
     };
 
+    console.log(`[NotificationOrchestrator] Template roles:`, template.recipientRoles);
+    console.log(`[NotificationOrchestrator] Role map values:`, roleMap);
+
     const recipientIds = (template.recipientRoles || [])
-        .map((role) => roleMap[role])
+        .map((role) => {
+            const id = roleMap[role];
+            console.log(`[NotificationOrchestrator] Mapping role ${role} -> ID ${id}`);
+            return id;
+        })
         .filter((id): id is number => typeof id === 'number' && id > 0);
 
     const uniqueRecipientIds = Array.from(new Set(recipientIds));
+    console.log(`[NotificationOrchestrator] Resolved unique recipients:`, uniqueRecipientIds);
+
     if (ctx.actorUserId && ctx.actorUserId > 0) {
-        return uniqueRecipientIds.filter((id) => id !== ctx.actorUserId);
+        const filtered = uniqueRecipientIds.filter((id) => id !== ctx.actorUserId);
+        console.log(`[NotificationOrchestrator] Filtered actor ${ctx.actorUserId}:`, filtered);
+        return filtered;
     }
     return uniqueRecipientIds;
 };
@@ -336,10 +356,12 @@ export const emitAppointmentEvent = async (
     const data = buildTransportData(event, template, ctx);
     const dedupeWindowMs = ctx.dedupeWindowMs ?? template.dedupeWindowMs ?? DEFAULT_DEDUPE_WINDOW_MS;
 
+    console.log(`[NotificationOrchestrator] Fetching users for IDs:`, recipientIds);
     const users = await prisma.user.findMany({
         where: { id: { in: recipientIds } },
         include: { profile: true }
     });
+    console.log(`[NotificationOrchestrator] Found ${users.length} users:`, users.map(u => ({ id: u.id, name: u.fullName, hasToken: !!u.profile?.fcmToken })));
 
     for (const user of users) {
         if (shouldSkipByDedupe(event, ctx.appointmentId, user.id, dedupeWindowMs)) {

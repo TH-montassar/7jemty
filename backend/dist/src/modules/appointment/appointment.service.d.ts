@@ -19,15 +19,15 @@ export declare const createClientAppointment: (clientId: number, salonId: number
         phoneNumber: string;
     };
     salon: {
-        name: string;
         address: string | null;
+        name: string;
         coverImageUrl: string | null;
     };
     services: ({
         service: {
+            description: string | null;
             id: number;
             name: string;
-            description: string | null;
             salonId: number;
             imageUrl: string | null;
             price: number;
@@ -39,8 +39,8 @@ export declare const createClientAppointment: (clientId: number, salonId: number
         serviceId: number;
     })[];
 } & {
-    id: number;
     createdAt: Date;
+    id: number;
     status: import("../../../generated/prisma/index.js").$Enums.AppointmentStatus;
     clientId: number;
     salonId: number;
@@ -79,15 +79,15 @@ export declare const getSalonAppointments: (patronId: number) => Promise<({
         } | null;
     };
     salon: {
-        name: string;
         address: string | null;
+        name: string;
         coverImageUrl: string | null;
     };
     services: ({
         service: {
+            description: string | null;
             id: number;
             name: string;
-            description: string | null;
             salonId: number;
             imageUrl: string | null;
             price: number;
@@ -99,8 +99,8 @@ export declare const getSalonAppointments: (patronId: number) => Promise<({
         serviceId: number;
     })[];
 } & {
-    id: number;
     createdAt: Date;
+    id: number;
     status: import("../../../generated/prisma/index.js").$Enums.AppointmentStatus;
     clientId: number;
     salonId: number;
@@ -137,15 +137,15 @@ export declare const getAppointmentsBySalonId: (salonId: number) => Promise<({
         } | null;
     };
     salon: {
-        name: string;
         address: string | null;
+        name: string;
         coverImageUrl: string | null;
     };
     services: ({
         service: {
+            description: string | null;
             id: number;
             name: string;
-            description: string | null;
             salonId: number;
             imageUrl: string | null;
             price: number;
@@ -157,8 +157,8 @@ export declare const getAppointmentsBySalonId: (salonId: number) => Promise<({
         serviceId: number;
     })[];
 } & {
-    id: number;
     createdAt: Date;
+    id: number;
     status: import("../../../generated/prisma/index.js").$Enums.AppointmentStatus;
     clientId: number;
     salonId: number;
@@ -192,19 +192,19 @@ export declare const getClientAppointments: (clientId: number) => Promise<({
         phoneNumber: string;
     };
     salon: {
-        id: number;
-        name: string;
         address: string | null;
         latitude: number | null;
         longitude: number | null;
+        id: number;
+        name: string;
         googleMapsUrl: string | null;
         coverImageUrl: string | null;
     };
     services: ({
         service: {
+            description: string | null;
             id: number;
             name: string;
-            description: string | null;
             salonId: number;
             imageUrl: string | null;
             price: number;
@@ -221,8 +221,8 @@ export declare const getClientAppointments: (clientId: number) => Promise<({
         comment: string | null;
     } | null;
 } & {
-    id: number;
     createdAt: Date;
+    id: number;
     status: import("../../../generated/prisma/index.js").$Enums.AppointmentStatus;
     clientId: number;
     salonId: number;
@@ -257,15 +257,15 @@ export declare const getEmployeeAppointments: (employeeId: number) => Promise<({
         phoneNumber: string;
     };
     salon: {
+        address: string | null;
         id: number;
         name: string;
-        address: string | null;
     };
     services: ({
         service: {
+            description: string | null;
             id: number;
             name: string;
-            description: string | null;
             salonId: number;
             imageUrl: string | null;
             price: number;
@@ -277,8 +277,8 @@ export declare const getEmployeeAppointments: (employeeId: number) => Promise<({
         serviceId: number;
     })[];
 } & {
-    id: number;
     createdAt: Date;
+    id: number;
     status: import("../../../generated/prisma/index.js").$Enums.AppointmentStatus;
     clientId: number;
     salonId: number;
@@ -302,9 +302,9 @@ export declare const getEmployeeAppointments: (employeeId: number) => Promise<({
 })[]>;
 export declare const extendAppointment: (appointmentId: number, minutes: number, userId: number, role: "PATRON" | "EMPLOYEE") => Promise<{
     client: {
-        role: import("../../../generated/prisma/index.js").$Enums.Role;
-        id: number;
         createdAt: Date;
+        id: number;
+        role: import("../../../generated/prisma/index.js").$Enums.Role;
         fullName: string;
         phoneNumber: string;
         passwordHash: string;
@@ -313,10 +313,11 @@ export declare const extendAppointment: (appointmentId: number, minutes: number,
         ignoredAppointmentsCount: number;
         blacklistedAt: Date | null;
         isBlacklistedBySystem: boolean;
+        warningCount: number;
     };
 } & {
-    id: number;
     createdAt: Date;
+    id: number;
     status: import("../../../generated/prisma/index.js").$Enums.AppointmentStatus;
     clientId: number;
     salonId: number;
@@ -356,9 +357,9 @@ export declare const getUnreviewedAppointments: (clientId: number) => Promise<({
     };
     services: ({
         service: {
+            description: string | null;
             id: number;
             name: string;
-            description: string | null;
             salonId: number;
             imageUrl: string | null;
             price: number;
@@ -370,8 +371,8 @@ export declare const getUnreviewedAppointments: (clientId: number) => Promise<({
         serviceId: number;
     })[];
 } & {
-    id: number;
     createdAt: Date;
+    id: number;
     status: import("../../../generated/prisma/index.js").$Enums.AppointmentStatus;
     clientId: number;
     salonId: number;
@@ -394,9 +395,9 @@ export declare const getUnreviewedAppointments: (clientId: number) => Promise<({
     lastCompletionAskTime: Date | null;
 })[]>;
 export declare const submitReview: (appointmentId: number, clientId: number, salonId: number, rating: number, comment?: string) => Promise<{
+    createdAt: Date;
     id: number;
     appointmentId: number;
-    createdAt: Date;
     clientId: number;
     salonId: number;
     rating: number;

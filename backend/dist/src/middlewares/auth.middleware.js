@@ -41,4 +41,12 @@ export const isAdmin = (req, res, next) => {
         res.status(403).json({ success: false, message: 'Accès refusé, réservé aux Admins' });
     }
 };
+export const isPatronOrAdmin = (req, res, next) => {
+    const role = req.user?.role;
+    if (role === 'PATRON' || role === 'ADMIN') {
+        next();
+        return;
+    }
+    res.status(403).json({ success: false, message: 'Accès refusé' });
+};
 //# sourceMappingURL=auth.middleware.js.map

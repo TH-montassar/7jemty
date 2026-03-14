@@ -63,6 +63,7 @@ class _ClientMainLayoutState extends State<ClientMainLayout> {
 
     final appointmentId = FcmService.extractAppointmentId(payload);
     final openHistory = FcmService.shouldOpenHistoryTab(payload);
+    final openReview = FcmService.shouldOpenReview(payload);
     if (appointmentId == null || !mounted) return;
 
     final navigator = Navigator.of(context);
@@ -76,6 +77,7 @@ class _ClientMainLayoutState extends State<ClientMainLayout> {
         key: ValueKey('appt_from_notif_${appointmentId}_$rebuildMarker'),
         initialTabIndex: openHistory ? 1 : 0,
         focusAppointmentId: appointmentId,
+        openReview: openReview,
       );
       _selectedIndex = 1;
     });

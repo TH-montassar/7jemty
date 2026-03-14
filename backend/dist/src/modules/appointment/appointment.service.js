@@ -3,6 +3,7 @@ import { broadcastToAll } from '../notifications/notifications.controller.js';
 import { broadcastAppointmentRefresh, emitAppointmentEvent } from '../notifications/notification.orchestrator.js';
 import { CLIENT_CANCELLATION_LOCK_HOURS, CLIENT_CANCELLATION_LOCK_MINUTES } from './appointment.constants.js';
 const ACTIVE_APPOINTMENT_STATUSES = ['PENDING', 'CONFIRMED', 'IN_PROGRESS', 'ARRIVED'];
+const getStakeholderUserIds = (barberId, patronId) => Array.from(new Set([barberId, patronId].filter((id) => typeof id === 'number' && id > 0)));
 export const updateAppointmentStatus = async (appointmentId, status, userId, userRole) => {
     const appointment = await prisma.appointment.findUnique({
         where: { id: appointmentId },
@@ -261,6 +262,7 @@ export const createClientAppointment = async (clientId, salonId, barberId, dateS
         throw new Error("Andek deja rendez-vous ekher fel wa9t hetha, ma tnajemch t3adi wehed jdid.");
     }
     const targetBarberId = targetType === 'PATRON' ? salon.patronId : barberId;
+    const stakeholderUserIds = getStakeholderUserIds(targetBarberId, salon.patronId);
     const appointment = await prisma.appointment.create({
         data: {
             clientId,
@@ -288,14 +290,15 @@ export const createClientAppointment = async (clientId, salonId, barberId, dateS
         appointmentDate,
         status: 'PENDING',
         clientId,
-        barberId: targetBarberId,
-        patronId: salon.patronId,
+        barberId: targetBarberId, // The assigned specialist (employee OR patron)
+        patronId: salon.patronId, // The salon owner (always notified)
+        targetUserIds: stakeholderUserIds,
         dedupeWindowMs: 30_000
     });
     await broadcastAppointmentRefresh({
         appointmentId: appointment.id,
         status: 'PENDING',
-        userIds: [clientId, targetBarberId, salon.patronId]
+        userIds: [clientId, ...stakeholderUserIds]
             .filter((id) => Boolean(id))
     });
     // Broadcast availability change to all clients
@@ -315,6 +318,7 @@ export const processInProgressReminders = async () => {
         include: { salon: { select: { patronId: true } } }
     });
     for (const appointment of appointments) {
+        const stakeholderUserIds = getStakeholderUserIds(appointment.barberId, appointment.salon.patronId);
         await emitAppointmentEvent('APPT_BARBER_ARRIVAL_CHECK', {
             appointmentId: appointment.id,
             appointmentDate: appointment.appointmentDate,
@@ -322,7 +326,7 @@ export const processInProgressReminders = async () => {
             clientId: appointment.clientId,
             barberId: appointment.barberId,
             patronId: appointment.salon.patronId,
-            targetUserIds: [appointment.barberId ?? appointment.salon.patronId],
+            targetUserIds: stakeholderUserIds,
             dedupeWindowMs: 60_000
         });
     }
@@ -337,6 +341,7 @@ export const processCompletionAlerts = async () => {
         include: { salon: { select: { patronId: true } } }
     });
     for (const appointment of toPrompt) {
+        const stakeholderUserIds = getStakeholderUserIds(appointment.barberId, appointment.salon.patronId);
         await prisma.appointment.update({
             where: { id: appointment.id },
             data: {
@@ -352,7 +357,7 @@ export const processCompletionAlerts = async () => {
             clientId: appointment.clientId,
             barberId: appointment.barberId,
             patronId: appointment.salon.patronId,
-            targetUserIds: [appointment.barberId ?? appointment.salon.patronId],
+            targetUserIds: stakeholderUserIds,
             dedupeWindowMs: 5 * 60_000
         });
     }

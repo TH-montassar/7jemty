@@ -8,6 +8,8 @@ type AppointmentStatusInput = 'PENDING' | 'CONFIRMED' | 'IN_PROGRESS' | 'ARRIVED
 type AppointmentTargetInput = 'EMPLOYEE' | 'PATRON';
 
 const ACTIVE_APPOINTMENT_STATUSES: AppointmentStatusInput[] = ['PENDING', 'CONFIRMED', 'IN_PROGRESS', 'ARRIVED'];
+const getStakeholderUserIds = (barberId?: number | null, patronId?: number | null): number[] =>
+    Array.from(new Set([barberId, patronId].filter((id): id is number => typeof id === 'number' && id > 0)));
 
 export const updateAppointmentStatus = async (
     appointmentId: number,
@@ -358,6 +360,7 @@ export const createClientAppointment = async (
     }
 
     const targetBarberId = targetType === 'PATRON' ? salon.patronId : barberId;
+    const stakeholderUserIds = getStakeholderUserIds(targetBarberId, salon.patronId);
 
     const appointment = await prisma.appointment.create({
         data: {
@@ -387,15 +390,16 @@ export const createClientAppointment = async (
         appointmentDate,
         status: 'PENDING',
         clientId,
-        barberId: targetBarberId,
-        patronId: salon.patronId,
+        barberId: targetBarberId,        // The assigned specialist (employee OR patron)
+        patronId: salon.patronId,        // The salon owner (always notified)
+        targetUserIds: stakeholderUserIds,
         dedupeWindowMs: 30_000
     });
 
     await broadcastAppointmentRefresh({
         appointmentId: appointment.id,
         status: 'PENDING',
-        userIds: [clientId, targetBarberId, salon.patronId]
+        userIds: [clientId, ...stakeholderUserIds]
             .filter((id): id is number => Boolean(id))
     });
 
@@ -419,6 +423,7 @@ export const processInProgressReminders = async () => {
     });
 
     for (const appointment of appointments) {
+        const stakeholderUserIds = getStakeholderUserIds(appointment.barberId, appointment.salon.patronId);
         await emitAppointmentEvent('APPT_BARBER_ARRIVAL_CHECK', {
             appointmentId: appointment.id,
             appointmentDate: appointment.appointmentDate,
@@ -426,7 +431,7 @@ export const processInProgressReminders = async () => {
             clientId: appointment.clientId,
             barberId: appointment.barberId,
             patronId: appointment.salon.patronId,
-            targetUserIds: [appointment.barberId ?? appointment.salon.patronId],
+            targetUserIds: stakeholderUserIds,
             dedupeWindowMs: 60_000
         });
     }
@@ -444,6 +449,7 @@ export const processCompletionAlerts = async () => {
     });
 
     for (const appointment of toPrompt) {
+        const stakeholderUserIds = getStakeholderUserIds(appointment.barberId, appointment.salon.patronId);
         await prisma.appointment.update({
             where: { id: appointment.id },
             data: {
@@ -460,7 +466,7 @@ export const processCompletionAlerts = async () => {
             clientId: appointment.clientId,
             barberId: appointment.barberId,
             patronId: appointment.salon.patronId,
-            targetUserIds: [appointment.barberId ?? appointment.salon.patronId],
+            targetUserIds: stakeholderUserIds,
             dedupeWindowMs: 5 * 60_000
         });
     }

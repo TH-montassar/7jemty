@@ -96,7 +96,22 @@ class FcmService {
     final eventType = (payload['eventType'] ?? '').toString().toUpperCase();
     return eventType == 'APPT_COMPLETED' ||
         eventType == 'APPT_CANCELLED' ||
-        eventType == 'APPT_DECLINED';
+        eventType == 'APPT_DECLINED' ||
+        eventType == 'REVIEW_REMINDER';
+  }
+
+  static bool shouldOpenReview(Map<String, dynamic> payload) {
+    final eventType = (payload['eventType'] ?? '').toString().toUpperCase();
+    if (eventType == 'REVIEW_REMINDER' || eventType == 'APPT_COMPLETED') return true;
+
+    final intent = (payload['intent'] ?? '').toString().toUpperCase();
+    if (intent == 'OPEN_REVIEW' || intent == 'LEAVE_REVIEW') return true;
+
+    // Check deeplink pattern as fallback
+    final deeplink = (payload['deeplink'] ?? '').toString();
+    if (deeplink.contains('review')) return true;
+
+    return false;
   }
 
   static bool isAppointmentPayload(Map<String, dynamic> payload) {
@@ -384,6 +399,7 @@ class FcmService {
     final signaturePayload = <String, String?>{
       'type': payload['type']?.toString(),
       'eventType': payload['eventType']?.toString(),
+      'intent': payload['intent']?.toString(),
       'appointmentId': payload['appointmentId']?.toString(),
       'newStatus': payload['newStatus']?.toString(),
       'status': payload['status']?.toString(),

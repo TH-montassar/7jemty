@@ -10,11 +10,13 @@ import 'package:hjamty/features/client_space/search/presentation/pages/search_pa
 class AppointmentsPage extends StatefulWidget {
   final int initialTabIndex;
   final int? focusAppointmentId;
+  final bool openReview;
 
   const AppointmentsPage({
     super.key,
     this.initialTabIndex = 0,
     this.focusAppointmentId,
+    this.openReview = false,
   });
 
   @override
@@ -237,7 +239,10 @@ class _AppointmentsPageState extends State<AppointmentsPage> {
         body: TabBarView(
           children: [
             UpcomingTab(focusAppointmentId: widget.focusAppointmentId),
-            HistoryTab(focusAppointmentId: widget.focusAppointmentId),
+            HistoryTab(
+              focusAppointmentId: widget.focusAppointmentId,
+              openReview: widget.openReview,
+            ),
           ],
         ),
       ),

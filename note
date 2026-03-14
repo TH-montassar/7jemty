@@ -15,7 +15,7 @@ docker compose exec backend npm run build
 
 docker compose exec backend npm run fast_forward
 
-
+npx kill-port 3000
 
 docker compose down
 docker compose build --no-cache backend

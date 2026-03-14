@@ -1,6 +1,7 @@
 import { ReportStatus, Role } from '../../../generated/prisma/index.js';
 import { prisma } from '../../lib/db.js';
 import { sendNotification } from '../notifications/notifications.service.js';
+import { broadcastNotificationToUser } from '../notifications/notifications.controller.js';
 
 export const reportReview = async (
     reviewId: number,
@@ -49,7 +50,7 @@ export const reportReview = async (
     });
 
     for (const admin of admins) {
-        await prisma.notification.create({
+        const notification = await prisma.notification.create({
             data: {
                 userId: admin.id,
                 title: '🚨 Review signalée',
@@ -57,6 +58,14 @@ export const reportReview = async (
                 eventType: 'REVIEW_REPORTED',
                 deeplink: `/admin/reports/${createdReport.id}`
             }
+        });
+
+        broadcastNotificationToUser(admin.id, {
+            ...notification,
+            type: 'REVIEW_REPORTED',
+            eventType: 'REVIEW_REPORTED',
+            reportId: createdReport.id,
+            reviewId: review.id
         });
 
         if (admin.profile?.fcmToken) {
@@ -116,13 +125,28 @@ export const dismissReport = async (reportId: number) => {
         throw new Error('Report introuvable');
     }
 
-    return prisma.reportedReview.update({
+    const updatedReport = await prisma.reportedReview.update({
         where: { id: reportId },
         data: {
             status: ReportStatus.DISMISSED,
             resolvedAt: new Date(),
         }
     });
+
+    const admins = await prisma.user.findMany({
+        where: { role: Role.ADMIN },
+        select: { id: true }
+    });
+
+    for (const admin of admins) {
+        broadcastNotificationToUser(admin.id, {
+            type: 'REPORT_DISMISSED',
+            eventType: 'REPORT_DISMISSED',
+            reportId
+        });
+    }
+
+    return updatedReport;
 };
 
 export const takeAction = async (reportId: number, adminId: number) => {

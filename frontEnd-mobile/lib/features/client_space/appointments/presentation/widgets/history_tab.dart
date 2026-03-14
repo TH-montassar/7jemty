@@ -7,12 +7,18 @@ import 'package:hjamty/core/services/fcm_service.dart';
 import 'package:hjamty/features/client_space/appointments/data/appointment_service.dart';
 import 'package:hjamty/features/client_space/appointments/presentation/pages/booking_flow_screen.dart';
 import 'package:hjamty/features/client_space/appointments/presentation/widgets/appointment_details_bottom_sheet.dart';
+import 'package:hjamty/features/client_space/appointments/presentation/widgets/review_modal_bottom_sheet.dart';
 import 'package:toastification/toastification.dart';
 
 class HistoryTab extends StatefulWidget {
   final int? focusAppointmentId;
+  final bool openReview;
 
-  const HistoryTab({super.key, this.focusAppointmentId});
+  const HistoryTab({
+    super.key, 
+    this.focusAppointmentId, 
+    this.openReview = false,
+  });
 
   @override
   State<HistoryTab> createState() => _HistoryTabState();
@@ -57,7 +63,8 @@ class _HistoryTabState extends State<HistoryTab> {
   @override
   void didUpdateWidget(covariant HistoryTab oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.focusAppointmentId != widget.focusAppointmentId) {
+    if (oldWidget.focusAppointmentId != widget.focusAppointmentId || 
+        oldWidget.openReview != widget.openReview) {
       _focusHandled = false;
       _tryOpenFocusedAppointment();
     }
@@ -157,11 +164,28 @@ class _HistoryTabState extends State<HistoryTab> {
     _focusHandled = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      showAppointmentDetailsBottomSheet(
-        context: context,
-        appointment: Map<String, dynamic>.from(target as Map),
-        showClientDetails: false,
-      );
+      
+      final review = target['review'] as Map<String, dynamic>?;
+      
+      // If requested to open review AND no review exists yet, open the review dialog
+      if (widget.openReview && review == null) {
+        showReviewModalBottomSheet(
+          context,
+          Map<String, dynamic>.from(target as Map),
+          onReviewSubmitted: () {
+            if (mounted) {
+              _fetchAppointments();
+            }
+          },
+        );
+      } else {
+        // Otherwise just open the details bottom sheet
+        showAppointmentDetailsBottomSheet(
+          context: context,
+          appointment: Map<String, dynamic>.from(target as Map),
+          showClientDetails: false,
+        );
+      }
     });
   }
 
@@ -363,32 +387,16 @@ class _HistoryTabState extends State<HistoryTab> {
                                   if (review == null) ...[
                                     Expanded(
                                       child: OutlinedButton(
-                                        onPressed: () async {
-                                          final result = await showDialog(
-                                            context: context,
-                                            builder: (_) =>
-                                                _ReviewDialog(appointment: apt),
+                                        onPressed: () {
+                                          showReviewModalBottomSheet(
+                                            context,
+                                            apt,
+                                            onReviewSubmitted: () {
+                                              if (mounted) {
+                                                _fetchAppointments();
+                                              }
+                                            },
                                           );
-                                          if (result == true) {
-                                            _fetchAppointments(); // Refresh the list after successful review
-                                            if (!context.mounted) return;
-                                            toastification.show(
-                                              context: context,
-                                              type: ToastificationType.success,
-                                              title: Text(
-                                                tr(context, 'thank_you'),
-                                              ),
-                                              description: Text(
-                                                tr(
-                                                  context,
-                                                  'review_added_success',
-                                                ),
-                                              ),
-                                              autoCloseDuration: const Duration(
-                                                seconds: 3,
-                                              ),
-                                            );
-                                          }
                                         },
                                         style: OutlinedButton.styleFrom(
                                           side: const BorderSide(
@@ -762,9 +770,7 @@ class _HistoryTabState extends State<HistoryTab> {
               child: Row(
                 children: [
                   Icon(
-                    _sortAscending
-                        ? Icons.arrow_upward
-                        : Icons.arrow_downward,
+                    _sortAscending ? Icons.arrow_upward : Icons.arrow_downward,
                     size: 16,
                     color: AppColors.textDark,
                   ),
@@ -784,132 +790,6 @@ class _HistoryTabState extends State<HistoryTab> {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _ReviewDialog extends StatefulWidget {
-  final Map<String, dynamic> appointment;
-
-  const _ReviewDialog({required this.appointment});
-
-  @override
-  State<_ReviewDialog> createState() => _ReviewDialogState();
-}
-
-class _ReviewDialogState extends State<_ReviewDialog> {
-  int _rating = 0;
-  final TextEditingController _commentController = TextEditingController();
-  bool _isSubmitting = false;
-
-  Future<void> _submitReview() async {
-    if (_rating == 0) {
-      toastification.show(
-        context: context,
-        type: ToastificationType.warning,
-        title: Text(tr(context, 'error')),
-        description: Text(tr(context, 'please_select_rating')),
-        autoCloseDuration: const Duration(seconds: 3),
-      );
-      return;
-    }
-
-    setState(() => _isSubmitting = true);
-
-    try {
-      await AppointmentService.submitReview(
-        appointmentId: widget.appointment['id'],
-        salonId:
-            widget.appointment['salonId'] ?? widget.appointment['salon']['id'],
-        rating: _rating,
-        comment: _commentController.text.trim(),
-      );
-
-      if (!mounted) return;
-      Navigator.pop(context, true); // true indicates success
-    } catch (e) {
-      if (!mounted) return;
-      toastification.show(
-        context: context,
-        type: ToastificationType.error,
-        title: Text(tr(context, 'error')),
-        description: Text(e.toString().replaceAll('Exception: ', '')),
-        autoCloseDuration: const Duration(seconds: 4),
-      );
-      setState(() => _isSubmitting = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      title: Text(
-        tr(context, 'leave_review'),
-        style: const TextStyle(fontWeight: FontWeight.bold),
-      ),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(5, (index) {
-              return IconButton(
-                onPressed: () {
-                  setState(() => _rating = index + 1);
-                },
-                icon: Icon(
-                  index < _rating ? Icons.star : Icons.star_border,
-                  color: Colors.amber,
-                  size: 32,
-                ),
-              );
-            }),
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _commentController,
-            maxLines: 3,
-            decoration: InputDecoration(
-              hintText: tr(context, 'your_comment_optional'),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(
-            tr(context, 'cancel'),
-            style: const TextStyle(color: Colors.grey),
-          ),
-        ),
-        ElevatedButton(
-          onPressed: _isSubmitting ? null : _submitReview,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primaryBlue,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-          child: _isSubmitting
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 2,
-                  ),
-                )
-              : Text(
-                  tr(context, 'send'),
-                  style: const TextStyle(color: Colors.white),
-                ),
-        ),
-      ],
     );
   }
 }

@@ -1,4 +1,11 @@
 import admin from 'firebase-admin';
+import { prisma } from '../../lib/db.js';
+const ANDROID_NOTIFICATION_CHANNEL_ID = 'hjamty_main_channel';
+const isInvalidRegistrationTokenError = (error) => {
+    const code = error?.code;
+    return code === 'messaging/registration-token-not-registered'
+        || code === 'messaging/invalid-registration-token';
+};
 export const sendNotification = async (token, title, body, data) => {
     try {
         if (!token)
@@ -10,6 +17,12 @@ export const sendNotification = async (token, title, body, data) => {
                     return;
                 normalizedData[key] = String(value);
             });
+        }
+        if (title?.trim()) {
+            normalizedData.title = title.trim();
+        }
+        if (body?.trim()) {
+            normalizedData.body = body.trim();
         }
         const message = {
             token,
@@ -28,7 +41,10 @@ export const sendNotification = async (token, title, body, data) => {
                 title: title || '',
                 body: body || '',
             };
-            message.android.notification = { sound: 'default' };
+            message.android.notification = {
+                channelId: ANDROID_NOTIFICATION_CHANNEL_ID,
+                sound: 'default'
+            };
             message.apns.payload = { aps: { sound: 'default' } };
         }
         const response = await admin.messaging().send(message);
@@ -37,6 +53,13 @@ export const sendNotification = async (token, title, body, data) => {
     }
     catch (error) {
         console.error(`[FCM] Error sending message:`, error);
+        if (isInvalidRegistrationTokenError(error)) {
+            await prisma.profile.updateMany({
+                where: { fcmToken: token },
+                data: { fcmToken: null }
+            });
+            console.warn('[FCM] Invalid registration token detected and cleared from profile(s).');
+        }
     }
 };
 //# sourceMappingURL=notifications.service.js.map

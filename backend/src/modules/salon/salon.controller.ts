@@ -123,7 +123,12 @@ export const getAllSalonsHandler = async (req: AuthRequest, res: Response): Prom
 
         res.status(200).json({ success: true, data: salons });
     } catch (error: any) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ 
+            success: false, 
+            message: error.message, 
+            errorCode: error.code || null, 
+            errorMeta: error.meta || null 
+        });
     }
 };
 

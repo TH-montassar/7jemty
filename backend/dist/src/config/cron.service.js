@@ -2,6 +2,7 @@ import cron from 'node-cron';
 import { prisma } from '../lib/db.js';
 import { emitAppointmentEvent } from '../modules/notifications/notification.orchestrator.js';
 import { CLIENT_CANCELLATION_LOCK_MINUTES, CLIENT_CANCELLATION_PRELOCK_REMINDER_MINUTES } from '../modules/appointment/appointment.constants.js';
+const getStakeholderUserIds = (barberId, patronId) => Array.from(new Set([barberId, patronId].filter((id) => typeof id === 'number' && id > 0)));
 export const runAppointmentReminderTick = async () => {
     try {
         const now = new Date();
@@ -29,7 +30,7 @@ export const runAppointmentReminderTick = async () => {
         for (const appt of appointments) {
             const apptTime = new Date(appt.appointmentDate);
             const normalizedApptTime = new Date(apptTime.getFullYear(), apptTime.getMonth(), apptTime.getDate(), apptTime.getHours(), apptTime.getMinutes());
-            const assignedBarberOrPatronId = appt.barberId ?? appt.salon.patronId;
+            const stakeholderUserIds = getStakeholderUserIds(appt.barberId, appt.salon.patronId);
             const baseContext = {
                 appointmentId: appt.id,
                 appointmentDate: appt.appointmentDate,
@@ -46,7 +47,7 @@ export const runAppointmentReminderTick = async () => {
                 });
                 await emitAppointmentEvent('APPT_REMINDER_1H10_BARBER', {
                     ...baseContext,
-                    targetUserIds: [assignedBarberOrPatronId]
+                    targetUserIds: stakeholderUserIds
                 });
             }
             const minutesUntilAppointment = Math.floor((normalizedApptTime.getTime() - currentTime.getTime()) / 60000);
@@ -62,7 +63,7 @@ export const runAppointmentReminderTick = async () => {
                 });
                 await emitAppointmentEvent('APPT_REMINDER_LT_1H_BARBER', {
                     ...baseContext,
-                    targetUserIds: [assignedBarberOrPatronId]
+                    targetUserIds: stakeholderUserIds
                 });
             }
             if (normalizedApptTime.getTime() === thirtyMinsFromNow.getTime() && !appt.is10mReminderSent) {
@@ -76,14 +77,12 @@ export const runAppointmentReminderTick = async () => {
                 });
                 await emitAppointmentEvent('APPT_BARBER_REMINDER_30M', {
                     ...baseContext,
-                    targetUserIds: [assignedBarberOrPatronId]
+                    targetUserIds: stakeholderUserIds
                 });
-                if (appt.barberId && appt.barberId !== appt.salon.patronId) {
-                    await emitAppointmentEvent('APPT_PATRON_EMPLOYEE_REMINDER_30M', {
-                        ...baseContext,
-                        targetUserIds: [appt.salon.patronId]
-                    });
-                }
+                await emitAppointmentEvent('APPT_PATRON_EMPLOYEE_REMINDER_30M', {
+                    ...baseContext,
+                    targetUserIds: [appt.salon.patronId]
+                });
             }
             if (normalizedApptTime.getTime() === fifteenMinsFromNow.getTime()) {
                 await emitAppointmentEvent('APPT_REMINDER_15M', {
@@ -100,7 +99,7 @@ export const runAppointmentReminderTick = async () => {
             if (normalizedApptTime.getTime() === currentTime.getTime() && appt.status !== 'IN_PROGRESS') {
                 await emitAppointmentEvent('APPT_BARBER_ARRIVAL_CHECK', {
                     ...baseContext,
-                    targetUserIds: [assignedBarberOrPatronId]
+                    targetUserIds: stakeholderUserIds
                 });
                 await emitAppointmentEvent('APPT_CLIENT_START_NOW', {
                     ...baseContext,
@@ -114,7 +113,7 @@ export const runAppointmentReminderTick = async () => {
                 if (currentTime.getTime() - lastAsked >= 5 * 60000) {
                     await emitAppointmentEvent('APPT_BARBER_COMPLETION_CHECK', {
                         ...baseContext,
-                        targetUserIds: [assignedBarberOrPatronId],
+                        targetUserIds: stakeholderUserIds,
                         dedupeWindowMs: 5 * 60_000
                     });
                     await prisma.appointment.update({

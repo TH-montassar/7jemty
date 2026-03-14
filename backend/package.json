@@ -16,6 +16,7 @@
     "test-reminders": "tsx scripts/test_reminders.ts",
     "create-admin": "tsx scripts/create_admin.ts",
     "seed-demo": "tsx scripts/seed_demo_data.ts",
+    "cleanup-demo": "tsx scripts/cleanup_demo_data.ts",
     "start": "node dist/server.js",
     "start:prod": "node dist/server.js",
     "build": "tsc"

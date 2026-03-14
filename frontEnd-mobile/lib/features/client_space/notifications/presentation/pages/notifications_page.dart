@@ -141,6 +141,12 @@ class _NotificationsPageState extends State<NotificationsPage> {
     if (notif['eventType'] != null) {
       payload['eventType'] = notif['eventType'].toString();
     }
+    if (notif['type'] != null) {
+      payload['type'] = notif['type'].toString();
+    }
+    if (notif['intent'] != null) {
+      payload['intent'] = notif['intent'].toString();
+    }
     if (notif['status'] != null) {
       payload['status'] = notif['status'].toString();
     }

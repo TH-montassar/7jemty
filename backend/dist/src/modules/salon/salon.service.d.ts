@@ -1,12 +1,12 @@
 import { ApprovalStatus } from '../../../generated/prisma/index.js';
 export declare const createSalon: (patronId: number, data: any) => Promise<{
-    id: number;
-    createdAt: Date;
-    name: string;
     description: string | null;
     address: string | null;
     latitude: number | null;
     longitude: number | null;
+    createdAt: Date;
+    id: number;
+    name: string;
     patronId: number;
     contactPhone: string | null;
     googleMapsUrl: string | null;
@@ -18,13 +18,13 @@ export declare const createSalon: (patronId: number, data: any) => Promise<{
     isForceClosed: boolean;
 }>;
 export declare const updateSalon: (patronId: number, data: any) => Promise<{
-    id: number;
-    createdAt: Date;
-    name: string;
     description: string | null;
     address: string | null;
     latitude: number | null;
     longitude: number | null;
+    createdAt: Date;
+    id: number;
+    name: string;
     patronId: number;
     contactPhone: string | null;
     googleMapsUrl: string | null;
@@ -64,17 +64,17 @@ export declare const getSalonByPatronId: (patronId: number) => Promise<{
     }[];
     rating: string;
     services: {
+        description: string | null;
         id: number;
         name: string;
-        description: string | null;
         salonId: number;
         imageUrl: string | null;
         price: number;
         durationMinutes: number;
     }[];
     portfolio: {
-        id: number;
         createdAt: Date;
+        id: number;
         salonId: number;
         imageUrl: string;
     }[];
@@ -92,13 +92,13 @@ export declare const getSalonByPatronId: (patronId: number) => Promise<{
         closeTime: string | null;
         isDayOff: boolean;
     }[];
-    id: number;
-    createdAt: Date;
-    name: string;
     description: string | null;
     address: string | null;
     latitude: number | null;
     longitude: number | null;
+    createdAt: Date;
+    id: number;
+    name: string;
     patronId: number;
     contactPhone: string | null;
     googleMapsUrl: string | null;
@@ -166,45 +166,45 @@ export declare const removeEmployeeFromSalonAdmin: (salonId: number, employeeId:
 }>;
 export declare const getAllSalons: (lat?: number, lng?: number, includeUnapproved?: boolean) => Promise<any[]>;
 export declare const createService: (patronId: number, data: any) => Promise<{
+    description: string | null;
     id: number;
     name: string;
-    description: string | null;
     salonId: number;
     imageUrl: string | null;
     price: number;
     durationMinutes: number;
 }>;
 export declare const createServiceAdmin: (salonId: number, data: any) => Promise<{
+    description: string | null;
     id: number;
     name: string;
-    description: string | null;
     salonId: number;
     imageUrl: string | null;
     price: number;
     durationMinutes: number;
 }>;
 export declare const getServices: (patronId: number) => Promise<{
+    description: string | null;
     id: number;
     name: string;
-    description: string | null;
     salonId: number;
     imageUrl: string | null;
     price: number;
     durationMinutes: number;
 }[]>;
 export declare const updateService: (patronId: number, serviceId: number, data: any) => Promise<{
+    description: string | null;
     id: number;
     name: string;
-    description: string | null;
     salonId: number;
     imageUrl: string | null;
     price: number;
     durationMinutes: number;
 }>;
 export declare const updateServiceAdmin: (salonId: number, serviceId: number, data: any) => Promise<{
+    description: string | null;
     id: number;
     name: string;
-    description: string | null;
     salonId: number;
     imageUrl: string | null;
     price: number;
@@ -240,9 +240,9 @@ export declare const getSalonById: (id: number, lat?: number, lng?: number) => P
         imageUrl: string | null;
     };
     services: {
+        description: string | null;
         id: number;
         name: string;
-        description: string | null;
         salonId: number;
         imageUrl: string | null;
         price: number;
@@ -263,8 +263,8 @@ export declare const getSalonById: (id: number, lat?: number, lng?: number) => P
         isDayOff: boolean;
     }[];
     portfolio: {
-        id: number;
         createdAt: Date;
+        id: number;
         salonId: number;
         imageUrl: string;
     }[];
@@ -309,9 +309,9 @@ export declare const getFavoriteSalons: (clientId: number) => Promise<{
         reviews: number;
     };
     services: {
+        description: string | null;
         id: number;
         name: string;
-        description: string | null;
         salonId: number;
         imageUrl: string | null;
         price: number;
@@ -325,13 +325,13 @@ export declare const getFavoriteSalons: (clientId: number) => Promise<{
         closeTime: string | null;
         isDayOff: boolean;
     }[];
-    id: number;
-    createdAt: Date;
-    name: string;
     description: string | null;
     address: string | null;
     latitude: number | null;
     longitude: number | null;
+    createdAt: Date;
+    id: number;
+    name: string;
     patronId: number;
     contactPhone: string | null;
     googleMapsUrl: string | null;
@@ -342,26 +342,26 @@ export declare const getFavoriteSalons: (clientId: number) => Promise<{
     isForceClosed: boolean;
 }[]>;
 export declare const createPortfolioImage: (patronId: number, imageUrl: string) => Promise<{
-    id: number;
     createdAt: Date;
+    id: number;
     salonId: number;
     imageUrl: string;
 }>;
 export declare const deletePortfolioImage: (patronId: number, imageId: number) => Promise<{
-    id: number;
     createdAt: Date;
+    id: number;
     salonId: number;
     imageUrl: string;
 }>;
 export declare const createPortfolioImageAdmin: (salonId: number, imageUrl: string) => Promise<{
-    id: number;
     createdAt: Date;
+    id: number;
     salonId: number;
     imageUrl: string;
 }>;
 export declare const deletePortfolioImageAdmin: (salonId: number, imageId: number) => Promise<{
-    id: number;
     createdAt: Date;
+    id: number;
     salonId: number;
     imageUrl: string;
 }>;
@@ -372,9 +372,9 @@ export declare const getAllSalonsAdmin: () => Promise<({
         employees: number;
     };
     patron: {
-        role: import("../../../generated/prisma/index.js").$Enums.Role;
-        id: number;
         createdAt: Date;
+        id: number;
+        role: import("../../../generated/prisma/index.js").$Enums.Role;
         fullName: string;
         phoneNumber: string;
         passwordHash: string;
@@ -383,15 +383,16 @@ export declare const getAllSalonsAdmin: () => Promise<({
         ignoredAppointmentsCount: number;
         blacklistedAt: Date | null;
         isBlacklistedBySystem: boolean;
+        warningCount: number;
     };
 } & {
-    id: number;
-    createdAt: Date;
-    name: string;
     description: string | null;
     address: string | null;
     latitude: number | null;
     longitude: number | null;
+    createdAt: Date;
+    id: number;
+    name: string;
     patronId: number;
     contactPhone: string | null;
     googleMapsUrl: string | null;
@@ -403,13 +404,13 @@ export declare const getAllSalonsAdmin: () => Promise<({
     isForceClosed: boolean;
 })[]>;
 export declare const updateSalonStatusAdmin: (salonId: number, status: ApprovalStatus) => Promise<{
-    id: number;
-    createdAt: Date;
-    name: string;
     description: string | null;
     address: string | null;
     latitude: number | null;
     longitude: number | null;
+    createdAt: Date;
+    id: number;
+    name: string;
     patronId: number;
     contactPhone: string | null;
     googleMapsUrl: string | null;
@@ -421,13 +422,13 @@ export declare const updateSalonStatusAdmin: (salonId: number, status: ApprovalS
     isForceClosed: boolean;
 }>;
 export declare const deleteSalonAdmin: (salonId: number) => Promise<{
-    id: number;
-    createdAt: Date;
-    name: string;
     description: string | null;
     address: string | null;
     latitude: number | null;
     longitude: number | null;
+    createdAt: Date;
+    id: number;
+    name: string;
     patronId: number;
     contactPhone: string | null;
     googleMapsUrl: string | null;
@@ -439,13 +440,13 @@ export declare const deleteSalonAdmin: (salonId: number) => Promise<{
     isForceClosed: boolean;
 }>;
 export declare const updateSalonAdmin: (salonId: number, data: any) => Promise<{
-    id: number;
-    createdAt: Date;
-    name: string;
     description: string | null;
     address: string | null;
     latitude: number | null;
     longitude: number | null;
+    createdAt: Date;
+    id: number;
+    name: string;
     patronId: number;
     contactPhone: string | null;
     googleMapsUrl: string | null;

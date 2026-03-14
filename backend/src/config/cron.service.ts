@@ -6,6 +6,9 @@ import {
     CLIENT_CANCELLATION_PRELOCK_REMINDER_MINUTES
 } from '../modules/appointment/appointment.constants.js';
 
+const getStakeholderUserIds = (barberId?: number | null, patronId?: number | null): number[] =>
+    Array.from(new Set([barberId, patronId].filter((id): id is number => typeof id === 'number' && id > 0)));
+
 export const runAppointmentReminderTick = async () => {
     try {
         const now = new Date();
@@ -49,7 +52,7 @@ export const runAppointmentReminderTick = async () => {
                 apptTime.getMinutes()
             );
 
-            const assignedBarberOrPatronId = appt.barberId ?? appt.salon.patronId;
+            const stakeholderUserIds = getStakeholderUserIds(appt.barberId, appt.salon.patronId);
             const baseContext = {
                 appointmentId: appt.id,
                 appointmentDate: appt.appointmentDate,
@@ -68,7 +71,7 @@ export const runAppointmentReminderTick = async () => {
 
                 await emitAppointmentEvent('APPT_REMINDER_1H10_BARBER', {
                     ...baseContext,
-                    targetUserIds: [assignedBarberOrPatronId]
+                    targetUserIds: stakeholderUserIds
                 });
             }
 
@@ -90,7 +93,7 @@ export const runAppointmentReminderTick = async () => {
 
                 await emitAppointmentEvent('APPT_REMINDER_LT_1H_BARBER', {
                     ...baseContext,
-                    targetUserIds: [assignedBarberOrPatronId]
+                    targetUserIds: stakeholderUserIds
                 });
             }
 
@@ -107,15 +110,13 @@ export const runAppointmentReminderTick = async () => {
 
                 await emitAppointmentEvent('APPT_BARBER_REMINDER_30M', {
                     ...baseContext,
-                    targetUserIds: [assignedBarberOrPatronId]
+                    targetUserIds: stakeholderUserIds
                 });
 
-                if (appt.barberId && appt.barberId !== appt.salon.patronId) {
-                    await emitAppointmentEvent('APPT_PATRON_EMPLOYEE_REMINDER_30M', {
-                        ...baseContext,
-                        targetUserIds: [appt.salon.patronId]
-                    });
-                }
+                await emitAppointmentEvent('APPT_PATRON_EMPLOYEE_REMINDER_30M', {
+                    ...baseContext,
+                    targetUserIds: [appt.salon.patronId]
+                });
             }
 
             if (normalizedApptTime.getTime() === fifteenMinsFromNow.getTime()) {
@@ -135,7 +136,7 @@ export const runAppointmentReminderTick = async () => {
             if (normalizedApptTime.getTime() === currentTime.getTime() && appt.status !== 'IN_PROGRESS') {
                 await emitAppointmentEvent('APPT_BARBER_ARRIVAL_CHECK', {
                     ...baseContext,
-                    targetUserIds: [assignedBarberOrPatronId]
+                    targetUserIds: stakeholderUserIds
                 });
 
                 await emitAppointmentEvent('APPT_CLIENT_START_NOW', {
@@ -158,7 +159,7 @@ export const runAppointmentReminderTick = async () => {
                 if (currentTime.getTime() - lastAsked >= 5 * 60000) {
                     await emitAppointmentEvent('APPT_BARBER_COMPLETION_CHECK', {
                         ...baseContext,
-                        targetUserIds: [assignedBarberOrPatronId],
+                        targetUserIds: stakeholderUserIds,
                         dedupeWindowMs: 5 * 60_000
                     });
 

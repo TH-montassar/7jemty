@@ -11,6 +11,7 @@ import appointmentRoutes from './modules/appointment/appointment.routes.js';
 import appointmentAdminRoutes from './modules/appointment/appointment.admin.routes.js';
 import uploadRoutes from './modules/upload/upload.routes.js';
 import notificationRoutes from './modules/notifications/notifications.routes.js';
+import reviewRoutes from './modules/review/review.routes.js';
 const app = express();
 initializeFirebase();
 initCronJobs();
@@ -22,6 +23,7 @@ app.use('/api/salon', salonRoutes);
 app.use('/api/appointment', appointmentRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/review', reviewRoutes);
 // Admin endpoints stay feature-owned, with shared admin guard at app level.
 app.use('/api/admin', protect, isAdmin);
 app.use('/api/admin', authAdminRoutes);

@@ -1,0 +1,67 @@
+import { dismissReport, getReports, getResolvedReports, reportReview, takeAction } from './review.service.js';
+export const reportReviewController = async (req, res) => {
+    try {
+        const reviewId = Number(req.params['id']);
+        const user = req.user;
+        if (!user?.userId) {
+            res.status(400).json({ success: false, message: 'Utilisateur non authentifié' });
+            return;
+        }
+        const reason = (req.body?.reason ?? '').toString().trim();
+        const message = (req.body?.message ?? '').toString();
+        if (!reason) {
+            res.status(400).json({ success: false, message: 'La raison est obligatoire' });
+            return;
+        }
+        const result = await reportReview(reviewId, user.userId, user.role, reason, message);
+        res.status(201).json({ success: true, data: result });
+    }
+    catch (error) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
+export const getReportsController = async (_req, res) => {
+    try {
+        const result = await getReports();
+        res.status(200).json({ success: true, data: result });
+    }
+    catch (error) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
+export const getResolvedReportsController = async (_req, res) => {
+    try {
+        const result = await getResolvedReports();
+        res.status(200).json({ success: true, data: result });
+    }
+    catch (error) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
+export const dismissReportController = async (req, res) => {
+    try {
+        const reportId = Number(req.params['id']);
+        const result = await dismissReport(reportId);
+        res.status(200).json({ success: true, data: result });
+    }
+    catch (error) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
+export const takeActionController = async (req, res) => {
+    try {
+        const reportId = Number(req.params['id']);
+        const user = req.user;
+        const adminId = user?.id ?? user?.userId;
+        if (!adminId) {
+            res.status(400).json({ success: false, message: 'Admin non authentifié' });
+            return;
+        }
+        const result = await takeAction(reportId, adminId);
+        res.status(200).json({ success: true, data: result });
+    }
+    catch (error) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
+//# sourceMappingURL=review.controller.js.map

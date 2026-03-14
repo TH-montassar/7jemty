@@ -19,6 +19,9 @@ type RefreshPayload = {
     status?: string | undefined;
     userIds: number[];
     deeplink?: string | undefined;
+    pushTitle?: string | undefined;
+    pushBody?: string | undefined;
+    pushUserIds?: number[] | undefined;
 };
 export declare const emitAppointmentEvent: (event: AppointmentNotificationEvent, ctx: AppointmentEventContext) => Promise<void>;
 export declare const broadcastAppointmentRefresh: (payload: RefreshPayload) => Promise<void>;

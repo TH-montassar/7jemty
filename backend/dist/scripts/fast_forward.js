@@ -2,8 +2,9 @@ import 'dotenv/config';
 import { PrismaClient } from '../generated/prisma/index.js';
 import { PrismaPg } from '@prisma/adapter-pg';
 import pg from 'pg';
+import { normalizeDatabaseUrl } from '../src/lib/normalizeDatabaseUrl.js';
 const { Pool } = pg;
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const pool = new Pool({ connectionString: normalizeDatabaseUrl(process.env.DATABASE_URL) });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 async function main() {
@@ -101,11 +102,57 @@ async function main() {
             console.log(`[Client ${clientId}] Updated IN_PROGRESS appointment ID: ${inProgressApt.id}`);
         }
     }
+    // ── Employee-side fast-forward ────────────────────────────────────────────
+    console.log('');
+    console.log('Looking for nearest CONFIRMED and IN_PROGRESS appointments per employee...');
+    const employees = await prisma.appointment.findMany({
+        where: {
+            barberId: { not: null },
+            status: { in: ['CONFIRMED', 'IN_PROGRESS'] },
+        },
+        select: { barberId: true },
+        distinct: ['barberId'],
+        orderBy: { barberId: 'asc' },
+    });
+    let employeeConfirmedUpdates = 0;
+    let employeeInProgressUpdates = 0;
+    for (const { barberId } of employees) {
+        if (!barberId)
+            continue;
+        // Fast-forward employee's first CONFIRMED appointment
+        const empConfirmedApt = await prisma.appointment.findFirst({
+            where: { barberId, status: 'CONFIRMED' },
+            orderBy: { appointmentDate: 'asc' },
+        });
+        if (empConfirmedApt) {
+            await prisma.appointment.update({
+                where: { id: empConfirmedApt.id },
+                data: { appointmentDate: now },
+            });
+            employeeConfirmedUpdates += 1;
+            console.log(`[Employee ${barberId}] Updated CONFIRMED appointment ID: ${empConfirmedApt.id}`);
+        }
+        // Fast-forward employee's first IN_PROGRESS appointment
+        const empInProgressApt = await prisma.appointment.findFirst({
+            where: { barberId, status: 'IN_PROGRESS' },
+            orderBy: { appointmentDate: 'asc' },
+        });
+        if (empInProgressApt) {
+            await prisma.appointment.update({
+                where: { id: empInProgressApt.id },
+                data: { estimatedEndTime: now },
+            });
+            employeeInProgressUpdates += 1;
+            console.log(`[Employee ${barberId}] Updated IN_PROGRESS appointment ID: ${empInProgressApt.id}`);
+        }
+    }
     console.log('');
     console.log(`Done at ${now.toLocaleDateString()} ${timeLabel}`);
-    console.log(`PENDING appointments updated: ${pendingUpdates}`);
-    console.log(`CONFIRMED appointments updated: ${confirmedUpdates}`);
-    console.log(`IN_PROGRESS appointments updated: ${inProgressUpdates}`);
+    console.log(`[Client] PENDING appointments updated:    ${pendingUpdates}`);
+    console.log(`[Client] CONFIRMED appointments updated:  ${confirmedUpdates}`);
+    console.log(`[Client] IN_PROGRESS appointments updated: ${inProgressUpdates}`);
+    console.log(`[Employee] CONFIRMED appointments updated:  ${employeeConfirmedUpdates}`);
+    console.log(`[Employee] IN_PROGRESS appointments updated: ${employeeInProgressUpdates}`);
     console.log('Go check the app now. In about 1 minute, status-based actions should be visible.');
 }
 main()

@@ -12,6 +12,12 @@ const pool = new Pool({
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 30000, // 30 seconds to allow Neon to spin up from sleep
 });
+
+// Handle idle connection errors (e.g., when Neon puts the DB to sleep)
+pool.on('error', (err, client) => {
+  console.error('❌ Unexpected error on idle client', err);
+});
+
 const adapter = new PrismaPg(pool);
 
 export const prisma = new PrismaClient({

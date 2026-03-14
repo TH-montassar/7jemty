@@ -91,7 +91,12 @@ export const getAllSalonsHandler = async (req, res) => {
         res.status(200).json({ success: true, data: salons });
     }
     catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({
+            success: false,
+            message: error.message,
+            errorCode: error.code || null,
+            errorMeta: error.meta || null
+        });
     }
 };
 export const createServiceHandler = async (req, res) => {
