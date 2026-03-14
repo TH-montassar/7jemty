@@ -10,7 +10,10 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-    console.log('Looking for nearest PENDING and CONFIRMED appointments per client to test reminders...');
+    console.log('Looking for nearest PENDING and CONFIRMED appointments per client/employee to test reminders...');
+    console.log('  +30m   → APPT_REMINDER_30M (30-min reminder)');
+    console.log('  +3h    → APPT_CLIENT_LOCK_LT_1H (cancellation lock: ≤ 3h)');
+    console.log('  +3h10m → APPT_REMINDER_1H10_CLIENT (pre-lock warning at exactly 3h10m)');
 
     const clients = await prisma.appointment.findMany({
         where: {
@@ -37,17 +40,17 @@ async function main() {
     const thirtyNow = new Date(now);
     thirtyNow.setMinutes(thirtyNow.getMinutes() + 30);
 
-    const hourNow = new Date(now);
-    hourNow.setMinutes(hourNow.getMinutes() + 60);
+    const threeHourNow = new Date(now);
+    threeHourNow.setMinutes(threeHourNow.getMinutes() + 180); // 3h → triggers APPT_CLIENT_LOCK_LT_1H
 
-    const hourTenNow = new Date(now);
-    hourTenNow.setMinutes(hourTenNow.getMinutes() + 70);
+    const threeHourTenNow = new Date(now);
+    threeHourTenNow.setMinutes(threeHourTenNow.getMinutes() + 190); // 3h10m → triggers APPT_REMINDER_1H10_CLIENT
 
     const timeLabel = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
 
     let thirtyUpdates = 0;
-    let hourUpdates = 0;
-    let hourTenUpdates = 0;
+    let threeHourUpdates = 0;
+    let threeHourTenUpdates = 0;
 
     for (let i = 0; i < clients.length; i++) {
         const clientObj = clients[i];
@@ -74,13 +77,13 @@ async function main() {
             let typeLabel = '+30m';
 
             if (typeIndex === 1) {
-                targetTime = hourNow;
-                typeLabel = '+1h';
-                hourUpdates++;
+                targetTime = threeHourNow;
+                typeLabel = '+3h';
+                threeHourUpdates++;
             } else if (typeIndex === 2) {
-                targetTime = hourTenNow;
-                typeLabel = '+1h10m';
-                hourTenUpdates++;
+                targetTime = threeHourTenNow;
+                typeLabel = '+3h10m';
+                threeHourTenUpdates++;
             } else {
                 thirtyUpdates++;
             }
@@ -100,11 +103,71 @@ async function main() {
         }
     }
 
+    // ── Employee-side reminder test ───────────────────────────────────────────
+    console.log('');
+    console.log('Looking for nearest CONFIRMED appointments per employee to test reminders...');
+
+    const employees = await prisma.appointment.findMany({
+        where: {
+            barberId: { not: null },
+            status: { in: ['PENDING', 'CONFIRMED'] },
+        },
+        select: { barberId: true },
+        distinct: ['barberId'],
+        orderBy: { barberId: 'asc' },
+    });
+
+    let empThirtyUpdates = 0;
+    let empHourUpdates = 0;
+    let empHourTenUpdates = 0;
+
+    for (let i = 0; i < employees.length; i++) {
+        const empObj = employees[i];
+        if (!empObj || empObj.barberId === null) continue;
+        const barberId = empObj.barberId!;
+
+        const typeIndex = i % 3;
+
+        const appointment = await prisma.appointment.findFirst({
+            where: {
+                barberId,
+                status: { in: ['PENDING', 'CONFIRMED'] },
+            },
+            orderBy: { appointmentDate: 'asc' },
+        });
+
+        if (appointment) {
+            let targetTime = thirtyNow;
+            let typeLabel = '+30m';
+
+            if (typeIndex === 1) {
+                targetTime = threeHourNow;
+                typeLabel = '+3h';
+                empHourUpdates++;
+            } else if (typeIndex === 2) {
+                targetTime = threeHourTenNow;
+                typeLabel = '+3h10m';
+                empHourTenUpdates++;
+            } else {
+                empThirtyUpdates++;
+            }
+
+            await prisma.appointment.update({
+                where: { id: appointment.id },
+                data: {
+                    appointmentDate: targetTime,
+                    is1hReminderSent: false,
+                    is10mReminderSent: false,
+                },
+            });
+            console.log(`[Employee ${barberId}] Updated appointment ID: ${appointment.id} to ${typeLabel}`);
+        }
+    }
+
     console.log('');
     console.log(`Done at ${now.toLocaleDateString()} ${timeLabel}`);
-    console.log(`Appointments updated to +30m: ${thirtyUpdates}`);
-    console.log(`Appointments updated to +1h: ${hourUpdates}`);
-    console.log(`Appointments updated to +1h10m: ${hourTenUpdates}`);
+    console.log(`[Client]   +30m: ${thirtyUpdates}  |  +3h: ${threeHourUpdates}  |  +3h10m: ${threeHourTenUpdates}`);
+    console.log(`[Employee] +30m: ${empThirtyUpdates}  |  +3h: ${empHourUpdates}  |  +3h10m: ${empHourTenUpdates}`);
     console.log('In about 1 minute, the background cron job should trigger their respective notifications.');
 }
 
