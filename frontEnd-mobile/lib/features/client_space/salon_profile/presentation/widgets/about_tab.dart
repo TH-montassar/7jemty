@@ -198,10 +198,19 @@ class _AboutTabState extends State<AboutTab> {
   }
 
   Future<void> _makePhoneCall(String phoneNumber) async {
-    final Uri launchUri = Uri(scheme: 'tel', path: phoneNumber);
-    if (await canLaunchUrl(launchUri)) {
-      await launchUrl(launchUri);
+    final sanitizedPhoneNumber = phoneNumber.replaceAll(
+      RegExp(r'[^\d+]'),
+      '',
+    );
+    if (sanitizedPhoneNumber.isEmpty) {
+      return;
     }
+
+    final Uri launchUri = Uri(
+      scheme: 'tel',
+      path: sanitizedPhoneNumber,
+    );
+    await launchUrl(launchUri, mode: LaunchMode.externalApplication);
   }
 
   Future<void> _openMaps(String query) async {
