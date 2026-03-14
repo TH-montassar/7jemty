@@ -315,3 +315,194 @@ docker compose up --build
 - L'architecture est globalement modulaire, mais certaines couches sont encore trop chargees.
 - Le gap principal immediate a corriger: endpoint `GET /api/salon/service/list` cote Flutter.
 - Priorite suivante: securite env (`JWT_SECRET`), tests backend, et typage strict TS.
+
+## 13) Mapping technique detaille (fichiers pivots)
+
+### 13.1 Backend (entrypoints et coeur metier)
+
+- Boot API
+  - `backend/server.ts`: demarrage HTTP et binding host/port.
+  - `backend/src/app.ts`: creation app Express, registration middleware, routes, cron.
+- Configuration / infra
+  - `backend/src/config/env.ts`: lecture des variables d'environnement.
+  - `backend/src/config/firebase.ts`: init Firebase Admin SDK.
+  - `backend/src/config/cron.service.ts`: orchestration des taches periodiques.
+  - `backend/src/lib/db.ts`: client Prisma + logs DB.
+  - `backend/src/lib/cloudinary.ts`: config upload media.
+- Security
+  - `backend/src/middlewares/auth.middleware.ts`: verification JWT + role guards.
+- Domain modules
+  - `backend/src/modules/auth/*`: login/register/OTP/profile + admin users.
+  - `backend/src/modules/salon/*`: salon, services, employes, favoris, portfolio.
+  - `backend/src/modules/appointment/*`: disponibilites, creation, transitions, reviews.
+  - `backend/src/modules/notifications/*`: historique + unread + SSE + orchestration push.
+  - `backend/src/modules/upload/*`: endpoint upload authentifie.
+
+### 13.2 Frontend Flutter (structure reelle par couche)
+
+- App shell
+  - `frontEnd-mobile/lib/main.dart`: init globale + root widget.
+  - `frontEnd-mobile/lib/features/splash/.../splash_screen.dart`: routeur initial selon token/role.
+- Config
+  - `frontEnd-mobile/lib/config/api_config.dart`: resolution de l'URL backend.
+  - `frontEnd-mobile/lib/firebase_options.dart`: bootstrap Firebase depuis `.env`.
+- Services API transverses (chemins reels)
+  - `frontEnd-mobile/lib/features/auth/data/auth_service.dart`
+  - `frontEnd-mobile/lib/features/client_space/salon_profile/data/salon_service.dart`
+  - `frontEnd-mobile/lib/features/client_space/appointments/data/appointment_service.dart`
+  - `frontEnd-mobile/lib/features/admin_space/data/admin_service.dart`
+  - `frontEnd-mobile/lib/core/services/notification_service.dart`
+  - `frontEnd-mobile/lib/core/services/fcm_service.dart`
+- Features role-based
+  - Client: `frontEnd-mobile/lib/features/client_space/...`
+  - Patron: `frontEnd-mobile/lib/features/patron_space/...`
+  - Employe: `frontEnd-mobile/lib/features/employee_space/...`
+  - Admin: `frontEnd-mobile/lib/features/admin_space/...`
+
+## 14) Contrats de donnees (vision IA)
+
+### 14.1 Acteurs metier
+
+- CLIENT: prend RDV, suit ses notifications, laisse des reviews.
+- PATRON: possede un salon, gere employes/services, pilote les RDV du salon.
+- EMPLOYEE: execute les RDV, met a jour le statut de prise en charge.
+- ADMIN: supervision plateforme (users, salons, moderation, stats).
+
+### 14.2 Entites et relations principales
+
+- `User` 1-1 `Profile`
+- `User(PATRON)` 1-N `Salon`
+- `Salon` 1-N `Service`
+- `Salon` 1-N `PortfolioImage`
+- `Salon` 1-N `WorkingHours`
+- `Salon` N-N `User(CLIENT)` via `FavoriteSalon`
+- `Appointment` lie:
+  - 1 `Salon`
+  - 1 `Client`
+  - 0..1 `Employee` ou `Patron` cible (`AppointmentTarget`)
+  - N `AppointmentService`
+- `Appointment` 0..1 `Review`
+- `Appointment` 0..N `AppointmentFault` (retards/non-traitement etc.)
+- `Notification` rattachee a un `User`
+
+### 14.3 Etats rendez-vous (state machine utile pour LLM)
+
+Flux nominal frequent:
+1. `PENDING`
+2. `CONFIRMED`
+3. `ARRIVED` (optionnel selon process)
+4. `IN_PROGRESS`
+5. `COMPLETED`
+
+Sorties alternatives:
+- `DECLINED` (refus cote salon)
+- `CANCELLED` (annulation)
+
+Contraintes:
+- Toutes les transitions ne sont pas autorisees depuis tous les etats.
+- Les permissions dependent du role + ownership de l'objet.
+- Les overlaps temporels sont bloques a la creation.
+
+## 15) Variables d'environnement et dependances externes
+
+### 15.1 Backend (.env attendu)
+
+Variables critiques (noms indicatifs selon code):
+- `DATABASE_URL` (PostgreSQL)
+- `JWT_SECRET`
+- `PORT`
+- `CLOUDINARY_*` (si upload image active)
+- variables Firebase Admin (credentials/service account)
+
+Dependances externes:
+- PostgreSQL (persistance metier)
+- Firebase (FCM push)
+- Cloudinary (media)
+
+### 15.2 Frontend (.env)
+
+- `API_BASE_URL` (ou `--dart-define=API_BASE_URL`)
+- `FIREBASE_*` requis par `firebase_options.dart`
+
+Notes execution:
+- Android emulator: fallback commun `http://10.0.2.2:3000`.
+- Web/desktop: base URL doit pointer vers host accessible depuis runtime cible.
+
+## 16) Runbook rapide (handoff equipe/IA)
+
+### 16.1 Lancer backend localement
+
+```bash
+cd backend
+npm install
+npm run prsm:gen
+npm run dev
+```
+
+### 16.2 Lancer frontend Flutter
+
+```bash
+cd frontEnd-mobile
+flutter pub get
+flutter run
+```
+
+### 16.3 Lancer en Docker
+
+```bash
+docker compose up --build
+```
+
+### 16.4 Check-list de smoke test manuel
+
+1. Register/login client et patron.
+2. Patron cree salon + service + employee.
+3. Client consulte disponibilites et cree un RDV.
+4. Patron/employee change statut du RDV jusqu'a `COMPLETED`.
+5. Client envoie une review.
+6. Verifier notifications unread + stream SSE.
+
+## 17) Prompt de transfert pret-a-coller pour une autre IA
+
+Utiliser ce bloc comme contexte minimal:
+
+```text
+Projet: 7jemty (monorepo backend Node/TS + frontend Flutter).
+
+But produit:
+- Marketplace/service booking pour salons/barbers.
+- Roles: CLIENT, PATRON, EMPLOYEE, ADMIN.
+
+Backend:
+- Express + Prisma + PostgreSQL.
+- Modules: auth, salon, appointment, notifications, upload.
+- Auth JWT + gardes role-based.
+- Notifications hybrides: DB + SSE + FCM.
+- Cron chaque minute pour rappels RDV.
+
+Frontend:
+- Flutter multi-role avec redirection via Splash selon jwt_token + user_role.
+- Services API dedies: auth/salon/appointment/admin/notifications.
+- Firebase initialise via .env.
+
+Regles metier critiques:
+- Workflow rendez-vous a etats controles (PENDING -> ... -> COMPLETED).
+- Verification permissions selon role + ownership.
+- Prevention des overlaps horaires lors de la creation.
+
+Priorites techniques actuelles:
+1) Aligner endpoint Flutter services salon (`/api/salon/services`).
+2) Durcir securite env (`JWT_SECRET` sans fallback insecure).
+3) Rationaliser logs Prisma en prod.
+4) Ajouter tests backend sur transitions/permissions/disponibilite.
+
+Docs:
+- Rapport complet: RAPPORT_TECHNIQUE.md
+- Arborescence complete: ARBORESCENCE_COMPLETE.md
+```
+
+## 18) Limites connues de ce rapport
+
+- Ce rapport privilegie une lecture architecture/metier; il ne remplace pas une spec OpenAPI formelle.
+- Certains endpoints peuvent evoluer; verifier toujours les fichiers `*.routes.ts` et `*.controller.ts` avant automatisation critique.
+- L'arborescence complete est basee sur les fichiers suivis Git (pas les fichiers ignores/non versionnes).
