@@ -331,7 +331,7 @@ class _SalonProfilePageState extends State<SalonProfilePage> {
                   ServicesTab(salonData: salonData),
                   ProductsTab(),
                   PortfolioTab(salonData: salonData),
-                  ReviewsTab(salonData: salonData),
+                  ReviewsTab(salonData: salonData, allowReport: false),
                 ],
               ),
             ),

@@ -1,11 +1,103 @@
 import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:flutter/material.dart';
 import 'package:hjamty/core/constants/app_colors.dart';
+import 'package:hjamty/features/client_space/salon_profile/data/salon_service.dart';
 
-class ReviewsTab extends StatelessWidget {
+class ReviewsTab extends StatefulWidget {
   final Map<String, dynamic> salonData;
+  final bool allowReport;
 
-  const ReviewsTab({super.key, required this.salonData});
+  const ReviewsTab({
+    super.key,
+    required this.salonData,
+    this.allowReport = false,
+  });
+
+  @override
+  State<ReviewsTab> createState() => _ReviewsTabState();
+}
+
+class _ReviewsTabState extends State<ReviewsTab> {
+  Future<void> _showReportDialog(int reviewId) async {
+    final controller = TextEditingController();
+    String selectedReason = 'INAPPROPRIATE';
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text(tr(context, 'report_review_title')),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButtonFormField<String>(
+                value: selectedReason,
+                isExpanded: true,
+                items: const [
+                  DropdownMenuItem(
+                    value: 'INAPPROPRIATE',
+                    child: Text('Inappropriate language'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'SPAM',
+                    child: Text('Spam / fake review'),
+                  ),
+                  DropdownMenuItem(
+                    value: 'HARASSMENT',
+                    child: Text('Harassment / insult'),
+                  ),
+                ],
+                onChanged: (v) {
+                  if (v == null) return;
+                  setDialogState(() => selectedReason = v);
+                },
+                decoration: InputDecoration(
+                  labelText: tr(context, 'report_reason_label'),
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: controller,
+                maxLines: 4,
+                decoration: InputDecoration(
+                  hintText: tr(context, 'report_review_hint'),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(tr(context, 'cancel')),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(tr(context, 'report_btn')),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      await SalonService.reportReview(
+        reviewId,
+        reason: selectedReason,
+        message: controller.text.trim(),
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(tr(context, 'report_review_success'))),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
+    }
+  }
 
   // 🚀 1. هذي الفونكسيون اللّي تطلع النافذة من اللوطة (حطيناها الفوق قبل الـ build)
   // 🚀 The _showAddReviewSheet was removed here because reviews should be tied to specific appointments.
@@ -13,15 +105,15 @@ class ReviewsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final List reviews = salonData['reviews'] ?? [];
+    final List reviews = widget.salonData['reviews'] ?? [];
     final int reviewsCount = reviews.length;
     final String avgRating = reviewsCount == 0
         ? "0.0"
-        : (salonData['rating']?.toString() ?? "0.0");
+        : (widget.salonData['rating']?.toString() ?? "0.0");
     final double avgRatingValue = double.tryParse(avgRating) ?? 0.0;
 
     // ignore: avoid_print
-    debugPrint('[ReviewsTab] salonData keys: ${salonData.keys.toList()}');
+    debugPrint('[ReviewsTab] salonData keys: ${widget.salonData.keys.toList()}');
     // ignore: avoid_print
     debugPrint(
       '[ReviewsTab] reviews length: $reviewsCount, avgRating: $avgRating',
@@ -168,6 +260,34 @@ class ReviewsTab extends StatelessWidget {
                           ],
                         ),
                       ),
+                      if (widget.allowReport)
+                        PopupMenuButton<String>(
+                          onSelected: (value) {
+                            if (value == 'report') {
+                              final reviewId = (r['id'] as num?)?.toInt();
+                              if (reviewId != null && reviewId > 0) {
+                                _showReportDialog(reviewId);
+                              }
+                            }
+                          },
+                          itemBuilder: (context) => [
+                            PopupMenuItem(
+                              value: 'report',
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.priority_high_rounded,
+                                    size: 18,
+                                    color: Colors.redAccent,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(tr(context, 'report_btn')),
+                                ],
+                              ),
+                            ),
+                          ],
+                          icon: const Icon(Icons.more_vert_rounded),
+                        ),
                     ],
                   ),
                   if (comment.isNotEmpty) ...[
