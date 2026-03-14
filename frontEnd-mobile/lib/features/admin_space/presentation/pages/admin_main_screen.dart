@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:hjamty/core/constants/app_colors.dart';
 import 'package:hjamty/features/auth/data/auth_service.dart';
 import 'package:hjamty/features/admin_space/presentation/pages/admin_home_page.dart';
-import 'package:hjamty/features/admin_space/presentation/pages/manage_reports_page.dart';
 import 'package:hjamty/features/admin_space/presentation/pages/manage_salons_page.dart';
 import 'package:hjamty/features/admin_space/presentation/pages/manage_users_page.dart';
 import 'package:hjamty/features/client_space/profile/presentation/pages/client_profile_page.dart';
@@ -22,7 +21,6 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
     const AdminDashboardPage(),
     const ManageSalonsPage(),
     const ManageUsersPage(),
-    const ManageReportsPage(),
     const ProfilePage(),
   ];
 
@@ -76,8 +74,7 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
           _buildNavItem(0, Icons.home_rounded),
           _buildNavItem(1, Icons.storefront_rounded),
           _buildNavItem(2, Icons.people_rounded),
-          _buildNavItem(3, Icons.report_gmailerrorred_rounded),
-          _buildNavItem(4, Icons.person_rounded),
+          _buildNavItem(3, Icons.person_rounded),
         ],
       ),
     );
@@ -87,7 +84,7 @@ class _AdminMainScreenState extends State<AdminMainScreen> {
     final isSelected = _currentIndex == index;
     final avatarUrl = _userData?['profile']?['avatarUrl']?.toString();
     final useAvatar =
-        index == 4 && avatarUrl != null && avatarUrl.isNotEmpty;
+        index == 3 && avatarUrl != null && avatarUrl.isNotEmpty;
     return GestureDetector(
       onTap: () {
         setState(() {
