@@ -2,6 +2,7 @@ import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:flutter/material.dart';
 import 'package:hjamty/core/constants/app_colors.dart';
 import 'package:hjamty/features/client_space/salon_profile/data/salon_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ReviewsTab extends StatefulWidget {
   final Map<String, dynamic> salonData;
@@ -18,6 +19,23 @@ class ReviewsTab extends StatefulWidget {
 }
 
 class _ReviewsTabState extends State<ReviewsTab> {
+  bool _isPatron = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRole();
+  }
+
+  Future<void> _loadRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    final role = prefs.getString('user_role');
+    if (!mounted) return;
+    setState(() {
+      _isPatron = role == 'PATRON';
+    });
+  }
+
   String _formatReviewDate(dynamic rawDate) {
     if (rawDate == null) return '';
     final parsed = DateTime.tryParse(rawDate.toString());
@@ -118,13 +136,6 @@ class _ReviewsTabState extends State<ReviewsTab> {
         ? "0.0"
         : (widget.salonData['rating']?.toString() ?? "0.0");
     final double avgRatingValue = double.tryParse(avgRating) ?? 0.0;
-
-    // ignore: avoid_print
-    debugPrint('[ReviewsTab] salonData keys: ${widget.salonData.keys.toList()}');
-    // ignore: avoid_print
-    debugPrint(
-      '[ReviewsTab] reviews length: $reviewsCount, avgRating: $avgRating',
-    );
 
     return ListView(
       padding: const EdgeInsets.all(20),
@@ -299,7 +310,7 @@ class _ReviewsTabState extends State<ReviewsTab> {
                             ],
                           ),
                         ),
-                        if (widget.allowReport)
+                        if (widget.allowReport && _isPatron)
                           InkWell(
                             onTap: () {
                               final reviewId = (r['id'] as num?)?.toInt();
