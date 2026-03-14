@@ -18,6 +18,13 @@ class ReviewsTab extends StatefulWidget {
 }
 
 class _ReviewsTabState extends State<ReviewsTab> {
+  String _formatReviewDate(dynamic rawDate) {
+    if (rawDate == null) return '';
+    final parsed = DateTime.tryParse(rawDate.toString());
+    if (parsed == null) return '';
+    return '${parsed.day.toString().padLeft(2, '0')}/${parsed.month.toString().padLeft(2, '0')}/${parsed.year}';
+  }
+
   Future<void> _showReportDialog(int reviewId) async {
     final controller = TextEditingController();
     String selectedReason = 'INAPPROPRIATE';
@@ -206,111 +213,141 @@ class _ReviewsTabState extends State<ReviewsTab> {
               final String? clientImage = r['clientImage'];
               final int rating = r['rating'] ?? 5;
               final String comment = r['comment'] ?? '';
+              final String createdAt = _formatReviewDate(r['createdAt']);
 
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryBlue.withOpacity(0.1),
-                          shape: BoxShape.circle,
-                          image: clientImage != null
-                              ? DecorationImage(
-                                  image: NetworkImage(clientImage),
-                                  fit: BoxFit.cover,
+              return Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: Colors.grey.shade200),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.03),
+                      blurRadius: 14,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryBlue.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                            image: clientImage != null
+                                ? DecorationImage(
+                                    image: NetworkImage(clientImage),
+                                    fit: BoxFit.cover,
+                                  )
+                                : null,
+                          ),
+                          child: clientImage == null
+                              ? const Icon(
+                                  Icons.person,
+                                  color: AppColors.primaryBlue,
                                 )
                               : null,
                         ),
-                        child: clientImage == null
-                            ? const Icon(
-                                Icons.person,
-                                color: AppColors.primaryBlue,
-                              )
-                            : null,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              clientName,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                                color: AppColors.textDark,
-                              ),
-                            ),
-                            Row(
-                              children: List.generate(
-                                5,
-                                (starIndex) => Icon(
-                                  Icons.star,
-                                  color: starIndex < rating
-                                      ? Colors.amber
-                                      : Colors.grey.shade300,
-                                  size: 14,
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                clientName,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 18,
+                                  color: AppColors.textDark,
                                 ),
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  ...List.generate(
+                                    5,
+                                    (starIndex) => Padding(
+                                      padding: const EdgeInsets.only(right: 1),
+                                      child: Icon(
+                                        Icons.star,
+                                        color: starIndex < rating
+                                            ? Colors.amber
+                                            : Colors.grey.shade300,
+                                        size: 15,
+                                      ),
+                                    ),
+                                  ),
+                                  if (createdAt.isNotEmpty) ...[
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      createdAt,
+                                      style: TextStyle(
+                                        color: Colors.grey.shade500,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      if (widget.allowReport)
-                        PopupMenuButton<String>(
-                          onSelected: (value) {
-                            if (value == 'report') {
+                        if (widget.allowReport)
+                          InkWell(
+                            onTap: () {
                               final reviewId = (r['id'] as num?)?.toInt();
                               if (reviewId != null && reviewId > 0) {
                                 _showReportDialog(reviewId);
                               }
-                            }
-                          },
-                          itemBuilder: (context) => [
-                            PopupMenuItem(
-                              value: 'report',
-                              child: Row(
-                                children: [
-                                  const Icon(
-                                    Icons.priority_high_rounded,
-                                    size: 18,
-                                    color: Colors.redAccent,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(tr(context, 'report_btn')),
-                                ],
+                            },
+                            borderRadius: BorderRadius.circular(30),
+                            child: Container(
+                              width: 42,
+                              height: 42,
+                              decoration: BoxDecoration(
+                                color: Colors.red.withOpacity(0.08),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.report_problem_rounded,
+                                color: Colors.redAccent,
+                                size: 22,
                               ),
                             ),
-                          ],
-                          icon: const Icon(Icons.more_vert_rounded),
-                        ),
-                    ],
-                  ),
-                  if (comment.isNotEmpty) ...[
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade50,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey.shade100),
-                      ),
-                      child: Text(
-                        comment,
-                        style: const TextStyle(
-                          color: AppColors.textDark,
-                          height: 1.5,
-                          fontSize: 14,
-                        ),
-                      ),
+                          ),
+                      ],
                     ),
+                    if (comment.isNotEmpty) ...[
+                      const SizedBox(height: 14),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          comment,
+                          style: const TextStyle(
+                            color: AppColors.textDark,
+                            height: 1.45,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
-                ],
+                ),
               );
             },
           ),
