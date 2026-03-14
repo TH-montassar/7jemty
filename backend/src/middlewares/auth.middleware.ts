@@ -52,3 +52,13 @@ export const isAdmin = (req: AuthRequest, res: Response, next: NextFunction): vo
         res.status(403).json({ success: false, message: 'Accès refusé, réservé aux Admins' });
     }
 };
+
+export const isPatronOrAdmin = (req: AuthRequest, res: Response, next: NextFunction): void => {
+    const role = req.user?.role;
+    if (role === 'PATRON' || role === 'ADMIN') {
+        next();
+        return;
+    }
+
+    res.status(403).json({ success: false, message: 'Accès refusé' });
+};
