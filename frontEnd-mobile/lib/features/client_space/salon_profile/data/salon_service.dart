@@ -488,7 +488,7 @@ class SalonService {
       }
 
       final response = await http.get(
-        Uri.parse('$baseUrl/service/list'),
+        Uri.parse('$baseUrl/services'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
