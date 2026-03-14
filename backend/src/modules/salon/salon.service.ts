@@ -1,6 +1,6 @@
 import { prisma } from '../../lib/db.js';
 import bcrypt from 'bcryptjs';
-import { ApprovalStatus, AppointmentStatus, Role } from '../../../generated/prisma/index.js';
+import { ApprovalStatus, AppointmentStatus, Prisma, Role } from '../../../generated/prisma/index.js';
 import { sendNotification } from '../notifications/notifications.service.js';
 
 const getSalonIdByPatronId = async (patronId: number): Promise<number> => {
@@ -628,20 +628,49 @@ const sortSalonsByDistance = <T extends { distanceKm?: number | null }>(salons: 
     return salons;
 };
 
+const isSchemaDriftError = (error: unknown): boolean => {
+    const errorCode = (error as Prisma.PrismaClientKnownRequestError | undefined)?.code;
+    return errorCode === 'P2021' || errorCode === 'P2022';
+};
+
 export const getAllSalons = async (lat?: number, lng?: number, includeUnapproved: boolean = false) => {
-    // Njibou tous les salons men base de donnÃ©es
-    const salons = await prisma.salon.findMany({
-        where: !includeUnapproved ? { approvalStatus: 'APPROVED' } : {},
-        include: {
-            services: true,
-            workingHours: true,
-            _count: {
-                select: {
-                    reviews: true,
+    let salons: any[] = [];
+
+    try {
+        // Query complète (schema le plus récent)
+        salons = await prisma.salon.findMany({
+            where: !includeUnapproved ? { approvalStatus: 'APPROVED' } : {},
+            include: {
+                services: true,
+                workingHours: true,
+                _count: {
+                    select: {
+                        reviews: true,
+                    }
                 }
             }
+        });
+    } catch (error) {
+        if (!isSchemaDriftError(error)) {
+            throw error;
         }
-    });
+
+        // Fallback pour anciennes bases (migrations pas encore appliquées)
+        salons = await prisma.salon.findMany({
+            include: {
+                services: true,
+                _count: {
+                    select: {
+                        reviews: true,
+                    }
+                }
+            }
+        });
+
+        if (!includeUnapproved) {
+            salons = salons.filter((salon) => salon.approvalStatus == null || salon.approvalStatus === ApprovalStatus.APPROVED);
+        }
+    }
 
     // Ken 3ana les coordonnÃ©es mta3 el client, n7esbou el distance (en km mthln)
     const salonsWithDistance = salons.map((salon) => mapSalonForListing(salon, lat, lng));
