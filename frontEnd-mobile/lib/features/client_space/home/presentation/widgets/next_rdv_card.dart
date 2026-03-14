@@ -5,6 +5,7 @@ import 'package:hjamty/core/constants/app_colors.dart';
 import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:intl/intl.dart';
 import 'package:hjamty/features/client_space/appointments/presentation/widgets/appointment_details_bottom_sheet.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class NextRdvCard extends StatefulWidget {
   final Map<String, dynamic>? appointmentData;
@@ -79,6 +80,61 @@ class _NextRdvCardState extends State<NextRdvCard> {
   void dispose() {
     _countdownTicker?.cancel();
     super.dispose();
+  }
+
+  Future<void> _openMaps(Map<String, dynamic> salon) async {
+    final String? googleMapsUrl = salon['googleMapsUrl']?.toString();
+    final dynamic latVal = salon['latitude'];
+    final dynamic lngVal = salon['longitude'];
+    final String? address = salon['address']?.toString();
+    final String? name = salon['name']?.toString();
+
+    final List<Uri> possibleUris = [];
+
+    if (googleMapsUrl != null && googleMapsUrl.isNotEmpty) {
+      try {
+        possibleUris.add(Uri.parse(googleMapsUrl));
+      } catch (_) {}
+    }
+
+    if (latVal != null && lngVal != null) {
+      possibleUris.add(
+        Uri.parse(
+          'https://www.google.com/maps/search/?api=1&query=$latVal,$lngVal',
+        ),
+      );
+    }
+
+    if (address != null && address.isNotEmpty) {
+      possibleUris.add(
+        Uri.parse(
+          'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(address)}',
+        ),
+      );
+    }
+
+    if (name != null && name.isNotEmpty) {
+      possibleUris.add(
+        Uri.parse(
+          'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(name)}',
+        ),
+      );
+    }
+
+    for (final uri in possibleUris) {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+        return;
+      }
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Map unavailable')),
+    );
   }
 
   @override
@@ -204,10 +260,19 @@ class _NextRdvCardState extends State<NextRdvCard> {
                     ],
                   ),
                   GestureDetector(
-                    onTap: () {
+                    onTap: () async {
+                      final salonData = apt['salon'];
+                      if (salonData is! Map) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Map unavailable')),
+                        );
+                        return;
+                      }
+
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text(tr(context, 'opening_map'))),
                       );
+                      await _openMaps(Map<String, dynamic>.from(salonData));
                     },
                     child: Container(
                       padding: const EdgeInsets.symmetric(
