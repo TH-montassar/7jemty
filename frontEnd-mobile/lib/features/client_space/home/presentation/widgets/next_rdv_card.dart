@@ -269,9 +269,6 @@ class _NextRdvCardState extends State<NextRdvCard> {
                         return;
                       }
 
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(tr(context, 'opening_map'))),
-                      );
                       await _openMaps(Map<String, dynamic>.from(salonData));
                     },
                     child: Container(
