@@ -794,4 +794,35 @@ class SalonService {
       throw Exception('Erreur de connexion: $e');
     }
   }
+
+  static Future<void> reportReview(
+    int reviewId, {
+    required String reason,
+    required String message,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('jwt_token');
+
+      if (token == null) {
+        throw Exception('Token manquant');
+      }
+
+      final response = await http.post(
+        Uri.parse('${ApiConfig.endpoint('/api/review')}/$reviewId/report'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'reason': reason, 'message': message}),
+      );
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode != 201 || data['success'] != true) {
+        throw Exception(data['message'] ?? 'Erreur signalement avis');
+      }
+    } catch (e) {
+      throw Exception(e.toString().replaceAll('Exception: ', ''));
+    }
+  }
 }
