@@ -7,6 +7,8 @@ import 'package:hjamty/core/services/fcm_service.dart';
 import 'package:hjamty/features/client_space/appointments/data/appointment_service.dart';
 import 'package:hjamty/features/client_space/appointments/presentation/pages/booking_flow_screen.dart';
 import 'package:hjamty/features/client_space/appointments/presentation/widgets/appointment_details_bottom_sheet.dart';
+import 'package:hjamty/features/client_space/appointments/presentation/widgets/appointment_empty_state.dart';
+import 'package:hjamty/features/client_space/appointments/presentation/widgets/appointment_filter_bar.dart';
 import 'package:hjamty/features/client_space/appointments/presentation/widgets/review_modal_bottom_sheet.dart';
 import 'package:toastification/toastification.dart';
 
@@ -510,286 +512,43 @@ class _HistoryTabState extends State<HistoryTab> {
   }
 
   Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(30),
-            decoration: BoxDecoration(
-              color: AppColors.primaryBlue.withValues(alpha: 0.08),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.history_rounded,
-              size: 70,
-              color: AppColors.primaryBlue.withValues(alpha: 0.5),
-            ),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            tr(context, 'No History'),
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textDark,
-              letterSpacing: 0.5,
-            ),
-          ),
-          const SizedBox(height: 10),
-          const Text(
-            "Your past appointments will appear here",
-            style: TextStyle(color: Colors.grey, fontSize: 15),
-          ),
-        ],
-      ),
+    return AppointmentEmptyState(
+      icon: Icons.history_rounded,
+      title: tr(context, 'No History'),
+      subtitle: 'Your past appointments will appear here',
     );
   }
 
   Widget _buildFilters() {
-    return Container(
-      height: 40,
-      margin: const EdgeInsets.only(top: 15, bottom: 5),
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        physics: const BouncingScrollPhysics(),
-        children: [
-          // All Chip
-          GestureDetector(
-            onTap: () {
-              setState(() {
-                _selectedStatus = 'All';
-                _sortField = 'APPOINTMENT_DATE';
-                _sortAscending = false;
-              });
-              _applyFilters();
-            },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              margin: const EdgeInsets.only(right: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: _selectedStatus == 'All'
-                      ? AppColors.primaryBlue
-                      : Colors.grey.shade300,
-                  width: _selectedStatus == 'All' ? 1.5 : 1,
-                ),
-              ),
-              child: Center(
-                child: Text(
-                  tr(context, 'all'),
-                  style: TextStyle(
-                    color: AppColors.textDark,
-                    fontWeight: _selectedStatus == 'All'
-                        ? FontWeight.bold
-                        : FontWeight.w500,
-                    fontSize: 13,
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // Status Dropdown
-          PopupMenuButton<String>(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15),
-            ),
-            color: Colors.white,
-            offset: const Offset(0, 45),
-            onSelected: (String status) {
-              setState(() => _selectedStatus = status);
-              _applyFilters();
-            },
-            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-              PopupMenuItem<String>(
-                value: 'Completed',
-                child: Text(
-                  tr(context, 'status_completed'),
-                  style: TextStyle(
-                    color: _selectedStatus == 'Completed'
-                        ? AppColors.primaryBlue
-                        : AppColors.textDark,
-                    fontWeight: _selectedStatus == 'Completed'
-                        ? FontWeight.bold
-                        : FontWeight.w500,
-                  ),
-                ),
-              ),
-              PopupMenuItem<String>(
-                value: 'Cancelled',
-                child: Text(
-                  tr(context, 'status_cancelled'),
-                  style: TextStyle(
-                    color: _selectedStatus == 'Cancelled'
-                        ? AppColors.primaryBlue
-                        : AppColors.textDark,
-                    fontWeight: _selectedStatus == 'Cancelled'
-                        ? FontWeight.bold
-                        : FontWeight.w500,
-                  ),
-                ),
-              ),
-              PopupMenuItem<String>(
-                value: 'Declined',
-                child: Text(
-                  tr(context, 'status_declined'),
-                  style: TextStyle(
-                    color: _selectedStatus == 'Declined'
-                        ? AppColors.primaryBlue
-                        : AppColors.textDark,
-                    fontWeight: _selectedStatus == 'Declined'
-                        ? FontWeight.bold
-                        : FontWeight.w500,
-                  ),
-                ),
-              ),
-            ],
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              margin: const EdgeInsets.only(right: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: (_selectedStatus != 'All')
-                      ? AppColors.primaryBlue
-                      : Colors.grey.shade300,
-                  width: (_selectedStatus != 'All') ? 1.5 : 1,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Text(
-                    _selectedStatus != 'All'
-                        ? tr(context, 'status_${_selectedStatus.toLowerCase()}')
-                        : tr(context, 'status') ?? 'Status',
-                    style: TextStyle(
-                      color: AppColors.textDark,
-                      fontWeight: (_selectedStatus != 'All')
-                          ? FontWeight.bold
-                          : FontWeight.w500,
-                      fontSize: 13,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Icon(
-                    Icons.keyboard_arrow_down,
-                    size: 20,
-                    color: AppColors.textDark,
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // Sort Field Dropdown
-          PopupMenuButton<String>(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15),
-            ),
-            color: Colors.white,
-            offset: const Offset(0, 45),
-            onSelected: (String value) {
-              setState(() => _sortField = value);
-              _applyFilters();
-            },
-            itemBuilder:
-                (BuildContext context) => const <PopupMenuEntry<String>>[
-                  PopupMenuItem<String>(
-                    value: 'APPOINTMENT_DATE',
-                    child: Text('Date RDV'),
-                  ),
-                  PopupMenuItem<String>(
-                    value: 'CREATED_AT',
-                    child: Text('Date creation'),
-                  ),
-                ],
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              margin: const EdgeInsets.only(right: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: _sortField != 'APPOINTMENT_DATE'
-                      ? AppColors.primaryBlue
-                      : Colors.grey.shade300,
-                  width: _sortField != 'APPOINTMENT_DATE' ? 1.5 : 1,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Text(
-                    _sortField == 'CREATED_AT' ? 'Date creation' : 'Date RDV',
-                    style: TextStyle(
-                      color: AppColors.textDark,
-                      fontWeight: _sortField != 'APPOINTMENT_DATE'
-                          ? FontWeight.bold
-                          : FontWeight.w500,
-                      fontSize: 13,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Icon(
-                    Icons.keyboard_arrow_down,
-                    size: 20,
-                    color: AppColors.textDark,
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // Sort Direction
-          GestureDetector(
-            onTap: () {
-              setState(() => _sortAscending = !_sortAscending);
-              _applyFilters();
-            },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              margin: const EdgeInsets.only(right: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: !_sortAscending
-                      ? AppColors.primaryBlue
-                      : Colors.grey.shade300,
-                  width: !_sortAscending ? 1.5 : 1,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    _sortAscending ? Icons.arrow_upward : Icons.arrow_downward,
-                    size: 16,
-                    color: AppColors.textDark,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    _sortAscending ? 'Asc' : 'Desc',
-                    style: TextStyle(
-                      color: AppColors.textDark,
-                      fontWeight:
-                          !_sortAscending ? FontWeight.bold : FontWeight.w500,
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+    return AppointmentFilterBar(
+      selectedStatus: _selectedStatus,
+      sortField: _sortField,
+      sortAscending: _sortAscending,
+      statusOptions: const [
+        AppointmentFilterOption(value: 'Completed', labelKey: 'status_completed'),
+        AppointmentFilterOption(value: 'Cancelled', labelKey: 'status_cancelled'),
+        AppointmentFilterOption(value: 'Declined', labelKey: 'status_declined'),
+      ],
+      onReset: () {
+        setState(() {
+          _selectedStatus = 'All';
+          _sortField = 'APPOINTMENT_DATE';
+          _sortAscending = false;
+        });
+        _applyFilters();
+      },
+      onStatusSelected: (status) {
+        setState(() => _selectedStatus = status);
+        _applyFilters();
+      },
+      onSortFieldSelected: (value) {
+        setState(() => _sortField = value);
+        _applyFilters();
+      },
+      onSortDirectionToggle: () {
+        setState(() => _sortAscending = !_sortAscending);
+        _applyFilters();
+      },
     );
   }
 }

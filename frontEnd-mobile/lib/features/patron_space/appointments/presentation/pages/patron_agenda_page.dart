@@ -9,6 +9,8 @@ import 'package:hjamty/core/services/notification_service.dart';
 import 'package:hjamty/features/client_space/appointments/data/appointment_service.dart';
 import 'package:hjamty/features/client_space/appointments/presentation/widgets/appointment_details_bottom_sheet.dart';
 import 'package:hjamty/features/patron_space/appointments/presentation/pages/calendar_page.dart';
+import 'package:hjamty/features/patron_space/appointments/presentation/widgets/agenda_filter_bar.dart';
+import 'package:hjamty/features/patron_space/appointments/presentation/widgets/agenda_list_utils.dart';
 import 'package:hjamty/features/patron_space/appointments/presentation/widgets/no_show_flow.dart';
 import 'package:intl/intl.dart';
 
@@ -157,31 +159,6 @@ class _PatronAgendaPageState extends State<PatronAgendaPage> {
     );
   }
 
-  DateTime? _safeDate(dynamic raw) {
-    if (raw == null) return null;
-    return DateTime.tryParse(raw.toString())?.toLocal();
-  }
-
-  DateTime? _createdDate(dynamic appointment) {
-    return _safeDate(appointment['createdAt']) ??
-        _safeDate(appointment['created_at']) ??
-        _safeDate(appointment['createdDate']);
-  }
-
-  String _statusLabel(String status) {
-    if (status == 'ALL') {
-      final statusLabel = tr(context, 'status');
-      return statusLabel == 'status' ? 'Status' : statusLabel;
-    }
-    if (status == 'ARRIVED') return 'Arrived';
-    final key = 'status_${status.toLowerCase()}';
-    final translated = tr(context, key);
-    if (translated == key) {
-      return status.replaceAll('_', ' ');
-    }
-    return translated;
-  }
-
   void _clearFilters() {
     setState(() {
       _statusFilter = 'ALL';
@@ -190,196 +167,19 @@ class _PatronAgendaPageState extends State<PatronAgendaPage> {
     });
   }
 
-  List<dynamic> _applyFiltersAndSort(List<dynamic> source) {
-    final filtered = source.where((appointment) {
-      final status = (appointment['status'] ?? '').toString().toUpperCase();
-      if (_statusFilter != 'ALL' && status != _statusFilter) {
-        return false;
-      }
-      return true;
-    }).toList();
-
-    filtered.sort((a, b) {
-      DateTime getSortDate(dynamic appointment) {
-        if (_sortField == 'CREATED_AT') {
-          return _createdDate(appointment) ??
-              _safeDate(appointment['appointmentDate']) ??
-              DateTime.fromMillisecondsSinceEpoch(0);
-        }
-        return _safeDate(appointment['appointmentDate']) ??
-            _createdDate(appointment) ??
-            DateTime.fromMillisecondsSinceEpoch(0);
-      }
-
-      final compare = getSortDate(a).compareTo(getSortDate(b));
-      if (compare != 0) {
-        return _sortAscending ? compare : -compare;
-      }
-      final statusA = (a['status'] ?? '').toString();
-      final statusB = (b['status'] ?? '').toString();
-      return statusA.compareTo(statusB);
-    });
-
-    return filtered;
-  }
-
   Widget _buildFiltersBar({required int totalCount, required int shownCount}) {
-    final hasActiveFilters =
-        _statusFilter != 'ALL' ||
-        _sortField != 'APPOINTMENT_DATE' ||
-        !_sortAscending;
-
-    Widget chip({
-      required Widget child,
-      bool active = false,
-      EdgeInsetsGeometry padding = const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 8,
-      ),
-    }) {
-      return Container(
-        padding: padding,
-        decoration: BoxDecoration(
-          color: active
-              ? AppColors.primaryBlue.withValues(alpha: 0.1)
-              : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: active ? AppColors.primaryBlue : Colors.grey.shade300,
-            width: active ? 1.5 : 1,
-          ),
-        ),
-        child: child,
-      );
-    }
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                PopupMenuButton<String>(
-                  onSelected: (value) => setState(() => _statusFilter = value),
-                  itemBuilder: (context) =>
-                      [
-                            'ALL',
-                            'PENDING',
-                            'CONFIRMED',
-                            'IN_PROGRESS',
-                            'ARRIVED',
-                            'COMPLETED',
-                            'CANCELLED',
-                            'DECLINED',
-                          ]
-                          .map(
-                            (status) => PopupMenuItem<String>(
-                              value: status,
-                              child: Text(_statusLabel(status)),
-                            ),
-                          )
-                          .toList(),
-                  child: chip(
-                    active: _statusFilter != 'ALL',
-                    child: Row(
-                      children: [
-                        Text(
-                          _statusLabel(_statusFilter),
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                        const SizedBox(width: 4),
-                        const Icon(Icons.keyboard_arrow_down, size: 16),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                PopupMenuButton<String>(
-                  onSelected: (value) => setState(() => _sortField = value),
-                  itemBuilder: (context) => const [
-                    PopupMenuItem<String>(
-                      value: 'APPOINTMENT_DATE',
-                      child: Text('Date RDV'),
-                    ),
-                    PopupMenuItem<String>(
-                      value: 'CREATED_AT',
-                      child: Text('Date creation'),
-                    ),
-                  ],
-                  child: chip(
-                    active: _sortField != 'APPOINTMENT_DATE',
-                    child: Row(
-                      children: [
-                        Text(
-                          _sortField == 'CREATED_AT'
-                              ? 'Date creation'
-                              : 'Date RDV',
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                        const SizedBox(width: 4),
-                        const Icon(Icons.keyboard_arrow_down, size: 16),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                InkWell(
-                  borderRadius: BorderRadius.circular(20),
-                  onTap: () => setState(() => _sortAscending = !_sortAscending),
-                  child: chip(
-                    active: !_sortAscending,
-                    child: Row(
-                      children: [
-                        Icon(
-                          _sortAscending
-                              ? Icons.arrow_upward
-                              : Icons.arrow_downward,
-                          size: 14,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          _sortAscending ? 'Asc' : 'Desc',
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                if (hasActiveFilters) ...[
-                  const SizedBox(width: 8),
-                  InkWell(
-                    borderRadius: BorderRadius.circular(20),
-                    onTap: _clearFilters,
-                    child: chip(
-                      child: const Row(
-                        children: [
-                          Icon(Icons.close, size: 14, color: Colors.red),
-                          SizedBox(width: 4),
-                          Text(
-                            'Clear',
-                            style: TextStyle(fontSize: 12, color: Colors.red),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Affichage: $shownCount / $totalCount',
-            style: TextStyle(
-              color: Colors.grey.shade600,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
+    return AgendaFilterBar(
+      statusFilter: _statusFilter,
+      sortField: _sortField,
+      sortAscending: _sortAscending,
+      totalCount: totalCount,
+      shownCount: shownCount,
+      statusLabel: (status) => agendaStatusLabel(context, status),
+      onClearFilters: _clearFilters,
+      onStatusSelected: (value) => setState(() => _statusFilter = value),
+      onSortFieldSelected: (value) => setState(() => _sortField = value),
+      onToggleSortDirection: () => setState(
+        () => _sortAscending = !_sortAscending,
       ),
     );
   }
@@ -421,8 +221,11 @@ class _PatronAgendaPageState extends State<PatronAgendaPage> {
             )
           : Builder(
               builder: (context) {
-                final filteredAppointments = _applyFiltersAndSort(
-                  _appointments,
+                final filteredAppointments = applyAgendaFiltersAndSort(
+                  source: _appointments,
+                  statusFilter: _statusFilter,
+                  sortField: _sortField,
+                  sortAscending: _sortAscending,
                 );
 
                 return RefreshIndicator(
