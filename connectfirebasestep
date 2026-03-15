@@ -1,0 +1,74 @@
+You need to configure Firebase in two places:
+
+Firebase Console for the mobile app
+Firebase Admin credentials for the backend
+1. Enable Phone Sign-In
+Go to Firebase Console:
+https://console.firebase.google.com/
+
+Then:
+
+Open your project: hjamty
+In the left menu, go to Authentication
+Open the Sign-in method tab
+Click Phone
+Press Enable
+Save
+That is what allows Firebase to send real OTP SMS in production.
+
+2. Configure the backend with Firebase Admin
+Your backend verifies the Firebase ID token after the user enters the SMS code. For that, the backend needs Firebase Admin credentials.
+
+In Firebase Console:
+
+Go to Project settings
+Open the Service accounts tab
+Click Generate new private key
+Download the JSON file
+Inside that JSON, you will find values like:
+
+project_id
+client_email
+private_key
+Your backend already supports these env vars in env.ts:
+
+FIREBASE_PROJECT_ID
+FIREBASE_CLIENT_EMAIL
+FIREBASE_PRIVATE_KEY
+So in production, set them in your backend environment like this:
+
+FIREBASE_PROJECT_ID=your_project_id
+FIREBASE_CLIENT_EMAIL=your_service_account_email
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+Important:
+
+keep the \n inside the private key
+do not paste raw line breaks unless your platform handles multiline secrets correctly
+If you use Railway
+In Railway:
+
+Open your backend service
+Go to Variables
+Add:
+FIREBASE_PROJECT_ID
+FIREBASE_CLIENT_EMAIL
+FIREBASE_PRIVATE_KEY
+Then redeploy.
+
+How to know it works
+When the backend starts, if Firebase Admin is configured correctly, it should log something like:
+
+Firebase Admin initialized successfully
+If not, your new endpoint /api/auth/verify-firebase-token will fail.
+
+Very important for mobile
+For Phone Auth to work on Android/iPhone, you still need app-side Firebase setup too:
+
+Android app registered in Firebase
+SHA-1 / SHA-256 added
+correct google-services.json
+iOS app setup if you test on iPhone
+If you want, I can now help you with the exact next check:
+
+verify whether your backend .env already has valid Firebase Admin values
+then verify whether your Flutter Android app is correctly connected to Firebase for Phone Auth

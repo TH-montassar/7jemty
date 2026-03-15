@@ -1,5 +1,5 @@
 import * as authService from './auth.service.js';
-import { registerSchema, loginSchema, requestOtpSchema, verifyOtpSchema } from './auth.schema.js';
+import { registerSchema, loginSchema, requestOtpSchema, verifyOtpSchema, verifyFirebaseTokenSchema } from './auth.schema.js';
 export const register = async (req, res) => {
     console.log(`[AUTH] Incoming REGISTER request for:`, req.body?.phoneNumber);
     try {
@@ -47,7 +47,7 @@ export const checkPhone = async (req, res) => {
     try {
         const { phoneNumber } = req.body;
         if (!phoneNumber) {
-            res.status(400).json({ success: false, message: 'Le numéro de téléphone est requis' });
+            res.status(400).json({ success: false, message: 'Le numero de telephone est requis' });
             return;
         }
         const result = await authService.checkPhoneExists(phoneNumber);
@@ -73,6 +73,17 @@ export const verifyOtp = async (req, res) => {
     try {
         const validatedData = verifyOtpSchema.parse(req.body);
         const result = await authService.verifyOtp(validatedData.phoneNumber, validatedData.code);
+        res.status(200).json({ success: true, ...result });
+    }
+    catch (error) {
+        const message = error.errors ? error.errors[0].message : error.message;
+        res.status(400).json({ success: false, message });
+    }
+};
+export const verifyFirebaseToken = async (req, res) => {
+    try {
+        const validatedData = verifyFirebaseTokenSchema.parse(req.body);
+        const result = await authService.verifyFirebaseToken(validatedData.firebaseToken);
         res.status(200).json({ success: true, ...result });
     }
     catch (error) {

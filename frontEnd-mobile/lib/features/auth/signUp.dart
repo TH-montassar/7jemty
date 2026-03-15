@@ -4,6 +4,7 @@ import 'package:hjamty/core/constants/app_colors.dart';
 import 'package:hjamty/core/localization/translation_service.dart';
 import 'signIn.dart';
 import 'package:hjamty/features/auth/data/auth_service.dart';
+import 'package:hjamty/features/auth/data/firebase_phone_auth_service.dart';
 import 'package:hjamty/core/services/fcm_service.dart';
 import 'package:toastification/toastification.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -34,6 +35,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool _isLoading = false;
   bool _isPatron = false;
 
+  String _normalizeBackendPhoneNumber(String phoneNumber) {
+    final normalized = phoneNumber.replaceAll(RegExp(r'\s+'), '').trim();
+    if (normalized.startsWith('+216')) return normalized.substring(4);
+    if (normalized.startsWith('216')) return normalized.substring(3);
+    return normalized;
+  }
+
   Future<void> _handleRegister() async {
     if (_passwordController.text != _confirmPasswordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -53,17 +61,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
     });
 
     try {
-      final phoneNumber = _phoneController.text.trim();
-
-      // 1. Request OTP
-      await AuthService.requestOtp(phoneNumber);
+      final phoneNumber = _normalizeBackendPhoneNumber(
+        _phoneController.text.trim(),
+      );
 
       setState(() {
         _isLoading = false;
       });
 
-      // 2. Show OTP Dialog
-      final verificationToken = await _showOtpDialog(phoneNumber);
+      final verificationToken = await _requestPhoneVerificationToken(
+        phoneNumber,
+      );
 
       if (verificationToken == null) return; // User cancelled or failed
 
@@ -190,11 +198,35 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
-  Future<String?> _showOtpDialog(String phoneNumber) async {
+  Future<String?> _requestPhoneVerificationToken(String phoneNumber) async {
+    if (!FirebasePhoneAuthService.shouldUseFirebasePhoneAuth) {
+      await AuthService.requestOtp(phoneNumber);
+      return _showOtpDialog(phoneNumber);
+    }
+
+    final session = await FirebasePhoneAuthService.startVerification(
+      phoneNumber,
+    );
+
+    if (session.isInstantVerified) {
+      return FirebasePhoneAuthService.exchangeCredentialForBackendToken(
+        session: session,
+      );
+    }
+
+    return _showOtpDialog(phoneNumber, firebaseSession: session);
+  }
+
+  Future<String?> _showOtpDialog(
+    String phoneNumber, {
+    FirebasePhoneVerificationSession? firebaseSession,
+  }) async {
     final TextEditingController otpController = TextEditingController();
     bool isDialogLoading = false;
     int timeLeft = 60;
     Timer? countdownTimer;
+    FirebasePhoneVerificationSession? activeFirebaseSession = firebaseSession;
+    final usesFirebase = firebaseSession != null;
 
     return showDialog<String>(
       context: context,
@@ -205,15 +237,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
             // Function to handle code submission
             Future<void> submitCode(String code) async {
               if (code.length != 6) return;
-              
+
               setDialogState(() => isDialogLoading = true);
               try {
-                final verifyResult = await AuthService.verifyOtp(
-                  phoneNumber,
-                  code,
-                );
+                final token = usesFirebase
+                    ? await FirebasePhoneAuthService
+                        .exchangeCredentialForBackendToken(
+                          session: activeFirebaseSession!,
+                          smsCode: code,
+                        )
+                    : (await AuthService.verifyOtp(phoneNumber, code))[
+                        'phoneVerificationToken'
+                      ];
 
-                final token = verifyResult['phoneVerificationToken'];
                 if (!context.mounted) return;
                 countdownTimer?.cancel();
                 Navigator.pop(context, token); // Return the token
@@ -286,17 +322,43 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   const SizedBox(height: 15),
                   // Resend Button
                   TextButton(
-                    onPressed: timeLeft == 0 && !isDialogLoading
-                        ? () async {
-                            setDialogState(() => isDialogLoading = true);
-                            try {
-                              await AuthService.requestOtp(phoneNumber);
-                              // Reset Timer
-                              setDialogState(() {
-                                timeLeft = 60;
-                                isDialogLoading = false;
-                                countdownTimer = null; // Forces restart
-                              });
+                      onPressed: timeLeft == 0 && !isDialogLoading
+                          ? () async {
+                              setDialogState(() => isDialogLoading = true);
+                              try {
+                                if (usesFirebase) {
+                                  activeFirebaseSession =
+                                      await FirebasePhoneAuthService
+                                          .startVerification(
+                                            phoneNumber,
+                                            forceResendingToken:
+                                                activeFirebaseSession
+                                                    ?.resendToken,
+                                          );
+
+                                  if (activeFirebaseSession!
+                                      .isInstantVerified) {
+                                    final token =
+                                        await FirebasePhoneAuthService
+                                            .exchangeCredentialForBackendToken(
+                                              session:
+                                                  activeFirebaseSession!,
+                                            );
+                                    if (!context.mounted) return;
+                                    countdownTimer?.cancel();
+                                    Navigator.pop(context, token);
+                                    return;
+                                  }
+                                } else {
+                                  await AuthService.requestOtp(phoneNumber);
+                                }
+
+                                // Reset Timer
+                                setDialogState(() {
+                                  timeLeft = 60;
+                                  isDialogLoading = false;
+                                  countdownTimer = null; // Forces restart
+                                });
                             } catch (e) {
                               setDialogState(() => isDialogLoading = false);
                               if (!context.mounted) return;

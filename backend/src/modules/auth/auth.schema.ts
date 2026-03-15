@@ -13,15 +13,19 @@ export const registerSchema = z.object({
 });
 
 export const loginSchema = z.object({
-    phoneNumber: z.string().min(8, "Numéro de téléphone invalide"),
+    phoneNumber: z.string().min(8, "Numero de telephone invalide"),
     password: z.string().min(6, "Mot de passe invalide"),
 });
 
 export const requestOtpSchema = z.object({
-    phoneNumber: z.string().min(8, "Numéro de téléphone invalide"),
+    phoneNumber: z.string().min(8, "Numero de telephone invalide"),
 });
 
 export const verifyOtpSchema = z.object({
-    phoneNumber: z.string().min(8, "Numéro de téléphone invalide"),
+    phoneNumber: z.string().min(8, "Numero de telephone invalide"),
     code: z.string().length(6, "Le code doit contenir 6 chiffres"),
+});
+
+export const verifyFirebaseTokenSchema = z.object({
+    firebaseToken: z.string().min(1, "Firebase token requis"),
 });

@@ -1,4 +1,5 @@
 import { prisma } from '../../lib/db.js';
+import admin from 'firebase-admin';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { env } from '../../config/env.js';
@@ -54,7 +55,6 @@ export const registerUser = async (data: any) => {
         throw new Error('ra9em deja msta3mel ');
     }
 
-
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(data.password, salt);
 
@@ -77,53 +77,48 @@ export const registerUser = async (data: any) => {
         }
     });
 
-    // Create a welcome notification with the password instructions
     const welcomeNotif = await prisma.notification.create({
         data: {
             userId: user.id,
-            title: "Bienvenue sur 7jemty ! 🎉",
-            body: `Votre compte a été créé avec succès.`,
+            title: 'Bienvenue sur 7jemty !',
+            body: 'Votre compte a ete cree avec succes.',
         }
     });
     broadcastNotificationToUser(user.id, welcomeNotif);
 
-    // Notify all ADMIN users
     const admins = await prisma.user.findMany({
         where: { role: Role.ADMIN },
         include: { profile: true }
     });
 
-    for (const admin of admins) {
+    for (const adminUser of admins) {
         const adminNotif = await prisma.notification.create({
             data: {
-                userId: admin.id,
-                title: "Nouveau membre",
+                userId: adminUser.id,
+                title: 'Nouveau membre',
                 body: `Un nouvel utilisateur (${user.fullName} - ${user.role}) vient de s'inscrire.`
             }
         });
-        broadcastNotificationToUser(admin.id, adminNotif);
-        if (admin.profile?.fcmToken) {
+        broadcastNotificationToUser(adminUser.id, adminNotif);
+        if (adminUser.profile?.fcmToken) {
             await sendNotification(
-                admin.profile.fcmToken,
-                "Nouveau membre",
+                adminUser.profile.fcmToken,
+                'Nouveau membre',
                 `Un nouvel utilisateur (${user.fullName}) vient de s'inscrire.`,
                 { type: 'NEW_USER' }
             );
         }
     }
 
-
     const token = jwt.sign({ userId: user.id, role: user.role }, env.JWT_SECRET, {
         expiresIn: '30d',
     });
-
 
     const { passwordHash: _, ...userWithoutPassword } = user;
     return { user: userWithoutPassword, token };
 };
 
 export const loginUser = async (data: any) => {
-    // 1. Nlawjou 3al l'user b numro l'telifoun w nchoufou chnouwa 3andou salons (ken role PATRON)
     const user = await prisma.user.findFirst({
         where: { phoneNumber: data.phoneNumber },
         include: {
@@ -133,25 +128,20 @@ export const loginUser = async (data: any) => {
         }
     });
 
-    // 2. Ken ma l9inehoch wala l'mot de passe ghalet
     if (!user) {
-        throw new Error('Numéro de téléphone ou mot de passe incorrect');
+        throw new Error('Numero de telephone ou mot de passe incorrect');
     }
 
-    // 3. N9arnou l'mot de passe elli ktebou bel mot de passe l'mcheffer fel base
     const isPasswordValid = await bcrypt.compare(data.password, user.passwordHash);
     if (!isPasswordValid) {
-        throw new Error('Numéro de téléphone ou mot de passe incorrect');
+        throw new Error('Numero de telephone ou mot de passe incorrect');
     }
 
-    // 4. Ken kol chay s7i7, nasn3ou l'Token jdid
     const token = jwt.sign({ userId: user.id, role: user.role }, env.JWT_SECRET, {
         expiresIn: '30d',
     });
 
     const { passwordHash: _, _count, ...userWithoutPassword } = user;
-
-    // Nraj3ou hasSalon (boolean) bech l'Frontend ya3ref yوجهou l'CreateSalon wala l'Dashboard
     const hasSalon = _count.salonsOwned > 0;
 
     return { user: { ...userWithoutPassword, hasSalon }, token };
@@ -173,7 +163,18 @@ export const getMe = async (userId: number) => {
     return userWithoutPassword;
 };
 
-export const updateProfile = async (userId: number, data: { fullName?: string; phoneNumber?: string; email?: string; avatarUrl?: string; bio?: string; fcmToken?: string | null; address?: string }) => {
+export const updateProfile = async (
+    userId: number,
+    data: {
+        fullName?: string;
+        phoneNumber?: string;
+        email?: string;
+        avatarUrl?: string;
+        bio?: string;
+        fcmToken?: string | null;
+        address?: string;
+    }
+) => {
     return await prisma.$transaction(async (tx) => {
         if (data.fullName !== undefined || data.phoneNumber !== undefined) {
             await tx.user.update({
@@ -213,7 +214,6 @@ export const checkPhoneExists = async (phoneNumber: string) => {
 };
 
 export const requestOtp = async (phoneNumber: string) => {
-    // 1. Spamm Protection: Limit to 1 request every 60 seconds
     const oneMinuteAgo = new Date(Date.now() - 60 * 1000);
     const recentOtp = await prisma.otpCode.findFirst({
         where: {
@@ -223,10 +223,9 @@ export const requestOtp = async (phoneNumber: string) => {
     });
 
     if (recentOtp) {
-        throw new Error("Veuillez patienter 60 secondes avant de demander un nouveau code.");
+        throw new Error('Veuillez patienter 60 secondes avant de demander un nouveau code.');
     }
 
-    // 2. Max attempts: Limit to 3 requests per 24 hours
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const otpsTodayCount = await prisma.otpCode.count({
         where: {
@@ -236,14 +235,12 @@ export const requestOtp = async (phoneNumber: string) => {
     });
 
     if (otpsTodayCount >= 3) {
-        throw new Error("Vous avez dépassé la limite de 3 tentatives. Réessayez dans 24 heures.");
+        throw new Error('Vous avez depasse la limite de 3 tentatives. Reessayez dans 24 heures.');
     }
 
-    // Generate a 6-digit code
     const code = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes expiry
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
-    // Save to database
     await prisma.otpCode.create({
         data: {
             phoneNumber,
@@ -252,18 +249,18 @@ export const requestOtp = async (phoneNumber: string) => {
         }
     });
 
-    // In a real production app, you would integrate an SMS provider here.
-    // For now, we simulate sending it.
     console.log('\n' + '='.repeat(50));
     console.log(`🚀 [SIMULATED SMS] TO: ${phoneNumber}`);
     console.log(`💬 CODE: ${code}`);
     console.log('='.repeat(50) + '\n');
 
-    return { message: "Code OTP envoyé avec succès" };
+    return {
+        message: 'Code OTP envoye avec succes',
+        ...(env.NODE_ENV !== 'production' && { debugCode: code })
+    };
 };
 
 export const verifyOtp = async (phoneNumber: string, submittedCode: string) => {
-    // Find the most recent unexpired OTP for this phone number
     const otpRecord = await prisma.otpCode.findFirst({
         where: {
             phoneNumber,
@@ -275,14 +272,13 @@ export const verifyOtp = async (phoneNumber: string, submittedCode: string) => {
     });
 
     if (!otpRecord) {
-        throw new Error("Aucun code OTP valide n'a été trouvé. Veuillez en demander un nouveau.");
+        throw new Error('Aucun code OTP valide n a ete trouve. Veuillez en demander un nouveau.');
     }
 
     if (otpRecord.code !== submittedCode) {
-        throw new Error("Code OTP incorrect.");
+        throw new Error('Code OTP incorrect.');
     }
 
-    // Code is valid. Delete it so it can't be reused.
     await prisma.otpCode.delete({
         where: { id: otpRecord.id }
     });
@@ -290,10 +286,38 @@ export const verifyOtp = async (phoneNumber: string, submittedCode: string) => {
     const phoneVerificationToken = createPhoneVerificationToken(phoneNumber);
 
     return {
-        message: "Numéro vérifié avec succès",
+        message: 'Numero verifie avec succes',
         phoneVerificationToken
     };
 };
+
+export const verifyFirebaseToken = async (firebaseToken: string) => {
+    if (!admin.apps.length) {
+        throw new Error('Firebase Admin n est pas configure sur le serveur.');
+    }
+
+    let decodedToken: admin.auth.DecodedIdToken;
+    try {
+        decodedToken = await admin.auth().verifyIdToken(firebaseToken);
+    } catch {
+        throw new Error('Firebase token invalide ou expire.');
+    }
+
+    const phoneNumber = decodedToken.phone_number;
+    if (!phoneNumber) {
+        throw new Error('Aucun numero de telephone verifie dans le token Firebase.');
+    }
+
+    const normalizedPhoneNumber = phoneNumber.replace(/^\+216/, '');
+    const phoneVerificationToken = createPhoneVerificationToken(normalizedPhoneNumber);
+
+    return {
+        message: 'Numero verifie avec succes via Firebase',
+        phoneNumber: normalizedPhoneNumber,
+        phoneVerificationToken
+    };
+};
+
 type AdminUserUpdateInput = {
     fullName?: string;
     phoneNumber?: string;

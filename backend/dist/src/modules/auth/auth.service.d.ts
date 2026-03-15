@@ -109,10 +109,16 @@ export declare const checkPhoneExists: (phoneNumber: string) => Promise<{
     role: null;
 }>;
 export declare const requestOtp: (phoneNumber: string) => Promise<{
+    debugCode?: string;
     message: string;
 }>;
 export declare const verifyOtp: (phoneNumber: string, submittedCode: string) => Promise<{
     message: string;
+    phoneVerificationToken: string;
+}>;
+export declare const verifyFirebaseToken: (firebaseToken: string) => Promise<{
+    message: string;
+    phoneNumber: string;
     phoneVerificationToken: string;
 }>;
 type AdminUserUpdateInput = {

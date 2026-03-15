@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -237,6 +236,33 @@ class AuthService {
         return data; // returns { success: true, message, phoneVerificationToken }
       } else {
         throw Exception(_extractErrorMessage(data['message'], 'Code invalide'));
+      }
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+
+  static Future<Map<String, dynamic>> verifyFirebaseToken(
+    String firebaseToken,
+  ) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/verify-firebase-token'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'firebaseToken': firebaseToken}),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        return data;
+      } else {
+        throw Exception(
+          _extractErrorMessage(
+            data['message'],
+            'Erreur lors de la verification Firebase',
+          ),
+        );
       }
     } catch (e) {
       throw Exception(e.toString());

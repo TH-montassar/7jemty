@@ -25,4 +25,7 @@ export declare const verifyOtpSchema: z.ZodObject<{
     phoneNumber: z.ZodString;
     code: z.ZodString;
 }, z.core.$strip>;
+export declare const verifyFirebaseTokenSchema: z.ZodObject<{
+    firebaseToken: z.ZodString;
+}, z.core.$strip>;
 //# sourceMappingURL=auth.schema.d.ts.map

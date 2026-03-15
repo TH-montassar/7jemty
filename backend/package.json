@@ -17,9 +17,10 @@
     "create-admin": "tsx scripts/create_admin.ts",
     "seed-demo": "tsx scripts/seed_demo_data.ts",
     "cleanup-demo": "tsx scripts/cleanup_demo_data.ts",
+    "clean": "powershell -NoProfile -Command \"if (Test-Path dist) { Remove-Item dist -Recurse -Force }\"",
     "start": "node dist/server.js",
     "start:prod": "node dist/server.js",
-    "build": "tsc"
+    "build": "npm run clean && tsc"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.4.1",

@@ -1,6 +1,7 @@
 import { ReportStatus, Role } from '../../../generated/prisma/index.js';
 import { prisma } from '../../lib/db.js';
 import { sendNotification } from '../notifications/notifications.service.js';
+import { broadcastNotificationToUser } from '../notifications/notifications.controller.js';
 export const reportReview = async (reviewId, reporterId, reporterRole, reason, message) => {
     if (reporterRole === Role.CLIENT || reporterRole === Role.EMPLOYEE) {
         throw new Error("Vous n'avez pas le droit de signaler une review");
@@ -34,7 +35,7 @@ export const reportReview = async (reviewId, reporterId, reporterRole, reason, m
         include: { profile: true }
     });
     for (const admin of admins) {
-        await prisma.notification.create({
+        const notification = await prisma.notification.create({
             data: {
                 userId: admin.id,
                 title: '🚨 Review signalée',
@@ -42,6 +43,13 @@ export const reportReview = async (reviewId, reporterId, reporterRole, reason, m
                 eventType: 'REVIEW_REPORTED',
                 deeplink: `/admin/reports/${createdReport.id}`
             }
+        });
+        broadcastNotificationToUser(admin.id, {
+            ...notification,
+            type: 'REVIEW_REPORTED',
+            eventType: 'REVIEW_REPORTED',
+            reportId: createdReport.id,
+            reviewId: review.id
         });
         if (admin.profile?.fcmToken) {
             await sendNotification(admin.profile.fcmToken, '🚨 Review signalée', `Salon ${review.salon.name}: raison "${reason}"`, {
@@ -90,13 +98,25 @@ export const dismissReport = async (reportId) => {
     if (!report) {
         throw new Error('Report introuvable');
     }
-    return prisma.reportedReview.update({
+    const updatedReport = await prisma.reportedReview.update({
         where: { id: reportId },
         data: {
             status: ReportStatus.DISMISSED,
             resolvedAt: new Date(),
         }
     });
+    const admins = await prisma.user.findMany({
+        where: { role: Role.ADMIN },
+        select: { id: true }
+    });
+    for (const admin of admins) {
+        broadcastNotificationToUser(admin.id, {
+            type: 'REPORT_DISMISSED',
+            eventType: 'REPORT_DISMISSED',
+            reportId
+        });
+    }
+    return updatedReport;
 };
 export const takeAction = async (reportId, adminId) => {
     const report = await prisma.reportedReview.findUnique({
@@ -120,12 +140,15 @@ export const takeAction = async (reportId, adminId) => {
     const clientId = report.review.clientId;
     const warningReason = `Review supprimée après signalement (${report.reason})`;
     await prisma.$transaction(async (tx) => {
+        // Mark the report as resolved first. In the current schema,
+        // deleting the review cascades and removes the ReportedReview row.
+        // If we delete first, the update below fails with "record not found".
         await tx.reportedReview.update({
             where: { id: reportId },
             data: {
                 status: ReportStatus.ACTION_TAKEN,
                 resolvedAt: now,
-                resolvedBy: adminId
+                resolvedBy: adminId,
             }
         });
         await tx.review.delete({ where: { id: report.reviewId } });
