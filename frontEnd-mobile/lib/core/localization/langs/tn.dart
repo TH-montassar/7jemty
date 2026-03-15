@@ -107,9 +107,14 @@ const Map<String, String> tn = {
   'attention': 'Rod belek',
   'confirm_cancel_appointment':
       'Met\'aked theb tbatel e-rendez-vous?\n\n⚠️ Kan tbatel 3 marrat wra baadhom comptek yetbloka.',
+  'emergency_cancel': 'Annulation en urgence',
+  'emergency_cancel_title': 'Annulation en urgence',
+  'confirm_emergency_cancel_appointment':
+      'Met\'aked theb tbatel e-rendez-vous b urgence?\n\nHedhi exception tnajem testaamelha 3 marrat bark fi 2 mois. Tawa el confirmation hedhi UI bark.',
   'go_back': 'Rjou3',
   'appointment_cancelled': 'Rendez-vous tbatel',
   'yes_cancel': 'Ey, Batel',
+  'yes_emergency_cancel': 'Ey, Batel',
   'congratulations': 'Sa77atoulek!',
   'appointment_with_ahmed_finished':
       'Rendez-vous mte3ek maa Ahmed fi salon \'Barbershop VIP\' kmal.',
@@ -487,6 +492,8 @@ const Map<String, String> tn = {
   'report_review_success': 'Signalement tba3ath lel admin.',
   'manage_review_reports': 'Gestion signalements avis',
   'no_review_reports': 'Ma fama hata signalement tawa.',
+  'manage_user_alerts': 'Alertes users',
+  'no_user_alerts': 'Ma fama hata alerte user tawa.',
   'review_report_action_title': 'Traitement signalement',
   'review_report_admin_note': 'Note admin (optionnel)',
   'warn_user_label': 'Ba3ath tanbih lel user',

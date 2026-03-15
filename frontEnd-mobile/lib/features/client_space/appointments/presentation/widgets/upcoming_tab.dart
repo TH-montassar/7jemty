@@ -348,7 +348,13 @@ class _UpcomingTabState extends State<UpcomingTab> {
                       final now = DateTime.now();
                       final difference = date.difference(now);
                       final bool canCancel =
-                          difference.inHours >= 1 && status != 'IN_PROGRESS';
+                          !difference.isNegative &&
+                          difference.inMinutes >= 180 &&
+                          status != 'IN_PROGRESS';
+                      final bool canEmergencyCancel =
+                          !difference.isNegative &&
+                          difference.inMinutes < 180 &&
+                          (status == 'CONFIRMED' || status == 'PENDING');
 
                       String countdownText = "";
                       if (status == 'CONFIRMED' || status == 'PENDING') {
@@ -626,6 +632,40 @@ class _UpcomingTabState extends State<UpcomingTab> {
                                     ),
                                 ],
                               ),
+                              if (canEmergencyCancel) ...[
+                                const SizedBox(height: 12),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: ElevatedButton.icon(
+                                    onPressed: () => _showEmergencyCancelDialog(
+                                      context,
+                                      apt['id'],
+                                    ),
+                                    icon: const Icon(
+                                      Icons.warning_amber_rounded,
+                                      size: 18,
+                                      color: Colors.white,
+                                    ),
+                                    label: Text(
+                                      tr(context, 'emergency_cancel'),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.actionRed,
+                                      elevation: 0,
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 12,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         ),
@@ -993,6 +1033,91 @@ class _UpcomingTabState extends State<UpcomingTab> {
               ),
               child: Text(
                 tr(parentContext, 'yes_cancel'),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showEmergencyCancelDialog(
+    BuildContext parentContext,
+    int appointmentId,
+  ) {
+    showDialog(
+      context: parentContext,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Row(
+            children: [
+              const Icon(
+                Icons.warning_amber_rounded,
+                color: AppColors.actionRed,
+                size: 28,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  tr(parentContext, 'emergency_cancel_title'),
+                  style: const TextStyle(
+                    color: AppColors.actionRed,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            tr(parentContext, 'confirm_emergency_cancel_appointment'),
+            style: const TextStyle(height: 1.4),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(
+                tr(parentContext, 'go_back'),
+                style: const TextStyle(
+                  color: Colors.grey,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final scaffoldMessenger = ScaffoldMessenger.of(parentContext);
+                final navigator = Navigator.of(dialogContext);
+
+                navigator.pop();
+
+                final success = await _cancelAppointment(appointmentId);
+
+                if (mounted && success) {
+                  scaffoldMessenger.showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        tr(parentContext, 'appointment_cancelled'),
+                      ),
+                      backgroundColor: AppColors.actionRed,
+                    ),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.actionRed,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: Text(
+                tr(parentContext, 'yes_emergency_cancel'),
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,

@@ -3,6 +3,7 @@ import 'package:hjamty/core/constants/app_colors.dart';
 import 'package:hjamty/core/localization/translation_service.dart';
 import 'package:hjamty/features/admin_space/data/admin_service.dart';
 import 'package:hjamty/features/admin_space/presentation/pages/manage_reports_page.dart';
+import 'package:hjamty/features/admin_space/presentation/pages/manage_user_alerts_page.dart';
 import 'package:hjamty/core/widgets/notification_bell.dart';
 import 'package:intl/intl.dart';
 
@@ -19,6 +20,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   int _totalSalons = 0;
   int _pendingSalons = 0;
   int _reviewReportsCount = 0;
+  int _userAlertsCount = 0;
 
   @override
   void initState() {
@@ -76,6 +78,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                     _buildRowStatsCards(),
                     const SizedBox(height: 15),
                     _buildReviewReportsCard(),
+                    const SizedBox(height: 15),
+                    _buildUserAlertsCard(),
                   ],
                 ),
               ),
@@ -347,6 +351,105 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   _reviewReportsCount.toString(),
                   style: const TextStyle(
                     color: AppColors.primaryBlue,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+            ] else
+              const SizedBox(width: 12),
+            const Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 16,
+              color: Colors.black45,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUserAlertsCard() {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const ManageUserAlertsPage(),
+          ),
+        );
+      },
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(25),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(13),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 54,
+              height: 54,
+              decoration: BoxDecoration(
+                color: AppColors.actionRed.withAlpha(24),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.warning_amber_rounded,
+                color: AppColors.actionRed,
+                size: 28,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    tr(context, 'manage_user_alerts'),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  if (_userAlertsCount == 0) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      tr(context, 'no_user_alerts'),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            if (_userAlertsCount > 0) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.actionRed.withAlpha(24),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  _userAlertsCount.toString(),
+                  style: const TextStyle(
+                    color: AppColors.actionRed,
                     fontWeight: FontWeight.bold,
                   ),
                 ),

@@ -107,7 +107,12 @@ const Map<String, String> en = {
   'no_slots_available': 'No slots available for this day.',
   'confirm_cancel_appointment':
       'Are you sure you want to cancel the appointment?\n\n⚠️ If you cancel 3 times in a row, your account will be blocked.',
+  'emergency_cancel': 'Emergency Cancellation',
+  'emergency_cancel_title': 'Emergency Cancellation',
+  'confirm_emergency_cancel_appointment':
+      'Are you sure you want to cancel this appointment as an emergency?\n\nThis is an exceptional option that can only be used 3 times in 2 months. This confirmation is UI-only for now.',
   'yes_cancel': 'Yes, Cancel',
+  'yes_emergency_cancel': 'Yes, Cancel',
   'go_back': 'Go Back',
   'appointment_cancelled': 'Appointment Cancelled',
 
@@ -493,6 +498,8 @@ const Map<String, String> en = {
   'report_review_success': 'Report sent to admin.',
   'manage_review_reports': 'Review Reports',
   'no_review_reports': 'No review reports for now.',
+  'manage_user_alerts': 'User Alerts',
+  'no_user_alerts': 'No user alerts for now.',
   'review_report_action_title': 'Resolve report',
   'review_report_admin_note': 'Admin note (optional)',
   'warn_user_label': 'Send warning to user',
