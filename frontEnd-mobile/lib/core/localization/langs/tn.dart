@@ -392,6 +392,7 @@ const Map<String, String> tn = {
   'skip_btn': 'Fout',
   'close_btn': 'Fermer',
   'start_service_btn': 'jee lclient',
+  'client_arrived_btn': 'jee lclient',
   'no_show_btn': 'majech lclient',
   'no_show_dialog_title': 'El client majech?',
   'no_show_dialog_desc':
@@ -452,7 +453,8 @@ const Map<String, String> tn = {
   'active': 'Active',
   'deactivated': 'Desactivé',
   'waiting_approval': 'Waiting for approval',
-  'salon_not_active_popup_desc': 'Salon mte3ek mazel mouch active w mahouch bech yban fel accueil hata yetsada9 men admin.',
+  'salon_not_active_popup_desc':
+      'Salon mte3ek mazel mouch active w mahouch bech yban fel accueil hata yetsada9 men admin.',
   'based_on_n_reviews': 'Based on {0} reviews',
   'no_reviews_yet': 'Ma famma 7atta avi ltaw',
   'rate_this_salon': '9ayyem hal saloun',

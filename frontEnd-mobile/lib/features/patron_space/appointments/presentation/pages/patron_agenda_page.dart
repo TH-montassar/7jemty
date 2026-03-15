@@ -223,10 +223,7 @@ class _PatronAgendaPageState extends State<PatronAgendaPage> {
     return filtered;
   }
 
-  Widget _buildFiltersBar({
-    required int totalCount,
-    required int shownCount,
-  }) {
+  Widget _buildFiltersBar({required int totalCount, required int shownCount}) {
     final hasActiveFilters =
         _statusFilter != 'ALL' ||
         _sortField != 'APPOINTMENT_DATE' ||
@@ -235,8 +232,10 @@ class _PatronAgendaPageState extends State<PatronAgendaPage> {
     Widget chip({
       required Widget child,
       bool active = false,
-      EdgeInsetsGeometry padding =
-          const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      EdgeInsetsGeometry padding = const EdgeInsets.symmetric(
+        horizontal: 12,
+        vertical: 8,
+      ),
     }) {
       return Container(
         padding: padding,
@@ -265,23 +264,24 @@ class _PatronAgendaPageState extends State<PatronAgendaPage> {
               children: [
                 PopupMenuButton<String>(
                   onSelected: (value) => setState(() => _statusFilter = value),
-                  itemBuilder: (context) => [
-                    'ALL',
-                    'PENDING',
-                    'CONFIRMED',
-                    'IN_PROGRESS',
-                    'ARRIVED',
-                    'COMPLETED',
-                    'CANCELLED',
-                    'DECLINED',
-                  ]
-                      .map(
-                        (status) => PopupMenuItem<String>(
-                          value: status,
-                          child: Text(_statusLabel(status)),
-                        ),
-                      )
-                      .toList(),
+                  itemBuilder: (context) =>
+                      [
+                            'ALL',
+                            'PENDING',
+                            'CONFIRMED',
+                            'IN_PROGRESS',
+                            'ARRIVED',
+                            'COMPLETED',
+                            'CANCELLED',
+                            'DECLINED',
+                          ]
+                          .map(
+                            (status) => PopupMenuItem<String>(
+                              value: status,
+                              child: Text(_statusLabel(status)),
+                            ),
+                          )
+                          .toList(),
                   child: chip(
                     active: _statusFilter != 'ALL',
                     child: Row(
@@ -404,12 +404,13 @@ class _PatronAgendaPageState extends State<PatronAgendaPage> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const CalendarPage(),
-                ),
+                MaterialPageRoute(builder: (context) => const CalendarPage()),
               );
             },
-            icon: const Icon(Icons.calendar_month, color: AppColors.primaryBlue),
+            icon: const Icon(
+              Icons.calendar_month,
+              color: AppColors.primaryBlue,
+            ),
             tooltip: 'Voir en calendrier',
           ),
         ],
@@ -420,7 +421,9 @@ class _PatronAgendaPageState extends State<PatronAgendaPage> {
             )
           : Builder(
               builder: (context) {
-                final filteredAppointments = _applyFiltersAndSort(_appointments);
+                final filteredAppointments = _applyFiltersAndSort(
+                  _appointments,
+                );
 
                 return RefreshIndicator(
                   onRefresh: _fetchAppointments,
@@ -458,10 +461,15 @@ class _PatronAgendaPageState extends State<PatronAgendaPage> {
                         )
                       else
                         SliverList(
-                          delegate: SliverChildBuilderDelegate((context, index) {
+                          delegate: SliverChildBuilderDelegate((
+                            context,
+                            index,
+                          ) {
                             final apt = filteredAppointments[index];
                             return Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                              ),
                               child: _buildAppointmentCard(apt),
                             );
                           }, childCount: filteredAppointments.length),
@@ -478,6 +486,7 @@ class _PatronAgendaPageState extends State<PatronAgendaPage> {
     final status = (apt['status'] as String).toUpperCase();
     final isPending = status == 'PENDING';
     final isConfirmed = status == 'CONFIRMED' || status == 'ACCEPTED';
+    final isArrived = status == 'ARRIVED';
     final isInProgress = status == 'IN_PROGRESS';
     final isCompleted = status == 'COMPLETED';
     final isDeclined = status == 'DECLINED' || status == 'CANCELLED';
@@ -506,6 +515,9 @@ class _PatronAgendaPageState extends State<PatronAgendaPage> {
     } else if (isConfirmed) {
       statusColor = AppColors.primaryBlue;
       statusText = tr(context, 'status_confirmed_badge');
+    } else if (isArrived) {
+      statusColor = Colors.teal;
+      statusText = 'Arrived';
     } else if (isInProgress) {
       statusColor = Colors.purple;
       statusText = tr(context, 'status_in_progress');
@@ -520,7 +532,8 @@ class _PatronAgendaPageState extends State<PatronAgendaPage> {
     String countdownText = '';
     bool isTimeReached = false;
 
-    if (dateStr != null && (isConfirmed || isPending || isInProgress)) {
+    if (dateStr != null &&
+        (isConfirmed || isPending || isArrived || isInProgress)) {
       DateTime targetDate;
       if (isInProgress && apt['estimatedEndTime'] != null) {
         targetDate = DateTime.parse(apt['estimatedEndTime']).toLocal();
@@ -561,10 +574,7 @@ class _PatronAgendaPageState extends State<PatronAgendaPage> {
 
     return GestureDetector(
       onTap: () {
-        showAppointmentDetailsBottomSheet(
-          context: context,
-          appointment: apt,
-        );
+        showAppointmentDetailsBottomSheet(context: context, appointment: apt);
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 15),
@@ -669,7 +679,11 @@ class _PatronAgendaPageState extends State<PatronAgendaPage> {
             const SizedBox(height: 12),
             Row(
               children: [
-                const Icon(Icons.calendar_today, size: 18, color: AppColors.primaryBlue),
+                const Icon(
+                  Icons.calendar_today,
+                  size: 18,
+                  color: AppColors.primaryBlue,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   time,
@@ -680,7 +694,7 @@ class _PatronAgendaPageState extends State<PatronAgendaPage> {
                 ),
               ],
             ),
-            if (isPending || isConfirmed || isInProgress)
+            if (isPending || isConfirmed || isArrived || isInProgress)
               const SizedBox(height: 16),
             if (isPending)
               Row(
@@ -758,6 +772,26 @@ class _PatronAgendaPageState extends State<PatronAgendaPage> {
                     ),
                   ),
                 ],
+              ),
+            if (isArrived)
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => _updateStatus(apt['id'], 'IN_PROGRESS'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.purple,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  icon: const Icon(Icons.play_arrow, size: 18),
+                  label: Text(
+                    tr(context, 'start_service_btn'),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
               ),
             if (isInProgress && isTimeReached)
               SizedBox(

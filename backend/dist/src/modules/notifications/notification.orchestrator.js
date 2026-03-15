@@ -39,6 +39,13 @@ const EVENT_TEMPLATES = {
         },
         priority: 'HIGH'
     },
+    APPT_CLIENT_ARRIVED: {
+        transportType: 'APPOINTMENT_UPDATED',
+        recipientRoles: ['CLIENT'],
+        title: () => 'Marhbe bik !',
+        body: () => 'Nchalah t3jbek l7jema.',
+        priority: 'HIGH'
+    },
     APPT_CANCELLED: {
         transportType: 'APPOINTMENT_UPDATED',
         recipientRoles: ['CLIENT', 'BARBER', 'PATRON'],

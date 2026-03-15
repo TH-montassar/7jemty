@@ -102,8 +102,9 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
     if (!mounted || _hasShownInactiveSalonPopup) return;
     if (!widget.isPatron || widget.salonId != null) return;
 
-    final status =
-        (salonData['approvalStatus'] ?? 'PENDING').toString().toUpperCase();
+    final status = (salonData['approvalStatus'] ?? 'PENDING')
+        .toString()
+        .toUpperCase();
     if (status == 'APPROVED') return;
 
     _hasShownInactiveSalonPopup = true;
@@ -739,20 +740,25 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
     required int totalCount,
     required int shownCount,
   }) {
-    final hasActiveFilters = _reservationStatusFilter != 'ALL' ||
+    final hasActiveFilters =
+        _reservationStatusFilter != 'ALL' ||
         _reservationSortField != 'APPOINTMENT_DATE' ||
         !_reservationSortAscending;
 
     Widget chip({
       required Widget child,
       bool active = false,
-      EdgeInsetsGeometry padding =
-          const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      EdgeInsetsGeometry padding = const EdgeInsets.symmetric(
+        horizontal: 12,
+        vertical: 8,
+      ),
     }) {
       return Container(
         padding: padding,
         decoration: BoxDecoration(
-          color: active ? AppColors.primaryBlue.withValues(alpha: 0.1) : Colors.white,
+          color: active
+              ? AppColors.primaryBlue.withValues(alpha: 0.1)
+              : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: active ? AppColors.primaryBlue : Colors.grey.shade300,
@@ -775,23 +781,24 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                 PopupMenuButton<String>(
                   onSelected: (value) =>
                       setState(() => _reservationStatusFilter = value),
-                  itemBuilder: (context) => [
-                    'ALL',
-                    'PENDING',
-                    'CONFIRMED',
-                    'IN_PROGRESS',
-                    'ARRIVED',
-                    'COMPLETED',
-                    'CANCELLED',
-                    'DECLINED',
-                  ]
-                      .map(
-                        (status) => PopupMenuItem<String>(
-                          value: status,
-                          child: Text(_reservationStatusLabel(status)),
-                        ),
-                      )
-                      .toList(),
+                  itemBuilder: (context) =>
+                      [
+                            'ALL',
+                            'PENDING',
+                            'CONFIRMED',
+                            'IN_PROGRESS',
+                            'ARRIVED',
+                            'COMPLETED',
+                            'CANCELLED',
+                            'DECLINED',
+                          ]
+                          .map(
+                            (status) => PopupMenuItem<String>(
+                              value: status,
+                              child: Text(_reservationStatusLabel(status)),
+                            ),
+                          )
+                          .toList(),
                   child: chip(
                     active: _reservationStatusFilter != 'ALL',
                     child: Row(
@@ -840,7 +847,8 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                 InkWell(
                   borderRadius: BorderRadius.circular(20),
                   onTap: () => setState(
-                    () => _reservationSortAscending = !_reservationSortAscending,
+                    () =>
+                        _reservationSortAscending = !_reservationSortAscending,
                   ),
                   child: chip(
                     active: !_reservationSortAscending,
@@ -1177,6 +1185,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
     final status = (apt['status'] as String).toUpperCase();
     final isPending = status == 'PENDING';
     final isConfirmed = status == 'CONFIRMED' || status == 'ACCEPTED';
+    final isArrived = status == 'ARRIVED';
     final isInProgress = status == 'IN_PROGRESS';
     final isCompleted = status == 'COMPLETED';
     final isDeclined = status == 'DECLINED' || status == 'CANCELLED';
@@ -1205,6 +1214,9 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
     } else if (isConfirmed) {
       statusColor = AppColors.primaryBlue;
       statusText = tr(context, 'status_confirmed_badge');
+    } else if (isArrived) {
+      statusColor = Colors.teal;
+      statusText = 'Arrived';
     } else if (isInProgress) {
       statusColor = Colors.purple;
       statusText = tr(context, 'status_in_progress');
@@ -1219,7 +1231,8 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
     String countdownText = '';
     bool isTimeReached = false;
 
-    if (dateStr != null && (isConfirmed || isPending || isInProgress)) {
+    if (dateStr != null &&
+        (isConfirmed || isPending || isArrived || isInProgress)) {
       DateTime targetDate;
       if (isInProgress && apt['estimatedEndTime'] != null) {
         targetDate = DateTime.parse(apt['estimatedEndTime']).toLocal();
@@ -1260,10 +1273,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
 
     return GestureDetector(
       onTap: () {
-        showAppointmentDetailsBottomSheet(
-          context: context,
-          appointment: apt,
-        );
+        showAppointmentDetailsBottomSheet(context: context, appointment: apt);
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 15),
@@ -1368,7 +1378,11 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
             const SizedBox(height: 12),
             Row(
               children: [
-                const Icon(Icons.calendar_today, size: 18, color: AppColors.primaryBlue),
+                const Icon(
+                  Icons.calendar_today,
+                  size: 18,
+                  color: AppColors.primaryBlue,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   time,
@@ -1379,7 +1393,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                 ),
               ],
             ),
-            if (isPending || isConfirmed || isInProgress)
+            if (isPending || isConfirmed || isArrived || isInProgress)
               const SizedBox(height: 16),
             if (isPending)
               Row(
@@ -1440,7 +1454,8 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () => _updateAptStatus(apt['id'], 'IN_PROGRESS'),
+                      onPressed: () =>
+                          _updateAptStatus(apt['id'], 'IN_PROGRESS'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primaryBlue,
                         foregroundColor: Colors.white,
@@ -1457,6 +1472,26 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
                     ),
                   ),
                 ],
+              ),
+            if (isArrived)
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => _updateAptStatus(apt['id'], 'IN_PROGRESS'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.purple,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  icon: const Icon(Icons.play_arrow, size: 18),
+                  label: Text(
+                    tr(context, 'start_service_btn'),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
               ),
             if (isInProgress && isTimeReached)
               Row(
@@ -1510,20 +1545,17 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
     final patron = _salonData?['patron'] as Map<String, dynamic>?;
 
     final patronId = (patron?['id'] as num?)?.toInt();
-    final specialists = employees
-        .whereType<Map<String, dynamic>>()
-        .map((emp) {
-          final specialist = Map<String, dynamic>.from(emp);
-          final specialistId = (specialist['id'] as num?)?.toInt();
+    final specialists = employees.whereType<Map<String, dynamic>>().map((emp) {
+      final specialist = Map<String, dynamic>.from(emp);
+      final specialistId = (specialist['id'] as num?)?.toInt();
 
-          if (patronId != null && specialistId == patronId) {
-            specialist['isPatron'] = true;
-            specialist.putIfAbsent('role', () => 'Patron');
-          }
+      if (patronId != null && specialistId == patronId) {
+        specialist['isPatron'] = true;
+        specialist.putIfAbsent('role', () => 'Patron');
+      }
 
-          return specialist;
-        })
-        .toList();
+      return specialist;
+    }).toList();
 
     final patronAlreadyInList =
         patronId != null &&
@@ -1703,11 +1735,7 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
       child: const Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.workspace_premium,
-            size: 14,
-            color: AppColors.primaryBlue,
-          ),
+          Icon(Icons.workspace_premium, size: 14, color: AppColors.primaryBlue),
           SizedBox(width: 4),
           Text(
             'Patron',
@@ -2336,4 +2364,3 @@ class _SalonDashboardScreenState extends State<SalonDashboardScreen> {
     );
   }
 }
-

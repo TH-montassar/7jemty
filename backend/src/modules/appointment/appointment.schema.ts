@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const updateAppointmentStatusSchema = z.object({
-    status: z.enum(['CONFIRMED', 'DECLINED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'])
+    status: z.enum(['CONFIRMED', 'DECLINED', 'ARRIVED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'])
 });
 
 export const checkAvailabilitySchema = z.object({

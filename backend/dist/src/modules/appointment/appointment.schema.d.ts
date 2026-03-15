@@ -3,6 +3,7 @@ export declare const updateAppointmentStatusSchema: z.ZodObject<{
     status: z.ZodEnum<{
         CONFIRMED: "CONFIRMED";
         IN_PROGRESS: "IN_PROGRESS";
+        ARRIVED: "ARRIVED";
         COMPLETED: "COMPLETED";
         CANCELLED: "CANCELLED";
         DECLINED: "DECLINED";

@@ -119,8 +119,16 @@ export const updateAppointmentStatus = async (
         actorRole: userRole
     };
 
+    const shouldSendClientArrivedNotification =
+        status === 'ARRIVED'
+        || (status === 'IN_PROGRESS' && appointment.status === 'CONFIRMED');
+
     if (status === 'CONFIRMED') {
         await emitAppointmentEvent('APPT_CONFIRMED', commonNotificationContext);
+    }
+
+    if (shouldSendClientArrivedNotification) {
+        await emitAppointmentEvent('APPT_CLIENT_ARRIVED', commonNotificationContext);
     }
 
     if (status === 'CANCELLED') {
@@ -524,7 +532,7 @@ const assertStatusTransition = (
 
     const allowedTransitions: Record<AppointmentStatusInput, AppointmentStatusInput[]> = {
         PENDING: ['CONFIRMED', 'DECLINED', 'CANCELLED'],
-        CONFIRMED: ['IN_PROGRESS', 'CANCELLED', 'COMPLETED'],
+        CONFIRMED: ['ARRIVED', 'IN_PROGRESS', 'CANCELLED', 'COMPLETED'],
         IN_PROGRESS: ['COMPLETED'],
         ARRIVED: ['IN_PROGRESS', 'COMPLETED'],
         COMPLETED: [],

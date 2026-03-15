@@ -39,6 +39,7 @@ const Map<String, String> en = {
   'status_cancelled': 'Cancelled',
   'status_declined': 'Declined',
   'start_service_btn': 'is client camee /Start Service',
+  'client_arrived_btn': 'Client arrived',
   'no_show_btn': 'No Show',
   'no_show_dialog_title': 'Client did not arrive?',
   'no_show_dialog_desc':
@@ -331,7 +332,8 @@ const Map<String, String> en = {
   'verified_status': 'Verified',
   'status_active': 'Status: Active',
   'waiting_approval': 'Waiting for approval',
-  'salon_not_active_popup_desc': 'Your salon is not active yet and will not appear on Home until it is approved by admin.',
+  'salon_not_active_popup_desc':
+      'Your salon is not active yet and will not appear on Home until it is approved by admin.',
   'starting_from': 'Starting from...',
   'no_reviews_yet': 'No reviews yet',
   'tab_reviews': 'Reviews',

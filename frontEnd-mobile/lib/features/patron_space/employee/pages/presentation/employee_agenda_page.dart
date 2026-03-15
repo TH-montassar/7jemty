@@ -228,10 +228,7 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
     return filtered;
   }
 
-  Widget _buildFiltersBar({
-    required int totalCount,
-    required int shownCount,
-  }) {
+  Widget _buildFiltersBar({required int totalCount, required int shownCount}) {
     final hasActiveFilters =
         _statusFilter != 'ALL' ||
         _sortField != 'APPOINTMENT_DATE' ||
@@ -240,8 +237,10 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
     Widget chip({
       required Widget child,
       bool active = false,
-      EdgeInsetsGeometry padding =
-          const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      EdgeInsetsGeometry padding = const EdgeInsets.symmetric(
+        horizontal: 12,
+        vertical: 8,
+      ),
     }) {
       return Container(
         padding: padding,
@@ -270,23 +269,24 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
               children: [
                 PopupMenuButton<String>(
                   onSelected: (value) => setState(() => _statusFilter = value),
-                  itemBuilder: (context) => [
-                    'ALL',
-                    'PENDING',
-                    'CONFIRMED',
-                    'IN_PROGRESS',
-                    'ARRIVED',
-                    'COMPLETED',
-                    'CANCELLED',
-                    'DECLINED',
-                  ]
-                      .map(
-                        (status) => PopupMenuItem<String>(
-                          value: status,
-                          child: Text(_statusLabel(status)),
-                        ),
-                      )
-                      .toList(),
+                  itemBuilder: (context) =>
+                      [
+                            'ALL',
+                            'PENDING',
+                            'CONFIRMED',
+                            'IN_PROGRESS',
+                            'ARRIVED',
+                            'COMPLETED',
+                            'CANCELLED',
+                            'DECLINED',
+                          ]
+                          .map(
+                            (status) => PopupMenuItem<String>(
+                              value: status,
+                              child: Text(_statusLabel(status)),
+                            ),
+                          )
+                          .toList(),
                   child: chip(
                     active: _statusFilter != 'ALL',
                     child: Row(
@@ -414,7 +414,10 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
                 ),
               );
             },
-            icon: const Icon(Icons.calendar_month, color: AppColors.primaryBlue),
+            icon: const Icon(
+              Icons.calendar_month,
+              color: AppColors.primaryBlue,
+            ),
             tooltip: 'Voir en calendrier',
           ),
         ],
@@ -425,7 +428,9 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
             )
           : Builder(
               builder: (context) {
-                final filteredAppointments = _applyFiltersAndSort(_appointments);
+                final filteredAppointments = _applyFiltersAndSort(
+                  _appointments,
+                );
 
                 return RefreshIndicator(
                   onRefresh: _fetchAppointments,
@@ -463,10 +468,15 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
                         )
                       else
                         SliverList(
-                          delegate: SliverChildBuilderDelegate((context, index) {
+                          delegate: SliverChildBuilderDelegate((
+                            context,
+                            index,
+                          ) {
                             final apt = filteredAppointments[index];
                             return Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                              ),
                               child: _buildAppointmentCard(apt, index),
                             );
                           }, childCount: filteredAppointments.length),
@@ -483,6 +493,7 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
     final status = (apt['status'] as String).toUpperCase();
     final isPending = status == 'PENDING';
     final isConfirmed = status == 'CONFIRMED' || status == 'ACCEPTED';
+    final isArrived = status == 'ARRIVED';
     final isInProgress = status == 'IN_PROGRESS';
     final isCompleted = status == 'COMPLETED';
     final isDeclined = status == 'DECLINED' || status == 'CANCELLED';
@@ -509,6 +520,9 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
     } else if (isConfirmed) {
       statusColor = AppColors.primaryBlue;
       statusText = tr(context, 'status_confirmed_badge');
+    } else if (isArrived) {
+      statusColor = Colors.teal;
+      statusText = 'Arrived';
     } else if (isInProgress) {
       statusColor = Colors.purple;
       statusText = tr(context, 'status_in_progress');
@@ -523,7 +537,8 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
     String countdownText = "";
     bool isTimeReached = false;
 
-    if (dateStr != null && (isConfirmed || isPending || isInProgress)) {
+    if (dateStr != null &&
+        (isConfirmed || isPending || isArrived || isInProgress)) {
       DateTime targetDate;
       if (isInProgress && apt['estimatedEndTime'] != null) {
         targetDate = DateTime.parse(apt['estimatedEndTime']).toLocal();
@@ -678,7 +693,7 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
               style: const TextStyle(color: Colors.grey, fontSize: 14),
             ),
 
-            if (isPending || isConfirmed || isInProgress)
+            if (isPending || isConfirmed || isArrived || isInProgress)
               const SizedBox(height: 16),
 
             if (isPending) // Accept or Decline buttons
@@ -686,8 +701,7 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: () =>
-                          _updateStatus(apt['id'], 'DECLINED'),
+                      onPressed: () => _updateStatus(apt['id'], 'DECLINED'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.actionRed,
                         side: const BorderSide(color: AppColors.actionRed),
@@ -701,8 +715,7 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () =>
-                          _updateStatus(apt['id'], 'CONFIRMED'),
+                      onPressed: () => _updateStatus(apt['id'], 'CONFIRMED'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primaryBlue,
                         elevation: 0,
@@ -743,8 +756,7 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () =>
-                          _updateStatus(apt['id'], 'IN_PROGRESS'),
+                      onPressed: () => _updateStatus(apt['id'], 'IN_PROGRESS'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.purple,
                         elevation: 0,
@@ -768,6 +780,33 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
                     ),
                   ),
                 ],
+              ),
+            if (isArrived)
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => _updateStatus(apt['id'], 'IN_PROGRESS'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.purple,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  icon: const Icon(
+                    Icons.play_arrow,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                  label: Text(
+                    tr(context, 'start_service_btn'),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
               ),
 
             if (isInProgress)
@@ -799,8 +838,7 @@ class _EmployeeAgendaPageState extends State<EmployeeAgendaPage> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
-                      onPressed: () =>
-                          _updateStatus(apt['id'], 'COMPLETED'),
+                      onPressed: () => _updateStatus(apt['id'], 'COMPLETED'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.successGreen,
                         padding: const EdgeInsets.symmetric(vertical: 12),
